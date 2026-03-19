@@ -27,9 +27,17 @@ Write-Host "Region: $REGION"
 Write-Host "------------------------------------------------"
 
 # 1.1 Grant Secret Accessor Roles
-Write-Host "Granting secret accessor permissions to default service account..."
-$PROJECT_NUMBER = gcloud projects describe $PROJECT_ID --format="value(projectNumber)"
-$SERVICE_ACCOUNT = "${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+Write-Host "Granting secret accessor permissions to runtime service account..."
+$SERVICE_ACCOUNT_NAME = "ekioba-identity"
+$SERVICE_ACCOUNT = "$SERVICE_ACCOUNT_NAME@$PROJECT_ID.iam.gserviceaccount.com"
+
+# Check if service account exists, create if not
+gcloud iam service-accounts describe $SERVICE_ACCOUNT --project $PROJECT_ID --quiet > $null 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "--> Creating service account: $SERVICE_ACCOUNT"
+    gcloud iam service-accounts create $SERVICE_ACCOUNT_NAME --display-name "Ekioba Runtime Identity" --project $PROJECT_ID
+}
+
 $SECRETS = @("TON_API_KEY", "SOLANA_RPC_URL", "DJANGO_SECRET_KEY", "COCKROACHDB_STORE_URL", "COCKROACHDB_HOTELS_URL")
 
 foreach ($SECRET in $SECRETS) {
@@ -48,6 +56,7 @@ $IYOBO_URL = gcloud run deploy ekioba-ai-assistant `
     --region $REGION `
     --platform managed `
     --allow-unauthenticated `
+    --service-account $SERVICE_ACCOUNT `
     --set-secrets "TON_API_KEY=TON_API_KEY:latest" `
     --format "value(status.url)"
 
@@ -61,6 +70,7 @@ $STORE_URL = gcloud run deploy ekioba-store `
     --region $REGION `
     --platform managed `
     --allow-unauthenticated `
+    --service-account $SERVICE_ACCOUNT `
     --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,COCKROACHDB_URL=COCKROACHDB_STORE_URL:latest,SOLANA_RPC_URL=SOLANA_RPC_URL:latest,TON_API_KEY=TON_API_KEY:latest" `
     --format "value(status.url)"
 
@@ -69,7 +79,7 @@ Write-Host "    Success: Store service live at $STORE_URL"
 
 # Deploy other backend microservices
 Write-Host "--> Deploying cargo (ekioba-cargo)..."
-gcloud run deploy "ekioba-cargo" --source "./cargo" --region $REGION --platform managed --allow-unauthenticated
+gcloud run deploy "ekioba-cargo" --source "./cargo" --region $REGION --platform managed --allow-unauthenticated --service-account $SERVICE_ACCOUNT
 
 Write-Host "--> Deploying hotels (ekioba-hotels)..."
 gcloud run deploy "ekioba-hotels" `
@@ -77,10 +87,11 @@ gcloud run deploy "ekioba-hotels" `
     --region $REGION `
     --platform managed `
     --allow-unauthenticated `
+    --service-account $SERVICE_ACCOUNT `
     --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,COCKROACHDB_URL=COCKROACHDB_HOTELS_URL:latest"
 
 Write-Host "--> Deploying language_academy (ekioba-language-academy)..."
-gcloud run deploy "ekioba-language-academy" --source "./language_academy" --region $REGION --platform managed --allow-unauthenticated
+gcloud run deploy "ekioba-language-academy" --source "./language_academy" --region $REGION --platform managed --allow-unauthenticated --service-account $SERVICE_ACCOUNT
 
 # 3. Build Frontend with Backend URLs
 Write-Host "`n[3/5] Building frontend with backend service URLs..."
@@ -110,7 +121,8 @@ gcloud run deploy ekioba-frontend `
     --image $frontend_image `
     --region $REGION `
     --platform managed `
-    --allow-unauthenticated
+    --allow-unauthenticated `
+    --service-account $SERVICE_ACCOUNT
 
 # 5. Summary
 Write-Host "`n[5/5] DEPLOYMENT COMPLETE"

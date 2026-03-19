@@ -1,5 +1,6 @@
 django
 djangorestframework
+djangorestframework-simplejwt
 gunicorn
 psycopg2-binary
 django-cockroachdb

@@ -1,9 +1,15 @@
-FROM python:3.11-slim
-ENV PYTHONUNBUFFERED=1
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container
 WORKDIR /app
+
+# Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
 COPY . .
-# Iyobo often uses FastAPI/Uvicorn. 
-# If using standard Python, adjust this entrypoint to your main script.
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app.main:app -k uvicorn.workers.UvicornWorker
+
+# Run the command defined in the Procfile (adapted for Docker)
+CMD exec gunicorn -b 0.0.0.0:$PORT -w 4 -k uvicorn.workers.UvicornWorker --timeout 120 app.main:app

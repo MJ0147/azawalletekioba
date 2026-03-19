@@ -67,7 +67,7 @@ jobs:
 
       - name: Inject environment
         run: |
-          echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.BACKEND_URL_PROD }}" >> .env.production
+          echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.BACKEND_URL_PROD }}" >> frontend/.env.production
 
       - name: Install dependencies
         run: |

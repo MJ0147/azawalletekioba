@@ -1,144 +1,163 @@
-# Ekioba Cloud Run Deployment Script
+# Ekioba Universal Cloud Run Deployment Script
 #
-# This script deploys all EKIOBA services to Google Cloud Run.
-# It assumes you have an Artifact Registry repository named 'ekioba' in your project.
-# If not, create one with:
-# gcloud artifacts repositories create ekioba --repository-format=docker --location=us-central1
+# This script builds one universal image (Dockerfile.universal)
+# and deploys a single Cloud Run service: ekioba-universal.
 
-$PROJECT_ID = gcloud config get-value project
-$REGION = "us-central1" # Deployment region
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
 
-if (-not $PROJECT_ID) {
-    Write-Error "No GCP Project ID set. Please run 'gcloud config set project <YOUR_PROJECT_ID>' first."
-    exit 1
+function Invoke-GCloudCommand {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$Args,
+
+        [Parameter(Mandatory = $true)]
+        [string]$FailureMessage,
+
+        [int]$Retries = 1,
+        [int]$BaseDelaySeconds = 10,
+        [switch]$CaptureOutput
+    )
+
+    for ($attempt = 1; $attempt -le $Retries; $attempt++) {
+        if ($CaptureOutput) {
+            $output = & gcloud @Args 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                return ($output | Out-String).Trim()
+            }
+        }
+        else {
+            & gcloud @Args
+            if ($LASTEXITCODE -eq 0) {
+                return
+            }
+        }
+
+        if ($attempt -lt $Retries) {
+            $delaySeconds = $BaseDelaySeconds * $attempt
+            Write-Warning "$FailureMessage Retry $attempt/$Retries failed. Waiting $delaySeconds seconds before retry..."
+            Start-Sleep -Seconds $delaySeconds
+        }
+    }
+
+    throw $FailureMessage
 }
 
-# Fix: Ensure script runs from project root so relative paths (./store, ./frontend) work
-Write-Host "Setting working directory to project root..."
-Set-Location "$PSScriptRoot/.."
+if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
+    throw "gcloud CLI is not installed or not available in PATH."
+}
 
-# Fix: Ensure ADC quota project matches current project to prevent warnings
+$PROJECT_ID = (& gcloud config get-value project 2>$null | Out-String).Trim()
+$REGION = "us-central1"
+$SERVICE_NAME = "ekioba-universal"
+$REPOSITORY = "ekioba"
+
+if (-not $PROJECT_ID -or $PROJECT_ID -eq "(unset)") {
+    throw "No GCP Project ID set. Run: gcloud config set project <YOUR_PROJECT_ID>"
+}
+
+$IMAGE = "${REGION}-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME"
+
+# Ensure script runs from repository root where Dockerfile.universal exists.
+Write-Host "Setting working directory to repository root..."
+Set-Location "$PSScriptRoot"
+
 Write-Host "Syncing ADC quota project..."
 gcloud auth application-default set-quota-project $PROJECT_ID 2>$null
 
 Write-Host "------------------------------------------------"
-Write-Host "Deploying Ekioba to Project: $PROJECT_ID"
+Write-Host "Deploying Ekioba Universal"
+Write-Host "Project: $PROJECT_ID"
 Write-Host "Region: $REGION"
+Write-Host "Service: $SERVICE_NAME"
 Write-Host "------------------------------------------------"
 
-# 0. Check/Create Artifact Registry
-Write-Host "`n[0/5] Ensuring Artifact Registry 'ekioba' exists..."
-gcloud artifacts repositories create ekioba --repository-format=docker --location=$REGION --description="Ekioba Container Registry" 2>$null
-
-# 1. Enable APIs
-Write-Host "`n[1/5] Enabling Cloud Run, Artifact Registry, and Cloud Build APIs..."
-gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com cloudresourcemanager.googleapis.com
-
-# 1.1 Grant Secret Accessor Roles
-Write-Host "Granting secret accessor permissions to default service account..."
-$PROJECT_NUMBER = gcloud projects describe $PROJECT_ID --format="value(projectNumber)"
-$SERVICE_ACCOUNT = "${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-$SECRETS = @("TON_API_KEY", "SOLANA_RPC_URL", "DJANGO_SECRET_KEY", "COCKROACHDB_STORE_URL", "COCKROACHDB_HOTELS_URL")
-
-foreach ($SECRET in $SECRETS) {
-    Write-Host "--> Granting access to $SECRET..."
-    gcloud secrets add-iam-policy-binding $SECRET --member="serviceAccount:$SERVICE_ACCOUNT" --role="roles/secretmanager.secretAccessor" --quiet | Out-Null
+Write-Host "`n[0/4] Ensuring Artifact Registry '$REPOSITORY' exists..."
+& gcloud artifacts repositories describe $REPOSITORY --location=$REGION --project=$PROJECT_ID > $null 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "--> Creating Artifact Registry repository: $REPOSITORY"
+    Invoke-GCloudCommand -Args @("artifacts", "repositories", "create", $REPOSITORY, "--repository-format=docker", "--location=$REGION", "--description=Ekioba Container Registry", "--project=$PROJECT_ID") -FailureMessage "Failed to create Artifact Registry repository '$REPOSITORY'."
 }
 
-# 2. Deploy Backend Services
-Write-Host "`n[2/5] Deploying all backend services..."
-Write-Host "This will mount secrets from Google Secret Manager as environment variables."
+Write-Host "`n[1/4] Enabling required Google Cloud APIs..."
+Invoke-GCloudCommand -Args @("services", "enable", "run.googleapis.com", "artifactregistry.googleapis.com", "cloudbuild.googleapis.com", "secretmanager.googleapis.com", "cloudresourcemanager.googleapis.com", "--project=$PROJECT_ID") -FailureMessage "Failed to enable required Google Cloud APIs." -Retries 3 -BaseDelaySeconds 15
 
-# Deploy AI Assistant (Iyobo)
-Write-Host "--> Deploying AI Assistant (ekioba-ai-assistant)..."
-$AI_IMAGE = "${REGION}-docker.pkg.dev/$PROJECT_ID/ekioba/ekioba-ai-assistant"
-gcloud builds submit ./ai_assistant --tag $AI_IMAGE
+Write-Host "`n[2/4] Granting secret access to runtime service account..."
+$SERVICE_ACCOUNT_NAME = "ekioba-identity"
+$SERVICE_ACCOUNT = "$SERVICE_ACCOUNT_NAME@$PROJECT_ID.iam.gserviceaccount.com"
 
-$IYOBO_URL = gcloud run deploy ekioba-ai-assistant `
-    --image $AI_IMAGE `
-    --region $REGION `
-    --platform managed `
-    --allow-unauthenticated `
-    --set-secrets "TON_API_KEY=TON_API_KEY:latest" `
-    --format "value(status.url)"
+# Check if service account exists, create if not
+gcloud iam service-accounts describe $SERVICE_ACCOUNT --project $PROJECT_ID --quiet > $null 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "--> Creating service account: $SERVICE_ACCOUNT"
+    Invoke-GCloudCommand -Args @("iam", "service-accounts", "create", $SERVICE_ACCOUNT_NAME, "--display-name=Ekioba Runtime Identity", "--project=$PROJECT_ID") -FailureMessage "Failed to create service account '$SERVICE_ACCOUNT'."
+}
 
-if (-not $IYOBO_URL) { Write-Error "Failed to deploy AI Assistant. Aborting."; exit 1 }
-Write-Host "    Success: AI Assistant live at $IYOBO_URL"
+$SECRETS = @("TON_API_KEY", "SOLANA_RPC_URL", "DJANGO_SECRET_KEY", "COCKROACHDB_STORE_URL", "COCKROACHDB_HOTELS_URL")
+$MISSING_SECRETS = @()
 
-# Deploy Store Service
-Write-Host "--> Deploying Store (ekioba-store)..."
-$STORE_IMAGE = "${REGION}-docker.pkg.dev/$PROJECT_ID/ekioba/ekioba-store"
-Write-Host "    Building Store image..."
-gcloud builds submit ./store --tag $STORE_IMAGE
+foreach ($SECRET in $SECRETS) {
+    & gcloud secrets describe $SECRET --project=$PROJECT_ID > $null 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $MISSING_SECRETS += $SECRET
+    }
+}
 
-$STORE_URL = gcloud run deploy ekioba-store `
-    --image $STORE_IMAGE `
-    --region $REGION `
-    --platform managed `
-    --allow-unauthenticated `
-    --format "value(status.url)"
+if ($MISSING_SECRETS.Count -gt 0) {
+    throw "Missing required secrets in project '$PROJECT_ID': $($MISSING_SECRETS -join ', ')."
+}
 
-if (-not $STORE_URL) { Write-Error "Failed to deploy Store service. Aborting."; exit 1 }
-Write-Host "    Success: Store service live at $STORE_URL"
+foreach ($SECRET in $SECRETS) {
+    Write-Host "--> Granting access to $SECRET"
+    Invoke-GCloudCommand -Args @("secrets", "add-iam-policy-binding", $SECRET, "--member=serviceAccount:$SERVICE_ACCOUNT", "--role=roles/secretmanager.secretAccessor", "--project=$PROJECT_ID", "--quiet") -FailureMessage "Failed to grant '$SECRET' access to '$SERVICE_ACCOUNT'."
+}
 
-# Deploy other backend microservices
-Write-Host "--> Deploying cargo (ekioba-cargo)..."
-$CARGO_IMAGE = "${REGION}-docker.pkg.dev/$PROJECT_ID/ekioba/ekioba-cargo"
-gcloud builds submit ./cargo --tag $CARGO_IMAGE
-gcloud run deploy "ekioba-cargo" --image $CARGO_IMAGE --region $REGION --platform managed --allow-unauthenticated
+Write-Host "`n[3/4] Building and pushing universal image..."
+if (-not (Test-Path "cloudbuild.universal.yaml")) {
+    throw "Missing required file: cloudbuild.universal.yaml"
+}
+$buildSubstitutions = @(
+    "_IMAGE=$IMAGE",
+    "_NEXT_PUBLIC_IYOBO_URL=/chat",
+    "_NEXT_PUBLIC_STORE_PRODUCTS_URL=/api/store/products/",
+    "_NEXT_PUBLIC_BACKEND_URL=/api"
+) -join ","
 
-Write-Host "--> Deploying hotels (ekioba-hotels)..."
-$HOTELS_IMAGE = "${REGION}-docker.pkg.dev/$PROJECT_ID/ekioba/ekioba-hotels"
-gcloud builds submit ./hotels --tag $HOTELS_IMAGE
-gcloud run deploy "ekioba-hotels" `
-    --image $HOTELS_IMAGE `
-    --region $REGION `
-    --platform managed `
-    --allow-unauthenticated `
-    --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,COCKROACHDB_URL=COCKROACHDB_HOTELS_URL:latest"
+Invoke-GCloudCommand -Args @("builds", "submit", ".", "--config", "cloudbuild.universal.yaml", "--substitutions", $buildSubstitutions, "--project=$PROJECT_ID") -FailureMessage "Build failed after retries: image was not created/pushed." -Retries 3 -BaseDelaySeconds 20
 
-Write-Host "--> Deploying language_academy (ekioba-language-academy)..."
-$LA_IMAGE = "${REGION}-docker.pkg.dev/$PROJECT_ID/ekioba/ekioba-language-academy"
-gcloud builds submit ./language_academy --tag $LA_IMAGE
-gcloud run deploy "ekioba-language-academy" `
-    --image $LA_IMAGE `
-    --region $REGION `
-    --platform managed `
-    --allow-unauthenticated
+Write-Host "`n[4/4] Deploying Cloud Run service '$SERVICE_NAME'..."
+$SERVICE_URL = Invoke-GCloudCommand -Args @(
+    "run", "deploy", $SERVICE_NAME,
+    "--image", $IMAGE,
+    "--region", $REGION,
+    "--project", $PROJECT_ID,
+    "--service-account", $SERVICE_ACCOUNT,
+    "--platform", "managed",
+    "--allow-unauthenticated",
+    "--port", "8080",
+    "--cpu", "2",
+    "--memory", "2Gi",
+    "--concurrency", "20",
+    "--timeout", "300",
+    "--set-secrets", "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,SOLANA_RPC_URL=SOLANA_RPC_URL:latest,TON_API_KEY=TON_API_KEY:latest,COCKROACHDB_STORE_URL=COCKROACHDB_STORE_URL:latest,COCKROACHDB_HOTELS_URL=COCKROACHDB_HOTELS_URL:latest",
+    "--set-env-vars", "NEXT_PUBLIC_IYOBO_URL=/chat,NEXT_PUBLIC_STORE_PRODUCTS_URL=/api/store/products/",
+    "--format", "value(status.url)"
+) -FailureMessage "Deployment failed: Cloud Run deploy command did not succeed." -CaptureOutput
 
-# 3. Build Frontend with Backend URLs
-Write-Host "`n[3/5] Building frontend with backend service URLs..."
-$IYOBO_CHAT_URL = "$IYOBO_URL/chat"
-$STORE_API_URL = "$STORE_URL/api/products/"
-Write-Host "--> Injecting NEXT_PUBLIC_IYOBO_URL=$IYOBO_CHAT_URL"
-Write-Host "--> Injecting NEXT_PUBLIC_STORE_PRODUCTS_URL=$STORE_API_URL"
+$SERVICE_URL = $SERVICE_URL.Trim()
 
-$frontend_image = "${REGION}-docker.pkg.dev/$PROJECT_ID/ekioba/ekioba-frontend"
-$cloudbuild_content = @"
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '--build-arg', 'NEXT_PUBLIC_IYOBO_URL=$IYOBO_CHAT_URL', '--build-arg', 'NEXT_PUBLIC_STORE_PRODUCTS_URL=$STORE_API_URL', '-t', '$frontend_image', '.']
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push', '$frontend_image']
-images:
-- '$frontend_image'
-"@
+if (-not $SERVICE_URL) {
+    throw "Deployment failed: Cloud Run did not return a service URL."
+}
 
-Set-Content -Path "cloudbuild_frontend_temp.yaml" -Value $cloudbuild_content -Encoding UTF8
-gcloud builds submit ./frontend --config cloudbuild_frontend_temp.yaml
-Remove-Item "cloudbuild_frontend_temp.yaml"
+$CANONICAL_URL = Invoke-GCloudCommand -Args @("run", "services", "describe", $SERVICE_NAME, "--region", $REGION, "--project", $PROJECT_ID, "--format", "value(status.url)") -FailureMessage "Failed to fetch canonical Cloud Run service URL." -CaptureOutput
+$CANONICAL_URL = $CANONICAL_URL.Trim()
+if (-not $CANONICAL_URL) {
+    $CANONICAL_URL = $SERVICE_URL
+}
 
-# 4. Deploy Frontend
-Write-Host "`n[4/5] Deploying frontend..."
-gcloud run deploy ekioba-frontend `
-    --image $frontend_image `
-    --region $REGION `
-    --platform managed `
-    --allow-unauthenticated
-
-# 5. Summary
-Write-Host "`n[5/5] DEPLOYMENT COMPLETE"
+Write-Host "`nDEPLOYMENT COMPLETE"
 Write-Host "------------------------------------------------"
-Write-Host "Frontend is live at:"
-gcloud run services describe ekioba-frontend --region $REGION --format "value(status.url)"
+Write-Host "Universal service is live at:"
+Write-Host $CANONICAL_URL
 Write-Host "------------------------------------------------"

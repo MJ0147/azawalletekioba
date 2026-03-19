@@ -33,69 +33,28 @@ jobs:
 
       - name: Enable required APIs
         run: |
-          gcloud services enable run.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com
+          gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com
 
-      - name: Deploy backend services
+      - name: Create Artifact Registry Repository
         run: |
-          # Build Images for all services to avoid "resource is empty" errors
-          gcloud builds submit ./store --tag "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-store"
-          gcloud builds submit ./cargo --tag "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-cargo"
-          gcloud builds submit ./hotels --tag "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-hotels"
-          gcloud builds submit ./language_academy --tag "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-language-academy"
-          gcloud builds submit ./ai_assistant --tag "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-ai-assistant"
+          gcloud artifacts repositories describe ekioba --location="${GCP_REGION}" --project="${GCP_PROJECT_ID}" || \
+          gcloud artifacts repositories create ekioba --repository-format=docker --location="${GCP_REGION}" --description="Ekioba Container Registry" --project="${GCP_PROJECT_ID}"
+
+      - name: Build and Deploy Universal Service
+        run: |
+          # Build the Universal Container
+          gcloud builds submit . --config cloudbuild.universal.yaml --substitutions=_IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-universal",_NEXT_PUBLIC_IYOBO_URL="/chat",_NEXT_PUBLIC_STORE_PRODUCTS_URL="/api/store/products/",_NEXT_PUBLIC_BACKEND_URL="/api" 
           
-          gcloud run deploy ekioba-store \
-            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-store" \
+          # Deploy to Cloud Run
+          gcloud run deploy ekioba-universal \
+            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-universal" \
             --region "${GCP_REGION}" \
             --project "${GCP_PROJECT_ID}" \
             --platform managed \
             --allow-unauthenticated \
-            --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,COCKROACHDB_URL=COCKROACHDB_STORE_URL:latest,SOLANA_RPC_URL=SOLANA_RPC_URL:latest,TON_API_KEY=TON_API_KEY:latest"
-
-          gcloud run deploy ekioba-cargo \
-            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-cargo" \
-            --region "${GCP_REGION}" \
-            --project "${GCP_PROJECT_ID}" \
-            --platform managed \
-            --allow-unauthenticated
-
-          gcloud run deploy ekioba-hotels \
-            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-hotels" \
-            --region "${GCP_REGION}" \
-            --project "${GCP_PROJECT_ID}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,COCKROACHDB_URL=COCKROACHDB_HOTELS_URL:latest"
-
-          gcloud run deploy ekioba-language-academy \
-            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-language-academy" \
-            --region "${GCP_REGION}" \
-            --project "${GCP_PROJECT_ID}" \
-            --platform managed \
-            --allow-unauthenticated
-
-          gcloud run deploy ekioba-ai-assistant \
-            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-ai-assistant" \
-            --region "${GCP_REGION}" \
-            --project "${GCP_PROJECT_ID}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --set-secrets "TON_API_KEY=TON_API_KEY:latest"
-
-      - name: Capture Backend URLs
-        id: backend-urls
-        run: |
-          IYOBO_URL=$(gcloud run services describe ekioba-ai-assistant --region "${GCP_REGION}" --format='value(status.url)')
-          STORE_URL=$(gcloud run services describe ekioba-store --region "${GCP_REGION}" --format='value(status.url)')
-          echo "iyobo_chat_url=${IYOBO_URL}/chat" >> "$GITHUB_OUTPUT"
-          echo "store_api_url=${STORE_URL}/api/products/" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy frontend
-        run: |
-          gcloud run deploy ekioba-frontend \
-            --source ./frontend \
-            --region "${GCP_REGION}" \
-            --project "${GCP_PROJECT_ID}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --set-build-env-vars "NEXT_PUBLIC_IYOBO_URL=${{ steps.backend-urls.outputs.iyobo_chat_url }},NEXT_PUBLIC_STORE_PRODUCTS_URL=${{ steps.backend-urls.outputs.store_api_url }}"
+            --service-account "ekioba-identity@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            --memory 2Gi \
+            --cpu 2 \
+            --port 8080 \
+            --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,SOLANA_RPC_URL=SOLANA_RPC_URL:latest,TON_API_KEY=TON_API_KEY:latest,COCKROACHDB_STORE_URL=COCKROACHDB_STORE_URL:latest,COCKROACHDB_HOTELS_URL=COCKROACHDB_HOTELS_URL:latest" \
+            --set-env-vars "NEXT_PUBLIC_IYOBO_URL=/chat,NEXT_PUBLIC_STORE_PRODUCTS_URL=/api/store/products/"

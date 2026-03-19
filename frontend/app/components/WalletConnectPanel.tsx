@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useWallet, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { TonConnectButton, useTonWallet } from "@tonconnect/ui-react";
 
 export default function WalletConnectPanel() {
