@@ -1,0 +1,65 @@
+# Stage 1: Build the Next.js Frontend
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+
+ARG NEXT_PUBLIC_IYOBO_URL
+ARG NEXT_PUBLIC_STORE_PRODUCTS_URL
+ARG NEXT_PUBLIC_BACKEND_URL
+
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci
+
+COPY frontend/ .
+
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN npm run build
+
+# Stage 2: Universal Runtime (Python + Nginx + Node)
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    nginx \
+    supervisor \
+    nodejs \
+    npm \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Setup Backend Services
+# Copy requirements first for caching
+COPY store/requirements.txt ./store/requirements.txt
+COPY cargo/requirements.txt ./cargo/requirements.txt
+COPY hotels/requirements.txt ./hotels/requirements.txt
+COPY language_academy/requirements.txt ./language_academy/requirements.txt
+COPY ai_assistant/requirements.txt ./ai_assistant/requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r store/requirements.txt \
+    && pip install --no-cache-dir -r cargo/requirements.txt \
+    && pip install --no-cache-dir -r hotels/requirements.txt \
+    && pip install --no-cache-dir -r language_academy/requirements.txt \
+    && pip install --no-cache-dir -r ai_assistant/requirements.txt
+
+# Copy Backend Code
+COPY store ./store
+COPY cargo ./cargo
+COPY hotels ./hotels
+COPY language_academy ./language_academy
+COPY ai_assistant ./ai_assistant
+
+# Setup Frontend
+WORKDIR /app/frontend
+COPY --from=frontend-builder /app/public ./public
+COPY --from=frontend-builder /app/.next/standalone ./
+COPY --from=frontend-builder /app/.next/static ./.next/static
+
+# Setup Configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose port 8080 (Cloud Run default)
+EXPOSE 8080
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

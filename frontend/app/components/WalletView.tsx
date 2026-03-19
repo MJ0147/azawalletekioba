@@ -13,11 +13,15 @@ export default function WalletView({ address }: { address: string }) {
 
     getBalance(address)
       .then((data) => {
-        setBalance(data.balance);
+        const parsedBalance = Number(data.balance);
+        if (!Number.isFinite(parsedBalance)) {
+          throw new Error("Invalid balance format");
+        }
+        setBalance(parsedBalance);
         const nowIso = new Date().toISOString();
         setLastUpdated(new Date(nowIso));
         setIsCachedFallback(false);
-        localStorage.setItem(cacheKey, JSON.stringify({ balance: data.balance, updatedAt: nowIso }));
+        localStorage.setItem(cacheKey, JSON.stringify({ balance: parsedBalance, updatedAt: nowIso }));
       })
       .catch(() => {
         const cached = localStorage.getItem(cacheKey);

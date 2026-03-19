@@ -21,20 +21,12 @@ Services:
 Current workflows:
 - `.github/workflows/ci.yml`: integration build and test on `develop`
 - `.github/workflows/django.yml`: Django checks on `main`
-- `.github/workflows/cloud-run.yml`: deploy services to Google Cloud Run
+- `.github/workflows/cloud-run.yml`: deploy universal service to Google Cloud Run
 
 ## Google Cloud Run
 
-The `cloud-run.yml` workflow deploys:
-- `ekioba-store`
-- `ekioba-cargo`
-- `ekioba-hotels`
-- `ekioba-language-academy`
-- `ekioba-ai-assistant`
-- `ekioba-frontend`
-
-It deploys backend services first, reads the Iyobo URL, then deploys frontend with:
-- `NEXT_PUBLIC_IYOBO_URL=<iyobo-url>/chat`
+The deployment is now consolidated into a single "Universal" container `ekioba-universal`.
+This container runs Nginx, which routes traffic to the Frontend, Store, Cargo, Hotels, and AI Assistant services running internally.
 
 ## Google Secret Manager (Blockchain Keys)
 

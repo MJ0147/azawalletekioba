@@ -3,6 +3,7 @@ import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, cl
 
 const merchantWallet = process.env.NEXT_PUBLIC_SOLANA_MERCHANT_WALLET;
 const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl("mainnet-beta");
+const BACKEND_URL = process.env.STORE_BACKEND_URL ?? "http://localhost:8001/api/products/";
 const connection = new Connection(rpcUrl, "confirmed");
 
 type PostRequest = {
@@ -16,8 +17,7 @@ type ServerProduct = {
 };
 
 async function fetchTrustedPrices(): Promise<Map<string, number>> {
-  const endpoint = process.env.NEXT_PUBLIC_STORE_PRODUCTS_URL || "http://localhost:8001/api/products/";
-  const response = await fetch(endpoint, { cache: "no-store" });
+  const response = await fetch(BACKEND_URL, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error(`Product source unavailable: ${response.status}`);

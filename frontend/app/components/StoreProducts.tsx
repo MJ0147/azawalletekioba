@@ -7,6 +7,7 @@ type Product = {
   id: string;
   name: string;
   price: string | number;
+  stock?: number;
   description?: string;
   image?: string;
   category?: "jewelry" | "fashion" | "art" | "craft" | "food";
@@ -163,6 +164,7 @@ function isProduct(value: unknown): value is Product {
     (typeof candidate.id === "string" || typeof candidate.id === "number") &&
     typeof candidate.name === "string" &&
     (typeof candidate.price === "number" || typeof candidate.price === "string") &&
+    (candidate.stock === undefined || typeof candidate.stock === "number") &&
     (candidate.description === undefined || typeof candidate.description === "string") &&
     (candidate.image === undefined || typeof candidate.image === "string") &&
     (candidate.category === undefined || isCategory(candidate.category))
@@ -174,6 +176,7 @@ function normalizeProduct(product: Product | (Partial<Product> & { id?: string |
     id: String(product.id ?? ""),
     name: product.name ?? "",
     price: product.price ?? 0,
+    stock: product.stock,
     description: product.description,
     image: product.image,
     category: product.category,
@@ -181,42 +184,66 @@ function normalizeProduct(product: Product | (Partial<Product> & { id?: string |
 }
 
 function parseProductsResponse(value: unknown): Product[] {
-  if (!Array.isArray(value)) {
-    return [];
+  let asArray: unknown = value;
+  if (!Array.isArray(asArray) && typeof asArray === "object" && asArray !== null) {
+    const w = asArray as Record<string, unknown>;
+    asArray = w["products"] ?? w["results"] ?? w["items"];
+  }
+  if (!Array.isArray(asArray)) return [];
+  return asArray.filter(isProduct).map(normalizeProduct);
+}
+
+async function fetchProducts(signal: AbortSignal): Promise<Product[]> {
+  const endpoint = process.env.NEXT_PUBLIC_STORE_PRODUCTS_URL || "/api/store/products/";
+  const response = await fetch(endpoint, { signal, cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
   }
 
-  return value.filter(isProduct).map(normalizeProduct);
+  const payload: unknown = await response.json();
+  return parseProductsResponse(payload);
 }
 
 export default function StoreProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const endpoint = process.env.NEXT_PUBLIC_STORE_PRODUCTS_URL ?? "http://localhost:8001/api/products/";
+    const controller = new AbortController();
 
-    fetch(endpoint)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Request failed: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        const parsed = parseProductsResponse(data);
+    setIsLoading(true);
+    setError("");
+
+    fetchProducts(controller.signal)
+      .then((parsed) => {
         if (parsed.length > 0) {
           setProducts(parsed);
           return;
         }
 
         setProducts(PRODUCTS);
+        setError("Store returned no products. Showing catalog fallback.");
       })
-      .catch(() => {
+      .catch((fetchError) => {
+        if ((fetchError as { name?: string }).name === "AbortError") {
+          return;
+        }
+
         setProducts(PRODUCTS);
         setError("Could not load products right now. Showing catalog fallback.");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-  }, []);
+
+    return () => {
+      controller.abort();
+    };
+  }, [refreshKey]);
 
   const addToCart = (product: Product) => {
     setCart((current) => {
@@ -257,7 +284,19 @@ export default function StoreProducts() {
     <section className="mt-10 rounded-2xl border border-ink/15 bg-white/70 p-5 shadow-sm">
       <h2 className="text-2xl font-semibold text-ink">EKIOBA Store</h2>
       <p className="mt-1 text-sm text-ink/70">Browse products, add items to cart, then pay with TON or Solana in Idia value.</p>
-      {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
+      {isLoading ? <p className="mt-3 text-sm text-ink/80">Loading products from store API...</p> : null}
+      {error ? (
+        <div className="mt-3 space-y-2">
+          <p className="text-sm text-red-600">{error}</p>
+          <button
+            type="button"
+            onClick={() => setRefreshKey((current) => current + 1)}
+            className="rounded-xl border border-ink/20 bg-white px-3 py-2 text-sm font-medium text-ink"
+          >
+            Retry loading products
+          </button>
+        </div>
+      ) : null}
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         {products.map((product) => {
@@ -291,7 +330,7 @@ export default function StoreProducts() {
         })}
       </div>
 
-      {!error && products.length === 0 ? <p className="mt-4 text-sm text-ink/80">No products available yet.</p> : null}
+      {!isLoading && !error && products.length === 0 ? <p className="mt-4 text-sm text-ink/80">No products available yet.</p> : null}
 
       <div className="mt-8 rounded-2xl border border-ink/15 bg-white/80 p-4">
         <h3 className="text-lg font-semibold text-ink">Cart</h3>
