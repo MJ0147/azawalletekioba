@@ -26,9 +26,68 @@ const startupMessage = `
 [0m
 `
 
+const heritageHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Benin Kingdom Heritage</title>
+  <style>
+    body { font-family: Georgia, serif; background: #1a0a00; color: #f5deb3; margin: 0; padding: 0; }
+    header { background: #8B0000; text-align: center; padding: 2rem 1rem; border-bottom: 4px solid #DAA520; }
+    header h1 { font-size: 2.5rem; margin: 0; color: #DAA520; letter-spacing: 2px; }
+    header p { margin: 0.5rem 0 0; font-style: italic; color: #f5deb3; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+    section { margin-bottom: 2.5rem; }
+    h2 { color: #DAA520; border-bottom: 2px solid #DAA520; padding-bottom: 0.3rem; }
+    ul { line-height: 2; }
+    .highlight { background: #3a1a00; border-left: 4px solid #DAA520; padding: 1rem 1.5rem; border-radius: 4px; }
+    footer { text-align: center; padding: 1.5rem; background: #8B0000; color: #f5deb3; border-top: 4px solid #DAA520; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>&#9670; Benin Kingdom Heritage &#9670;</h1>
+    <p>Celebrating the rich culture and history of the ancient Benin Kingdom</p>
+  </header>
+  <main>
+    <section>
+      <h2>About the Benin Kingdom</h2>
+      <p>The Benin Kingdom is one of the oldest and most highly developed states in West Africa, dating back to the 11th century. Located in present-day Edo State, Nigeria, it was founded by the Edo people and ruled by the Oba (king). At its height, the Benin Kingdom was a powerful empire renowned for its art, culture, and sophisticated governance.</p>
+    </section>
+    <section>
+      <h2>The Benin Bronzes</h2>
+      <p>Among the most celebrated aspects of Benin heritage are the famous Benin Bronzes — a collection of more than a thousand metal plaques and sculptures that once decorated the royal palace of the Benin Kingdom. Cast from brass and bronze, these works are masterpieces of craftsmanship, depicting the Oba, court ceremonies, warriors, and animals.</p>
+      <div class="highlight">
+        <strong>"The Benin Bronzes stand as testament to the artistic genius and cultural sophistication of the Benin people."</strong>
+      </div>
+    </section>
+    <section>
+      <h2>Cultural Heritage Highlights</h2>
+      <ul>
+        <li><strong>Oba's Palace:</strong> The royal palace in Benin City, a UNESCO World Heritage Site candidate, has been the seat of the Benin monarchy for centuries.</li>
+        <li><strong>Igodomigodo Art:</strong> Intricate ivory and bronze craftsmanship recognized globally for its artistry and historical significance.</li>
+        <li><strong>Igue Festival:</strong> An annual festival celebrating the Oba's divine authority and the spiritual well-being of the kingdom.</li>
+        <li><strong>Ewedo's Reforms:</strong> The 13th-century Oba Ewedo reorganized the kingdom's administration, laying the foundation for centuries of prosperity.</li>
+        <li><strong>Repatriation Efforts:</strong> Ongoing global discussions seek to return Benin Bronzes looted in 1897 to their rightful home in Benin City.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Legacy</h2>
+      <p>The Benin Kingdom's legacy endures in the hearts of the Edo people and in collections around the world. Efforts to preserve, document, and repatriate Benin heritage items continue today, ensuring that the story of this great civilization is told for generations to come.</p>
+    </section>
+  </main>
+  <footer>
+    &copy; Benin Kingdom Heritage &mdash; Honoring a timeless civilization
+  </footer>
+</body>
+</html>
+`
+
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello! you've requested %s\n", r.URL.Path)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(w, heritageHTML)
 	})
 
 	port := os.Getenv("PORT")
