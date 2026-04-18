@@ -13,6 +13,8 @@
     "generate:icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
+    "@copilotkit/react-core": "^1.0.0",
+    "@copilotkit/react-ui": "^1.0.0",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
     "@solana/wallet-adapter-wallets": "^0.19.37",
@@ -34,6 +36,7 @@
     "@types/react-dom": "18.2.25"
   },
   "overrides": {
+    "tar": "7.5.10",
     "@types/react": "18.2.79",
     "@types/react-dom": "18.2.25"
   }
