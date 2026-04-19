@@ -1,13 +1,28 @@
-steps:
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - build
-      - -t
-      - ${_IMAGE}
-      - ai_assistant
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - push
-      - ${_IMAGE}
-images:
-  - ${_IMAGE}
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${_IMAGE} .
+
+      - name: Push Docker image
+        run: |
+          docker push ${_IMAGE}
+
+      - name: Deploy to DigitalOcean
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        run: |
+          doctl apps update <app-id> --spec app.yaml --image ${_IMAGE}

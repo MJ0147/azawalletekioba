@@ -1,8 +1,10 @@
 import boto3
 from botocore.exceptions import ClientError
 import json
+import os
 from functools import lru_cache
-from pydantic_settings import BaseSettings, SettingsConfigDict, field_validator
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # Project Settings
@@ -15,6 +17,16 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     OPENAI_API_KEY: str = "missing"
+    COPILOT_API_KEY: str = ""
+    COPILOT_BASE_URL: str = "https://models.inference.ai.azure.com"
+    COPILOT_MODEL: str = "gpt-4o-mini"
+
+    @field_validator("COPILOT_API_KEY", mode="before")
+    @classmethod
+    def fallback_copilot_key(cls, v: str) -> str:
+        if v:
+            return v
+        return os.getenv("COPILOT_API_KEY") or os.getenv("GITHUB_TOKEN") or os.getenv("OPENAI_API_KEY") or ""
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 
-from app.core.config import settings
+from config import settings
 from user import User
 
 engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)

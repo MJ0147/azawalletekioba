@@ -1,0 +1,17 @@
+name: my-app
+services:
+  - name: backend
+    image:
+      registry: docker.io
+      repository: azawalletekioba/backend
+      tag: latest
+    http_port: 8000
+  - name: frontend
+    image:
+      registry: docker.io
+      repository: azawalletekioba/frontend
+      tag: latest
+    http_port: 3000
+    envs:
+      - key: REACT_APP_API_URL
+        value: "https://python-api-653036098161.us-central1.run.app"
