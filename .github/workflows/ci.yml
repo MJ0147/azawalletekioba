@@ -26,21 +26,13 @@ jobs:
         run: |
           pip install -r store/requirements.txt
 
-      - name: Validate database connection string
-        env:
-          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
-        run: |
-          if [ -z "${COCKROACHDB_URL}" ]; then
-            echo "COCKROACHDB_URL is not set. Configure repository variable COCKROACHDB_URL (preferred) or secret COCKROACHDB_URL."
-            exit 1
-          fi
-
       - name: Run Django tests
         env:
-          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
+          DJANGO_DB_ENGINE: sqlite
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY || 'ci-only-secret-key' }}
         run: |
           cd store
-          python manage.py test
+          python manage.py test --verbosity=2
 
   frontend:
     runs-on: ubuntu-latest
