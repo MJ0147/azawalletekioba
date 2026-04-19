@@ -10,17 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      cockroachdb:
-        image: cockroachdb/cockroach:v23.1.11
-        ports:
-          - "26257:26257"
-          - "8080:8080"
-        options: >-
-          --health-cmd="cockroach sql --insecure --host=localhost:26257 -e 'select 1'"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
     strategy:
       max-parallel: 4
       matrix:
@@ -40,12 +29,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Validate database connection string
+      env:
+        COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
+      run: |
+        if [ -z "${COCKROACHDB_URL}" ]; then
+          echo "COCKROACHDB_URL is not set. Configure repository variable COCKROACHDB_URL (preferred) or secret COCKROACHDB_URL."
+          exit 1
+        fi
+
     - name: Run Tests
       working-directory: store
       env:
+        COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-        COCKROACHDB_HOST: cockroachdb
-        COCKROACHDB_PORT: "26257"
         TON_API_KEY: ${{ secrets.TON_API_KEY }}
         SOLANA_API_KEY: ${{ secrets.SOLANA_API_KEY }}
       run: |
