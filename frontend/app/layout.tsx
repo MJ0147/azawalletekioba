@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import BlockchainProviders from "./components/BlockchainProviders";
+import CopilotProvider from "./components/CopilotProvider";
 import "@solana/wallet-adapter-react-ui/styles.css";
+import "@copilotkit/react-ui/styles.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +18,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#020617" />
       </head>
       <body>
-        <BlockchainProviders>{children}</BlockchainProviders>
+        <CopilotProvider>
+          <BlockchainProviders>
+            {children}
+          </BlockchainProviders>
+        </CopilotProvider>
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import WalletConnectPanel from "./components/WalletConnectPanel";
 import StoreProducts from "./components/StoreProducts";
+import GenerativeUI from "./components/GenerativeUI";
 
 export default function Home() {
   return (
@@ -26,13 +27,18 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Generative UI Section */}
+      <div className="w-full max-w-4xl mb-10">
+        <GenerativeUI />
+      </div>
+
       {/* Wallet Section */}
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md mb-10">
         <WalletConnectPanel />
       </div>
 
       {/* Product Listing */}
-      <div className="w-full max-w-5xl mt-10">
+      <div className="w-full max-w-5xl">
         <StoreProducts />
       </div>
     </main>

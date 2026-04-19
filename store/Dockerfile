@@ -1,7 +1,11 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-trixie
 
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	openssl=3.5.5-1~deb13u2 libssl3t64=3.5.5-1~deb13u2 \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
 COPY requirements.txt .

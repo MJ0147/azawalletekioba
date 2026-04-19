@@ -1,21 +1,47 @@
 steps:
-- name: gcr.io/cloud-builders/docker
-  args:
-  - build
-  - -f
-  - Dockerfile.universal
-  - -t
-  - ${_IMAGE}
-  - --build-arg
-  - NEXT_PUBLIC_IYOBO_URL=${_NEXT_PUBLIC_IYOBO_URL}
-  - --build-arg
-  - NEXT_PUBLIC_STORE_PRODUCTS_URL=${_NEXT_PUBLIC_STORE_PRODUCTS_URL}
-  - --build-arg
-  - NEXT_PUBLIC_BACKEND_URL=${_NEXT_PUBLIC_BACKEND_URL}
-  - .
-- name: gcr.io/cloud-builders/docker
-  args:
-  - push
-  - ${_IMAGE}
+  - name: docker
+    args:
+      - build
+      - -f
+      - Dockerfile.universal
+      - -t
+      - ${_IMAGE}
+      - --build-arg
+      - NEXT_PUBLIC_IYOBO_URL=${_NEXT_PUBLIC_IYOBO_URL}
+      - --build-arg
+      - NEXT_PUBLIC_STORE_PRODUCTS_URL=${_NEXT_PUBLIC_STORE_PRODUCTS_URL}
+      - --build-arg
+      - NEXT_PUBLIC_BACKEND_URL=${_BACKEND_URL}
+      - .
+
+  - name: docker
+    args:
+      - push
+      - ${_IMAGE}
+
+  - name: doctl
+    args:
+      - kubernetes
+      - cluster
+      - kubeconfig
+      - save
+      - ${_DO_CLUSTER_NAME}
+
+  - name: doctl
+    args:
+      - kubernetes
+      - cluster
+      - kubeconfig
+      - use
+      - ${_DO_CLUSTER_NAME}
+
+  - name: kubectl
+    args:
+      - rollout
+      - restart
+      - deployment/${_DO_DEPLOYMENT_NAME}
+      - -n
+      - ${_DO_NAMESPACE}
+
 images:
-- ${_IMAGE}
+  - ${_IMAGE}

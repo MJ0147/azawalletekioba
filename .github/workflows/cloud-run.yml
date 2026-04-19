@@ -1,18 +1,9 @@
-name: Cloud Run CD
+name: DigitalOcean CD
 
 on:
   workflow_dispatch:
   push:
     branches: ["main"]
-
-permissions:
-  contents: read
-  id-token: write
-
-env:
-  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GCP_REGION: ${{ secrets.GCP_REGION }}
-  GCS_SOURCE_BUCKET: azawalletekioba
 
 jobs:
   deploy:
@@ -21,68 +12,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - name: Authenticate to DigitalOcean
+        run: doctl auth init -t ${{ secrets.DO_API_TOKEN }}
 
-      - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
-
-      - name: Enable required APIs
+      - name: Build and Push Docker Image
         run: |
-          gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com storage.googleapis.com
+          docker buildx build --platform linux/amd64,linux/arm64 \
+            -t azawalletekioba/ekioba:edomall \
+            -t azawalletekioba/ekioba:latest \
+            -f Dockerfile.universal . --push
 
-      - name: Create Artifact Registry Repository
-        run: |
-          gcloud artifacts repositories describe ekioba --location="${GCP_REGION}" --project="${GCP_PROJECT_ID}" || \
-          gcloud artifacts repositories create ekioba --repository-format=docker --location="${GCP_REGION}" --description="Ekioba Container Registry" --project="${GCP_PROJECT_ID}"
-
-      - name: Create Source Bucket
-        run: |
-          gsutil ls -b "gs://${GCS_SOURCE_BUCKET}" || \
-          gsutil mb -p "${GCP_PROJECT_ID}" -l "${GCP_REGION}" "gs://${GCS_SOURCE_BUCKET}"
-
-      - name: Upload AI Assistant Source Archive
-        run: |
-          gsutil -m cp -r ai_assistant/* "gs://${GCS_SOURCE_BUCKET}/ai-assistant-source/"
-
-      - name: Build and Deploy Universal Service
-        run: |
-          # Build the Universal Container
-          gcloud builds submit . --config cloudbuild.universal.yaml --substitutions=_IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-universal",_NEXT_PUBLIC_IYOBO_URL="/chat",_NEXT_PUBLIC_STORE_PRODUCTS_URL="/api/store/products/",_NEXT_PUBLIC_BACKEND_URL="/api" 
-          
-          # Deploy to Cloud Run
-          gcloud run deploy ekioba-universal \
-            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-universal" \
-            --region "${GCP_REGION}" \
-            --project "${GCP_PROJECT_ID}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --service-account "ekioba-identity@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
-            --memory 2Gi \
-            --cpu 2 \
-            --port 8080 \
-            --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,SOLANA_RPC_URL=SOLANA_RPC_URL:latest,TON_API_KEY=TON_API_KEY:latest,COCKROACHDB_STORE_URL=COCKROACHDB_STORE_URL:latest,COCKROACHDB_HOTELS_URL=COCKROACHDB_HOTELS_URL:latest" \
-            --set-env-vars "NEXT_PUBLIC_IYOBO_URL=/chat,NEXT_PUBLIC_STORE_PRODUCTS_URL=/api/store/products/"
-
-      - name: Build and Deploy AI Assistant Service
-        run: |
-          # Build the AI Assistant Container
-          gcloud builds submit . --config cloudbuild.ai-assistant.yaml --substitutions=_IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-ai-assistant"
-          
-          # Deploy to Cloud Run
-          gcloud run deploy ekioba-ai-assistant \
-            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/ekioba/ekioba-ai-assistant" \
-            --region "${GCP_REGION}" \
-            --project "${GCP_PROJECT_ID}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --service-account "ekioba-identity@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
-            --memory 1Gi \
-            --cpu 1 \
-            --port 8000 \
-            --set-secrets "API_KEY=API_KEY:latest"
+      - name: Deploy to DigitalOcean App Platform
+        run: doctl apps update ekioba-universal --spec app.yaml

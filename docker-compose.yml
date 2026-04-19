@@ -1,76 +1,13 @@
-version: '3.8'
-
+version: "3.9"
 services:
-  # Gateway mirroring the Universal Container routing architecture
-  gateway:
-    image: nginx:alpine
+  backend:
+    build: ./language_academy
     ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - frontend
-      - store
-      - ai_assistant
-      - language_academy
-      - hotels
+      - "8000:8000"
 
   frontend:
     build: ./frontend
-    environment:
-      - NEXT_PUBLIC_IYOBO_URL=/chat
-      - NEXT_PUBLIC_STORE_PRODUCTS_URL=/api/store/products/
-      - NEXT_PUBLIC_BACKEND_URL=/api
-      - STORE_PAYMENTS_URL=http://store:8000/payments/process/
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-
-  store:
-    build: ./store
-    environment:
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-local-development-key}
-      - SOLANA_RPC_URL=${SOLANA_RPC_URL}
-      - TON_API_KEY=${TON_API_KEY}
-      - COCKROACHDB_URL=${COCKROACHDB_STORE_URL}
-    volumes:
-      - ./store:/app
-
-  hotels:
-    build: ./hotels
-    environment:
-      - COCKROACHDB_URL=${COCKROACHDB_HOTELS_URL}
-    volumes:
-      - ./hotels:/app
-
-  language_academy:
-    build: ./language_academy
-    environment:
-      - PORT=8004
-    volumes:
-      - ./language_academy:/app
-
-  ai_assistant:
-    build: ./ai_assistant
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - PORT=8080
-      - DATABASE_URL=${COCKROACHDB_STORE_URL}
-    volumes:
-      - ./ai_assistant:/app
-
-  # Mock Database for local development (Optional persistent storage)
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=ekioba
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
     ports:
-      - "5432:5432"
-
-networks:
-  default:
-    name: ekioba-network
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
