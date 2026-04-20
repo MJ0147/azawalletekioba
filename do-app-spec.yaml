@@ -1,32 +1,33 @@
-name: my-app
+name: ekioba
 services:
   - name: backend
     image:
       registry: docker.io
       repository: __DOCKER_USERNAME__/backend
-      tag: latest
-    http_port: 8000
-    envs:
-      - key: DJANGO_SECRET_KEY
-        value: ${DJANGO_SECRET_KEY}
-        type: SECRET
-      - key: STORE_URL
-        value: ${STORE_URL}
-        type: SECRET
-      - key: HOTELS_URL
-        value: ${HOTELS_URL}
-        type: SECRET
-      - key: TON_API_KEY
-        value: ${TON_API_KEY}
-        type: SECRET
-      - key: SOLANA_API_KEY
-        value: ${SOLANA_API_KEY}
-        type: SECRET
-  - name: frontend
+      tag: __TAG__
+
+  - name: frontend-api
     image:
       registry: docker.io
       repository: __DOCKER_USERNAME__/frontend
-      tag: latest
+      tag: __TAG__
+    envs:
+      - key: DJANGO_SECRET_KEY
+        type: SECRET
+      - key: STORE_URL
+        type: SECRET
+      - key: HOTELS_URL
+        type: SECRET
+      - key: TON_API_KEY
+        type: SECRET
+      - key: SOLANA_API_KEY
+        type: SECRET
+
+  - name: frontend-public
+    image:
+      registry: docker.io
+      repository: __DOCKER_USERNAME__/frontend
+      tag: __TAG__
     http_port: 3000
     envs:
       - key: NEXT_PUBLIC_BACKEND_URL
