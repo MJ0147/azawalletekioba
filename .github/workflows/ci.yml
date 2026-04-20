@@ -30,6 +30,7 @@ jobs:
         env:
           DJANGO_DB_ENGINE: ${{ vars.DJANGO_DB_ENGINE || 'sqlite' }}
           COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
         run: |
           cd store
           python manage.py test

@@ -2,10 +2,11 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from urllib.parse import parse_qs, urlparse
+from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", get_random_secret_key())
 DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = ["*"]
 
