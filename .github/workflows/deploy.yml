@@ -40,7 +40,7 @@ jobs:
 
       # Deploy to DigitalOcean App Platform
       - name: Deploy to DigitalOcean
-        uses: digitalocean/app_action/deploy@v2
+        uses: digitalocean/app-action@v2
         with:
           token: ${{ secrets.DO_API_TOKEN }}
-          app_spec_file: ./do-app-spec.rendered.yaml
+          app_spec: ./do-app-spec.rendered.yaml
