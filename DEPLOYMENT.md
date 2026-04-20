@@ -114,7 +114,7 @@ Solana
 
 Frontend wallet connection: @solana/wallet-adapter-react + @solana/wallet-adapter-react-ui
 
-Checkout wallet: Phantom (@solana/wallet-adapter-wallets)
+Checkout wallet: Phantom + Solflare (@solana/wallet-adapter-phantom, @solana/wallet-adapter-solflare)
 
 Chain SDK: @solana/web3.js (and optional @solana/pay for QR/request links)
 

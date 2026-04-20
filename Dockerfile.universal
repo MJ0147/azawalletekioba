@@ -6,9 +6,11 @@ WORKDIR /app
 ARG NEXT_PUBLIC_IYOBO_URL
 ARG NEXT_PUBLIC_STORE_PRODUCTS_URL
 ARG NEXT_PUBLIC_BACKEND_URL
+ENV NPM_CONFIG_OPTIONAL=false
+ENV npm_config_optional=false
 
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci
+RUN npm install --legacy-peer-deps --omit=optional --no-optional
 
 COPY frontend/ .
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -55,6 +57,7 @@ COPY --from=frontend-builder /app/.next/static ./.next/static
 
 # Setup configuration (requires root)
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Create non-root user, transfer ownership, then drop privileges
 RUN useradd -m appuser && chown -R appuser:appuser /app

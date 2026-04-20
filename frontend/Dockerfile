@@ -9,6 +9,7 @@ COPY . .
 
 RUN npm run build
 
-# Serve with a lightweight web server
-RUN npm install -g serve
-CMD ["serve", "-s", "build", "-l", "3000"]
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+CMD ["npm", "run", "start"]

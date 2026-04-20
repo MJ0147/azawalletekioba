@@ -28,3 +28,9 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
+# SSH key material
+ekioba
+ekioba.pub
+*.pem
+*.key
