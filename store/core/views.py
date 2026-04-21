@@ -91,7 +91,7 @@ def admin_payment_logs(request):
 
 
 @csrf_exempt
-def process_payment(request):
+def _process_chain_payment(request, chain: str):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST is supported."}, status=405)
 
@@ -100,7 +100,11 @@ def process_payment(request):
     except (json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({"error": "Invalid JSON payload."}, status=400)
 
-    chain = str(payload.get("chain", "")).lower()
+    chain = str(chain).lower()
+    if chain not in ["ton", "solana"]:
+        return JsonResponse(
+            {"error": "Unsupported chain. Use 'solana' or 'ton'."}, status=400)
+
     wallet = payload.get("wallet")
     amount = payload.get("amount")
     proof = payload.get("proof", {})
@@ -131,21 +135,13 @@ def process_payment(request):
     except (TypeError, ValueError):
         return JsonResponse({"error": "amount must be numeric."}, status=400)
 
-    # SECURITY: Recalculate and verify the amount against the product price.
-    # Do not trust the client-provided 'amount' for the final verification.
     if amount < float(product.price):
         return JsonResponse(
-            {"error": f"Insufficient payment amount. Product '{product.name}' costs {product.price}."}, status=400)
+            {"error": f"Insufficient payment amount. Product '{product.name}' costs {product.price}."},
+            status=400,
+        )
 
-    chain_label = (
-        "TON"
-        if chain == "ton"
-        else "Solana"
-        if chain == "solana"
-        else chain.upper()
-    )
-    tx_hash_value = ""
-
+    chain_label = "TON" if chain == "ton" else "Solana"
     if chain == "solana":
         tx_hash_value = str(proof.get("signature", ""))
         if not tx_hash_value:
@@ -153,31 +149,26 @@ def process_payment(request):
                 {"error": "proof.signature is required for Solana payments."},
                 status=400,
             )
-    elif chain == "ton":
+    else:
         tx_hash_value = str(proof.get("tx_hash", ""))
         if not tx_hash_value:
             return JsonResponse(
                 {"error": "proof.tx_hash is required for TON payments."}, status=400
             )
-    else:
-        return JsonResponse(
-            {"error": "Unsupported chain. Use 'solana' or 'ton'."}, status=400)
 
     payment = Payment.objects.create(
         product=product,
         tx_hash=tx_hash_value,
         blockchain=chain_label,
-        status="pending")
+        status="pending",
+    )
 
     try:
         if chain == "solana":
-            signature = tx_hash_value
-            tx = process_solana_payment(wallet, amount, signature)
-            payment.tx_hash = signature
-        elif chain == "ton":
-            tx_hash = tx_hash_value
-            tx = process_ton_payment(wallet, amount, tx_hash)
-            payment.tx_hash = tx_hash
+            tx = process_solana_payment(wallet, amount, tx_hash_value)
+        else:
+            tx = process_ton_payment(wallet, amount, tx_hash_value)
+        payment.tx_hash = tx_hash_value
     except Exception as exc:
         payment.save(update_fields=["tx_hash", "status"])
         return JsonResponse({"error": str(exc)}, status=502)
@@ -185,8 +176,36 @@ def process_payment(request):
     payment.status = "confirmed"
     payment.save(update_fields=["tx_hash", "status"])
 
-    return JsonResponse({"status": "verified", "chain": chain,
-                        "payment_id": payment.id, "tx": tx})
+    return JsonResponse(
+        {"status": "verified", "chain": chain, "payment_id": payment.id, "tx": tx}
+    )
+
+
+@csrf_exempt
+def process_payment(request):
+    chain = str(request.GET.get("chain", "")).lower()
+    if not chain:
+        try:
+            payload = json.loads(request.body.decode("utf-8"))
+            chain = str(payload.get("chain", "")).lower()
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            chain = ""
+
+    if chain not in ["ton", "solana"]:
+        return JsonResponse(
+            {"error": "Unsupported chain. Use 'solana' or 'ton'."}, status=400)
+
+    return _process_chain_payment(request, chain)
+
+
+@csrf_exempt
+def pay_ton(request):
+    return _process_chain_payment(request, "ton")
+
+
+@csrf_exempt
+def pay_solana(request):
+    return _process_chain_payment(request, "solana")
 
 @csrf_exempt
 def token_info(request):

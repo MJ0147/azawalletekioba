@@ -10,7 +10,6 @@ httpx
 loguru
 python-jose[cryptography]
 passlib[bcrypt]
-boto3
 openai
 pytest
 pytest-asyncio

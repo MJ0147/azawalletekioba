@@ -39,7 +39,5 @@ urlpatterns = [
         "api/idia/verify-contract/",
         views.verify_contract,
         name="verify_contract"),
-    path("payments/ton/", views.pay_ton, name="pay_ton"),
-    path("payments/solana/", views.pay_solana, name="pay_solana"),
     path("payments/process/", views.process_payment, name="process_payment"),
 ]

@@ -6,7 +6,8 @@ from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", get_random_secret_key())
+DEFAULT_DJANGO_SECRET_KEY = "django-insecure-4v8!k9r#2qz$w7m@1xj^p5t&n3u!s6a%b0c*d9e?y2l@h"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", DEFAULT_DJANGO_SECRET_KEY)
 DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = ["*"]
 

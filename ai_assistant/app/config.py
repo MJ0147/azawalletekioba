@@ -1,6 +1,3 @@
-import boto3
-from botocore.exceptions import ClientError
-import json
 import os
 from functools import lru_cache
 from pydantic import field_validator
@@ -30,18 +27,18 @@ class Settings(BaseSettings):
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
-    def fetch_db_url_from_aws(cls, v: str) -> str:
-        # If v is a Secret Name (not starting with mysql), fetch from AWS
-        if v and not v.startswith("mysql"):
-            try:
-                client = boto3.client("secretsmanager")
-                response = client.get_secret_value(SecretId=v)
-                secret = json.loads(response["SecretString"])
-                return secret.get("DATABASE_URL", v)
-            except ClientError as e:
-                # Log specific AWS errors (like AccessDenied) to help debug IAM issues
-                print(f"Error fetching secret from AWS: {e}")
-                return v
+    def normalize_database_url(cls, v: str) -> str:
+        # Keep DATABASE_URL as provided from env/.env; do not resolve cloud secrets.
+        if not v:
+            return v
+
+        normalized = str(v).strip().lower()
+        if "://" in normalized:
+            return v
+
+        if normalized.startswith(("mysql", "postgres", "postgresql", "sqlite", "mssql", "oracle", "redis", "rediss")):
+            return v
+
         return v
 
     # This tells Pydantic to read from a .env file

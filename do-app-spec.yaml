@@ -3,7 +3,7 @@ services:
   - name: backend
     image:
       registry: docker.io
-      repository: __DOCKER_USERNAME__/backend
+      repository: <DOCKER_USERNAME>/backend
       tag: latest
     http_port: 8000
     envs:
@@ -25,7 +25,7 @@ services:
   - name: frontend
     image:
       registry: docker.io
-      repository: __DOCKER_USERNAME__/frontend
+      repository: <DOCKER_USERNAME>/frontend
       tag: latest
     http_port: 3000
     envs:
