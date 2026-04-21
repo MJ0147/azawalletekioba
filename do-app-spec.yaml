@@ -5,23 +5,19 @@ services:
       registry: docker.io
       repository: __DOCKER_USERNAME__/backend
       tag: latest
+    http_port: 8000
     envs:
       - key: DJANGO_SECRET_KEY
-        value: ${DJANGO_SECRET_KEY}
         type: SECRET
       - key: STORE_URL
-        value: ${STORE_URL}
         type: SECRET
       - key: HOTELS_URL
-        value: ${HOTELS_URL}
         type: SECRET
       - key: TON_API_KEY
-        value: ${TON_API_KEY}
         type: SECRET
       - key: SOLANA_API_KEY
-        value: ${SOLANA_API_KEY}
         type: SECRET
-    http_port: 8000
+
   - name: frontend
     image:
       registry: docker.io
