@@ -1,11 +1,10 @@
-name: my-app
+name: ekioba
 services:
   - name: backend
     image:
       registry: docker.io
-      repository: <DOCKER_USERNAME>/backend
+      repository: __DOCKER_USERNAME__/backend
       tag: latest
-    http_port: 8000
     envs:
       - key: DJANGO_SECRET_KEY
         value: ${DJANGO_SECRET_KEY}
@@ -22,10 +21,11 @@ services:
       - key: SOLANA_API_KEY
         value: ${SOLANA_API_KEY}
         type: SECRET
+    http_port: 8000
   - name: frontend
     image:
       registry: docker.io
-      repository: <DOCKER_USERNAME>/frontend
+      repository: __DOCKER_USERNAME__/frontend
       tag: latest
     http_port: 3000
     envs:
