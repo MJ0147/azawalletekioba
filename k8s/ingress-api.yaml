@@ -1,0 +1,109 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Ingress — API routes (with path-prefix strip rewrite)
+#
+# Mirrors nginx.conf `rewrite ^/api/{service}/(.*) /$1 break` behaviour.
+# The NGINX Ingress rewrite-target annotation uses capture group $2 to strip
+# the /api/<service>/ prefix before forwarding to the container.
+#
+# Path pattern:  /api/store(/|$)(.*)
+# Rewrite target: /$2
+# Example: GET /api/store/products/  →  container sees GET /products/
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ekioba-ingress-api
+  namespace: ekioba
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    # Strip /api/<service> prefix — $2 is the captured remainder after the prefix
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "2"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Content-Type-Options nosniff always;
+      add_header X-Frame-Options SAMEORIGIN always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy no-referrer-when-downgrade always;
+
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - ekioba.com
+        - www.ekioba.com
+      secretName: ekioba-tls
+  rules:
+    - host: ekioba.com
+      http:
+        paths:
+          - path: /api/store(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: store
+                port:
+                  number: 8001
+
+          - path: /api/hotels(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: hotels
+                port:
+                  number: 8003
+
+          - path: /api/academy(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: language-academy
+                port:
+                  number: 8004
+
+          - path: /api/cargo(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: cargo
+                port:
+                  number: 8002
+
+    - host: www.ekioba.com
+      http:
+        paths:
+          - path: /api/store(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: store
+                port:
+                  number: 8001
+
+          - path: /api/hotels(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: hotels
+                port:
+                  number: 8003
+
+          - path: /api/academy(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: language-academy
+                port:
+                  number: 8004
+
+          - path: /api/cargo(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: cargo
+                port:
+                  number: 8002

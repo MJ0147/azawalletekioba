@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ekioba
+  labels:
+    app.kubernetes.io/part-of: ekioba
+    app.kubernetes.io/managed-by: kubectl

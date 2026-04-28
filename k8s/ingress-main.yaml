@@ -1,0 +1,98 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Ingress — Main routes (no path-prefix rewrite)
+#
+# Handles: / (frontend), /chat (ai-assistant), /telegram/ (ai-assistant)
+# These paths are forwarded as-is to the backend container.
+#
+# Requires: NGINX Ingress Controller + cert-manager (DigitalOcean Starter Kit
+# or: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/do/deploy.yaml)
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ekioba-ingress-main
+  namespace: ekioba
+  annotations:
+    # Rate limit: 10 requests/sec per IP, burst 20 (mirrors nginx.conf)
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "2"
+
+    # Security headers (mirrors nginx.conf add_header directives)
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Content-Type-Options nosniff always;
+      add_header X-Frame-Options SAMEORIGIN always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy no-referrer-when-downgrade always;
+
+    # Max upload body size
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+
+    # WebSocket support for frontend (HMR / realtime)
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "ekioba/nginx-custom-headers"
+
+    # TLS certificate issued by cert-manager ClusterIssuer
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - ekioba.com
+        - www.ekioba.com
+      secretName: ekioba-tls
+  rules:
+    - host: ekioba.com
+      http:
+        paths:
+          # Frontend — catch-all, must be last
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+
+          # AI Assistant — chat and Telegram webhook (no prefix rewrite needed)
+          - path: /chat
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-assistant
+                port:
+                  number: 8005
+
+          - path: /telegram/
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-assistant
+                port:
+                  number: 8005
+
+    - host: www.ekioba.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+
+          - path: /chat
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-assistant
+                port:
+                  number: 8005
+
+          - path: /telegram/
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-assistant
+                port:
+                  number: 8005

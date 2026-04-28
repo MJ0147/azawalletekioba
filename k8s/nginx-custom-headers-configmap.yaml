@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ConfigMap — nginx-custom-headers
+#
+# Custom proxy headers injected into every upstream request via the
+# ingress-main annotation: nginx.ingress.kubernetes.io/proxy-set-headers
+#
+# The NGINX Ingress Controller reads this ConfigMap and adds each key as a
+# "proxy_set_header" directive before forwarding to the backend.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-custom-headers
+  namespace: ekioba
+data:
+  # Inform backends the original request scheme so they can redirect correctly
+  X-Forwarded-Proto: "$scheme"
+
+  # Pass the real client IP (NGINX Ingress sets this by default but we
+  # keep it explicit so nothing breaks if the default behaviour changes)
+  X-Real-IP: "$remote_addr"
+
+  # Standard forwarded-for chain
+  X-Forwarded-For: "$proxy_add_x_forwarded_for"
+
+  # Allow backends to detect WebSocket upgrade requests
+  Upgrade: "$http_upgrade"
+  Connection: "$connection_upgrade"

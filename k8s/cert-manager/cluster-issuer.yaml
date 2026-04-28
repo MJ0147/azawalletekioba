@@ -1,0 +1,43 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# cert-manager ClusterIssuer — Let's Encrypt (production)
+#
+# Prerequisites:
+#   1. cert-manager installed:
+#      kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.5/cert-manager.yaml
+#   2. Replace <your-email> with a real address for Let's Encrypt notifications.
+#   3. Apply: kubectl apply -f k8s/cert-manager/cluster-issuer.yaml
+#
+# For testing, change server to:
+#   https://acme-staging-v02.api.letsencrypt.org/directory
+# and secretName to letsencrypt-staging
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@ekioba.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+---
+# Staging issuer — use this first to avoid Let's Encrypt rate limits during setup
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: admin@ekioba.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx

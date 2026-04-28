@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: language-academy
+  namespace: ekioba
+  labels:
+    app: language-academy
+    app.kubernetes.io/part-of: ekioba
+spec:
+  type: ClusterIP
+  selector:
+    app: language-academy
+  ports:
+    - name: http
+      port: 8004
+      targetPort: 8004
+      protocol: TCP
