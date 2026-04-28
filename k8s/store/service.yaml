@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: store-svc
+  namespace: ekioba
+  labels:
+    app: store
+    app.kubernetes.io/name: store
+    app.kubernetes.io/part-of: ekioba
+spec:
+  selector:
+    app: store
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8001
+      targetPort: 8001
+  type: ClusterIP

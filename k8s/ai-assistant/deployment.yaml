@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-assistant
+  namespace: ekioba
+  labels:
+    app: ai-assistant
+    app.kubernetes.io/name: ai-assistant
+    app.kubernetes.io/part-of: ekioba
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-assistant
+  template:
+    metadata:
+      labels:
+        app: ai-assistant
+        app.kubernetes.io/name: ai-assistant
+        app.kubernetes.io/part-of: ekioba
+    spec:
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: ai-assistant
+          image: ai-assistant:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8005
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: ekioba-app-config
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ekioba-secrets
+                  key: OPENAI_API_KEY
+            - name: TON_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ekioba-secrets
+                  key: TON_API_KEY
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8005
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8005
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /var/run
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}

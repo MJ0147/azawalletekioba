@@ -34,3 +34,6 @@ ekioba
 ekioba.pub
 *.pem
 *.key
+
+# Kubernetes secrets (never commit real secrets)
+k8s/secrets.yaml

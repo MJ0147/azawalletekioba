@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-headers
+  namespace: ekioba
+data:
+  # Forwarding headers passed to upstream services
+  X-Forwarded-Proto: "$scheme"
+  X-Real-IP: "$remote_addr"
+  # WebSocket upgrade support
+  Upgrade: "$http_upgrade"
+  Connection: "upgrade"

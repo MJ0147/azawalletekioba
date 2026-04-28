@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-assistant-svc
+  namespace: ekioba
+  labels:
+    app: ai-assistant
+    app.kubernetes.io/name: ai-assistant
+    app.kubernetes.io/part-of: ekioba
+spec:
+  selector:
+    app: ai-assistant
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8005
+      targetPort: 8005
+  type: ClusterIP

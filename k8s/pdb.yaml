@@ -1,0 +1,73 @@
+---
+# Pod Disruption Budgets — ensure at least 1 pod available during node drains / upgrades
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-pdb
+  namespace: ekioba
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: frontend
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: store-pdb
+  namespace: ekioba
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: store
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cargo-pdb
+  namespace: ekioba
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: cargo
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: hotels-pdb
+  namespace: ekioba
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: hotels
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: language-academy-pdb
+  namespace: ekioba
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: language-academy
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-assistant-pdb
+  namespace: ekioba
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ai-assistant

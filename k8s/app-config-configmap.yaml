@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ekioba-app-config
+  namespace: ekioba
+data:
+  # Django settings
+  DJANGO_DEBUG: "False"
+  DJANGO_ALLOWED_HOSTS: "*"
+  DJANGO_SETTINGS_MODULE: "app.settings"
+
+  # Service base URLs (internal cluster DNS)
+  STORE_URL: "http://store-svc.ekioba.svc.cluster.local:8001"
+  CARGO_URL: "http://cargo-svc.ekioba.svc.cluster.local:8002"
+  HOTELS_URL: "http://hotels-svc.ekioba.svc.cluster.local:8003"
+  LANGUAGE_ACADEMY_URL: "http://language-academy-svc.ekioba.svc.cluster.local:8000"
+  AI_ASSISTANT_URL: "http://ai-assistant-svc.ekioba.svc.cluster.local:8005"
+  FRONTEND_URL: "http://frontend-svc.ekioba.svc.cluster.local:3000"
+
+  # Frontend public URLs (override at deploy time)
+  NEXT_PUBLIC_BACKEND_URL: "/api"
+  NEXT_PUBLIC_STORE_PRODUCTS_URL: "/api/store/products/"
+  NEXT_PUBLIC_IYOBO_URL: "/chat"

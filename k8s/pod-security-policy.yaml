@@ -1,0 +1,73 @@
+---
+# Pod Security Standards via namespace labels (modern approach, enforced in k8s 1.25+)
+# The namespace already has pod-security labels set in namespace.yaml.
+#
+# This file provides a fallback PodSecurityPolicy for older clusters (<= 1.24).
+# NOTE: PodSecurityPolicy was removed in Kubernetes 1.25. Use namespace Pod Security
+# Standards labels (namespace.yaml) for 1.25+ clusters.
+
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: ekioba-restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfiles: "runtime/default"
+    apparmor.security.beta.kubernetes.io/allowedProfiles: "runtime/default"
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: true
+
+---
+# ClusterRole to allow use of the restricted PSP
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ekioba-use-restricted-psp
+rules:
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    verbs: ["use"]
+    resourceNames: ["ekioba-restricted"]
+
+---
+# Bind the restricted PSP to the ekioba namespace default service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ekioba-use-restricted-psp
+  namespace: ekioba
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ekioba-use-restricted-psp
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: ekioba
