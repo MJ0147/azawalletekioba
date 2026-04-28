@@ -1,0 +1,173 @@
+---
+# Default deny-all ingress policy — blocks all inbound pod-to-pod traffic unless
+# explicitly allowed by the rules below.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: ekioba
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+# Allow ingress controller → frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-frontend
+  namespace: ekioba
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 3000
+          protocol: TCP
+
+---
+# Allow ingress controller → ai-assistant
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-ai-assistant
+  namespace: ekioba
+spec:
+  podSelector:
+    matchLabels:
+      app: ai-assistant
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: ekioba
+      ports:
+        - port: 8005
+          protocol: TCP
+
+---
+# Allow ingress controller + internal services → store
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-store
+  namespace: ekioba
+spec:
+  podSelector:
+    matchLabels:
+      app: store
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: ekioba
+      ports:
+        - port: 8001
+          protocol: TCP
+
+---
+# Allow ingress controller + internal services → cargo
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-cargo
+  namespace: ekioba
+spec:
+  podSelector:
+    matchLabels:
+      app: cargo
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: ekioba
+      ports:
+        - port: 8002
+          protocol: TCP
+
+---
+# Allow ingress controller + internal services → hotels
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-hotels
+  namespace: ekioba
+spec:
+  podSelector:
+    matchLabels:
+      app: hotels
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: ekioba
+      ports:
+        - port: 8003
+          protocol: TCP
+
+---
+# Allow ingress controller + internal services → language-academy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-language-academy
+  namespace: ekioba
+spec:
+  podSelector:
+    matchLabels:
+      app: language-academy
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: ekioba
+      ports:
+        - port: 8000
+          protocol: TCP
+
+---
+# Allow all pods in the ekioba namespace to make external DNS/internet calls (egress)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-all
+  namespace: ekioba
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}

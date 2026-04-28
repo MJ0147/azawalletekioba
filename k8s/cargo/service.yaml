@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-svc
+  namespace: ekioba
+  labels:
+    app: cargo
+    app.kubernetes.io/name: cargo
+    app.kubernetes.io/part-of: ekioba
+spec:
+  selector:
+    app: cargo
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP

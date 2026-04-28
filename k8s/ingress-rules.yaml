@@ -1,0 +1,32 @@
+# Common annotations reference for Ekioba Ingress resources.
+# Copy relevant annotations into your Ingress metadata.annotations block.
+#
+# ── Security ────────────────────────────────────────────────────────────────
+# nginx.ingress.kubernetes.io/configuration-snippet: |
+#   add_header X-Frame-Options "SAMEORIGIN" always;
+#   add_header X-Content-Type-Options "nosniff" always;
+#   add_header X-XSS-Protection "1; mode=block" always;
+#   add_header Referrer-Policy "no-referrer-when-downgrade" always;
+#   add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+#
+# ── Rate Limiting ────────────────────────────────────────────────────────────
+# nginx.ingress.kubernetes.io/limit-rps: "100"
+# nginx.ingress.kubernetes.io/limit-connections: "20"
+#
+# ── WebSocket ───────────────────────────────────────────────────────────────
+# nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+# nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+#
+# ── Rewrite (API prefix stripping) ─────────────────────────────────────────
+# nginx.ingress.kubernetes.io/rewrite-target: /$2
+# nginx.ingress.kubernetes.io/use-regex: "true"
+# path: /api/service(/|$)(.*)  # use ImplementationSpecific pathType
+#
+# ── TLS / cert-manager ──────────────────────────────────────────────────────
+# cert-manager.io/cluster-issuer: "letsencrypt-prod"    # production
+# cert-manager.io/cluster-issuer: "letsencrypt-staging" # testing (no rate-limit)
+#
+# ── Proxy ───────────────────────────────────────────────────────────────────
+# nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+# nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+# nginx.ingress.kubernetes.io/proxy-set-headers: "ekioba/custom-headers"
