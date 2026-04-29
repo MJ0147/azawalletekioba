@@ -8,8 +8,11 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "EKIOBA AI Assistant"
     API_V1_STR: str = "/api/v1"
     
-    # Database & Security (Values provided via .env)
-    DATABASE_URL: str
+    # Database provider selection: auto | azure | digitalocean
+    DATABASE_PROVIDER: str = "auto"
+    AZURE_DATABASE_URL: str = ""
+    DIGITALOCEAN_DATABASE_URL: str = ""
+    DATABASE_URL: str = ""
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -28,18 +31,35 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:
-        # Keep DATABASE_URL as provided from env/.env; do not resolve cloud secrets.
-        if not v:
-            return v
+        provider = (os.getenv("DATABASE_PROVIDER") or "auto").strip().lower()
+        azure_url = (os.getenv("AZURE_DATABASE_URL") or "").strip()
+        do_url = (os.getenv("DIGITALOCEAN_DATABASE_URL") or "").strip()
+        primary_url = str(v or "").strip()
 
-        normalized = str(v).strip().lower()
-        if "://" in normalized:
-            return v
+        if provider not in {"auto", "azure", "digitalocean", "do"}:
+            raise ValueError("DATABASE_PROVIDER must be one of: auto, azure, digitalocean")
 
-        if normalized.startswith(("mysql", "postgres", "postgresql", "sqlite", "mssql", "oracle", "redis", "rediss")):
-            return v
+        if provider == "azure":
+            resolved = azure_url or primary_url
+        elif provider in {"digitalocean", "do"}:
+            resolved = do_url or primary_url
+        else:
+            if primary_url:
+                resolved = primary_url
+            elif azure_url and do_url:
+                raise ValueError(
+                    "Both AZURE_DATABASE_URL and DIGITALOCEAN_DATABASE_URL are set. "
+                    "Set DATABASE_PROVIDER to select one."
+                )
+            else:
+                resolved = azure_url or do_url
 
-        return v
+        if not resolved or "://" not in resolved:
+            raise ValueError(
+                "Provide a valid database URI via DATABASE_URL, or set DATABASE_PROVIDER with "
+                "AZURE_DATABASE_URL / DIGITALOCEAN_DATABASE_URL"
+            )
+        return resolved
 
     # This tells Pydantic to read from a .env file
     model_config = SettingsConfigDict(
