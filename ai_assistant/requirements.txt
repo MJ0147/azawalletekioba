@@ -5,6 +5,7 @@ pydantic-settings
 sqlalchemy
 alembic
 pymysql
+pyodbc
 python-multipart
 httpx
 loguru
