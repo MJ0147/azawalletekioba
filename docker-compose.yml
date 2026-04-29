@@ -1,13 +1,75 @@
-version: "3.9"
 services:
-  backend:
-    build: ./language_academy
+  store:
+    build:
+      context: ./store
+      dockerfile: Dockerfile
+    container_name: ekioba-store
+    environment:
+      PORT: "8001"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-dev-secret-key}
+      DJANGO_DB_ENGINE: ${DJANGO_DB_ENGINE:-sqlite}
+      DATABASE_URL: ${STORE_DATABASE_URL:-sqlite:///db.sqlite3}
+      SQLITE_DB_PATH: ${STORE_SQLITE_DB_PATH:-/app/db.sqlite3}
+      TON_API_KEY: ${TON_API_KEY:-}
+      SOLANA_API_KEY: ${SOLANA_API_KEY:-}
     ports:
-      - "8000:8000"
+      - "8001:8001"
+
+  cargo:
+    build:
+      context: ./cargo
+      dockerfile: Dockerfile
+    container_name: ekioba-cargo
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+
+  hotels:
+    build:
+      context: ./hotels
+      dockerfile: Dockerfile
+    container_name: ekioba-hotels
+    environment:
+      PORT: "8003"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-dev-secret-key}
+      SQLITE_DB_PATH: ${HOTELS_SQLITE_DB_PATH:-/app/db.sqlite3}
+    ports:
+      - "8003:8003"
+
+  language_academy:
+    build:
+      context: ./language_academy
+      dockerfile: Dockerfile
+    container_name: ekioba-language-academy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8004
+    ports:
+      - "8004:8004"
+
+  ai_assistant:
+    build:
+      context: ./ai_assistant
+      dockerfile: Dockerfile
+    container_name: ekioba-ai-assistant
+    environment:
+      PORT: "8005"
+    ports:
+      - "8005:8005"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ekioba-frontend
+    depends_on:
+      - store
+      - ai_assistant
+    environment:
+      PORT: "3000"
+      STORE_BACKEND_URL: ${STORE_BACKEND_URL:-http://store:8001/api/products/}
+      STORE_PAYMENTS_URL: ${STORE_PAYMENTS_URL:-http://store:8001/payments/process/}
+      AI_ASSISTANT_URL: ${AI_ASSISTANT_URL:-http://ai_assistant:8005}
+      FRONTEND_IYOBO_URL: ${FRONTEND_IYOBO_URL:-/chat}
+      SOLANA_MERCHANT_WALLET: ${SOLANA_MERCHANT_WALLET:-}
+      TON_MERCHANT_WALLET: ${TON_MERCHANT_WALLET:-}
     ports:
       - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000

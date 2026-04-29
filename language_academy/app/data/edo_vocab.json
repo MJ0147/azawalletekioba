@@ -1,33 +1,33 @@
 [
   {
-    "edo": "owie",
+    "edo": "koyo",
     "english": "hello",
     "category": "greeting",
-    "example": "Owie, ma re gha to?"
+    "example": "koyo, wo ye rie??"
   },
   {
-    "edo": "vb'owo",
+    "edo": "uruese",
     "english": "thank you",
     "category": "gratitude",
-    "example": "Vb'owo for your help."
+    "example": "uruese for your help."
+  },
+  {
+    "edo": "lare",
+    "english": "come",
+    "category": "verb",
+    "example": "lare vbe wian."
   },
   {
     "edo": "khian",
-    "english": "come",
-    "category": "verb",
-    "example": "Khian vbe ekha."
-  },
-  {
-    "edo": "ya",
     "english": "go",
     "category": "verb",
-    "example": "Ya vbe owa."
+    "example": "khian vbe owa."
   },
   {
-    "edo": "emwin",
+    "edo": "amen",
     "english": "water",
     "category": "noun",
-    "example": "Re emwin rre."
+    "example": "Re amen rre."
   },
   {
     "edo": "owa",
@@ -48,15 +48,15 @@
     "example": "Okhuo no gie."
   },
   {
-    "edo": "ukhu",
+    "edo": "urho",
     "english": "door",
     "category": "noun",
-    "example": "Kp'ukhu vbe owa."
+    "example": "urho vbe owa."
   },
   {
-    "edo": "egbe",
+    "edo": "ebe",
     "english": "book",
     "category": "noun",
-    "example": "Re egbe na me."
+    "example": "Re ebe na me."
   }
 ]

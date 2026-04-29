@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Agent Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>Live Market & Cloud Dashboard</h1>
+
+  <canvas id="stockChart"></canvas>
+  <canvas id="cryptoChart"></canvas>
+  <canvas id="sentimentChart"></canvas>
+  <canvas id="cloudChart"></canvas>
+
+  <button onclick="startReader()">Start Screen Reader</button>
+  <button onclick="stopReader()">Stop Screen Reader</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const forecastData = {{ forecast | tojson }};
+
+    new Chart(document.getElementById("stockChart"), {
+      type: "line",
+      data: { labels: forecastData.stocks.labels,
+              datasets: [{ label: "Stock (AAPL)", data: forecastData.stocks.actual, borderColor: "blue" },
+                         { label: "Predicted", data: forecastData.stocks.predicted, borderColor: "red", borderDash:[5,5]}] }
+    });
+
+    new Chart(document.getElementById("cryptoChart"), {
+      type: "line",
+      data: { labels: forecastData.crypto.labels,
+              datasets: [{ label: "Crypto (BTC)", data: forecastData.crypto.actual, borderColor: "green" },
+                         { label: "Predicted", data: forecastData.crypto.predicted, borderColor: "orange", borderDash:[5,5]}] }
+    });
+
+    new Chart(document.getElementById("sentimentChart"), {
+      type: "bar",
+      data: { labels: forecastData.sentiment.labels,
+              datasets: [{ label: "Sentiment Score", data: forecastData.sentiment.values, backgroundColor: "purple"}] },
+      options: { scales: { y: { min: 0, max: 100 } } }
+    });
+
+    new Chart(document.getElementById("cloudChart"), {
+      type: "line",
+      data: { labels: forecastData.cloud.labels,
+              datasets: [{ label: "Droplet CPU Usage", data: forecastData.cloud.values, borderColor: "brown"}] }
+    });
+
+    function startReader() {
+      const msg = new SpeechSynthesisUtterance("Dashboard loaded. Stock, crypto, sentiment, and cloud metrics are now live.");
+      window.speechSynthesis.speak(msg);
+    }
+    function stopReader() { window.speechSynthesis.cancel(); }
+  </script>
+</body>
+</html>

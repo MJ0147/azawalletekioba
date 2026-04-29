@@ -5,17 +5,42 @@ from jose import jwt, JWTError
 from pydantic import ValidationError
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy.pool import NullPool
 
 from config import settings
 from user import User
 
-engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+# Only relational (PostgreSQL / MySQL) back-ends benefit from connection pooling.
+# Redis / SQLite or anything non-relational should use NullPool so SQLAlchemy
+# does not try to manage persistent connections.
+_RELATIONAL_SCHEMES = ("postgresql", "postgres", "mysql", "mssql", "oracle")
+_is_relational = any(settings.DATABASE_URL.lower().startswith(s) for s in _RELATIONAL_SCHEMES)
+
+_pool_kwargs = (
+    {
+        "pool_size": int(__import__("os").environ.get("DB_POOL_SIZE", "5")),
+        "max_overflow": int(__import__("os").environ.get("DB_MAX_OVERFLOW", "10")),
+        "pool_timeout": int(__import__("os").environ.get("DB_POOL_TIMEOUT", "30")),
+        "pool_recycle": int(__import__("os").environ.get("DB_POOL_RECYCLE", "1800")),
+    }
+    if _is_relational
+    else {"poolclass": NullPool}
+)
+
+engine = create_engine(
+    settings.DATABASE_URL,
+    pool_pre_ping=True,  # verify connection liveness before use
+    **_pool_kwargs,
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db() -> Generator:
+    db = SessionLocal()
     try:
-        db = SessionLocal()
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

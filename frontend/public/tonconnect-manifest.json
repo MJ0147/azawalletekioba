@@ -1,5 +1,7 @@
 {
   "url": "http://localhost:3000",
   "name": "EKIOBA",
-  "iconUrl": "http://localhost:3000/favicon.ico"
+  "iconUrl": "http://localhost:3000/favicon.ico",
+  "termsOfUseUrl": "http://localhost:3000/terms.html",
+  "privacyPolicyUrl": "http://localhost:3000/privacy.html"
 }

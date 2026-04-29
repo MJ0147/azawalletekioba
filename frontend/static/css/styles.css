@@ -1,0 +1,255 @@
+:root {
+  --bg-1: #f9f5eb;
+  --bg-2: #dbe8e0;
+  --ink: #1d2a33;
+  --accent: #dd5b2f;
+  --accent-dark: #9f3f1f;
+  --surface: rgba(255, 255, 255, 0.86);
+  --line: rgba(29, 42, 51, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at 15% 20%, #f1d9b6 0%, transparent 40%),
+    radial-gradient(circle at 90% 10%, #b9d8c8 0%, transparent 36%),
+    linear-gradient(160deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+}
+
+.shell {
+  width: min(1100px, 92vw);
+  margin: 2rem auto 3rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.hero,
+.panel {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  backdrop-filter: blur(4px);
+  border-radius: 20px;
+  padding: 1.15rem;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.74rem;
+  margin: 0 0 0.35rem;
+  color: var(--accent-dark);
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.5vw, 2.7rem);
+}
+
+.sub {
+  margin: 0.65rem 0 0;
+  max-width: 70ch;
+}
+
+.hero-pill {
+  align-self: flex-start;
+  background: #1d2a33;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.panel-header h2,
+.panel-header p {
+  margin: 0;
+}
+
+.panel-header p {
+  color: rgba(29, 42, 51, 0.72);
+  margin-top: 0.25rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+input,
+select,
+button {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 0.6rem 0.8rem;
+  font: inherit;
+}
+
+input,
+select {
+  background: #fff;
+  flex: 1;
+  min-width: 180px;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent-dark);
+  cursor: pointer;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--ink);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.code {
+  margin-top: 0.85rem;
+  background: #1f2937;
+  color: #d7e2ed;
+  border-radius: 12px;
+  padding: 0.8rem;
+  min-height: 90px;
+  white-space: pre-wrap;
+}
+
+.cart ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cart li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.55rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.cart li > div {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.total {
+  margin-top: 0.7rem;
+}
+
+.status-note,
+.wallet-hint {
+  font-size: 0.86rem;
+  color: rgba(29, 42, 51, 0.75);
+}
+
+.chat-bubble {
+  margin-top: 0.8rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.product-grid {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.product-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.product-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.product-image.placeholder {
+  background: linear-gradient(120deg, #f3d4b3, #ddece3);
+}
+
+.product-body {
+  padding: 0.75rem;
+}
+
+.product-body h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.product-body p {
+  margin: 0.45rem 0;
+  font-size: 0.9rem;
+  color: rgba(29, 42, 51, 0.78);
+}
+
+.product-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-panel canvas {
+  margin-top: 0.8rem;
+  max-height: 280px;
+}
+
+@media (max-width: 960px) {
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    width: 94vw;
+    margin-top: 1rem;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+}

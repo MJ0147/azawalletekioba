@@ -1,0 +1,22 @@
+{% if using_fallback %}
+<p class="status-note">Store API is unavailable. Showing catalog fallback.</p>
+{% endif %}
+<div class="product-grid">
+  {% for product in products %}
+  <article class="product-card">
+    {% if product.image %}
+    <img class="product-image" src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" />
+    {% else %}
+    <div class="product-image placeholder"></div>
+    {% endif %}
+    <div class="product-body">
+      <h3>{{ product.name }}</h3>
+      <p>{{ product.description or ('Premium ' ~ product.name ~ ' from the Ekioba marketplace.') }}</p>
+      <div class="product-meta">
+        <span>Idia {{ '%.2f'|format((product.price or 0)|float) }}</span>
+        <button type="button" x-on:click='addToCart("{{ product.id }}")'>Add to cart</button>
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</div>

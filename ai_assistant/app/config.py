@@ -42,7 +42,11 @@ class Settings(BaseSettings):
         return v
 
     # This tells Pydantic to read from a .env file
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",
+    )
 
 @lru_cache
 def get_settings():

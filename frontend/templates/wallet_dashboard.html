@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wallet Dashboard with Forecast</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; color: #1f2937; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    header { margin-bottom: 32px; }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { color: #6b7280; font-size: 14px; }
+    
+    .wallet-section { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .wallet-info { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .wallet-item { flex: 1; min-width: 200px; }
+    .wallet-label { font-size: 12px; color: #6b7280; font-weight: 500; margin-bottom: 4px; }
+    .wallet-value { font-size: 20px; font-weight: 700; color: #059669; }
+    
+    .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 24px; }
+    .chart-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .chart-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+    .prediction-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-top: 12px; }
+    .prediction-label { font-size: 12px; color: #047857; font-weight: 500; }
+    .prediction-value { font-size: 18px; font-weight: 700; color: #047857; margin-top: 4px; }
+    
+    .sentiment-box { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px; margin-top: 12px; }
+    .sentiment-label { font-size: 12px; color: #7e22ce; font-weight: 500; }
+    .sentiment-value { font-size: 18px; font-weight: 700; color: #7e22ce; margin-top: 4px; }
+    
+    .crypto-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-top: 12px; }
+    .crypto-label { font-size: 12px; color: #059669; font-weight: 500; }
+    .crypto-value { font-size: 18px; font-weight: 700; color: #059669; margin-top: 4px; }
+    
+    .refresh-button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .refresh-button:hover { background: #2563eb; }
+    .timestamp { font-size: 12px; color: #9ca3af; margin-top: 12px; }
+    
+    .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; color: #991b1b; margin-bottom: 16px; }
+    .loading { text-align: center; padding: 32px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>💼 Wallet Dashboard with Market Forecast</h1>
+      <p class="subtitle">Real-time wallet information and predictive market analytics</p>
+    </header>
+
+    <div id="error-container"></div>
+
+    <!-- Wallet Section -->
+    <div class="wallet-section">
+      <div class="wallet-info">
+        <div class="wallet-item">
+          <div class="wallet-label">Solana Wallet</div>
+          <div class="wallet-value" id="solana-wallet">{{ wallet.solana_wallet[:20] }}...</div>
+        </div>
+        <div class="wallet-item">
+          <div class="wallet-label">TON Wallet</div>
+          <div class="wallet-value" id="ton-wallet">{{ wallet.ton_wallet[:20] }}...</div>
+        </div>
+        <div class="wallet-item">
+          <div class="wallet-label">Last Updated</div>
+          <div class="wallet-value" id="timestamp">Now</div>
+        </div>
+        <button class="refresh-button" onclick="location.reload()">🔄 Refresh Data</button>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="forecast-grid">
+      <!-- Stock Chart -->
+      <div class="chart-card">
+        <h3>📈 Stock Forecast (AAPL)</h3>
+        <canvas id="stockChart"></canvas>
+        <div class="prediction-box">
+          <div class="prediction-label">Next Predicted Price</div>
+          <div class="prediction-value" id="stock-prediction">-</div>
+        </div>
+      </div>
+
+      <!-- Crypto Chart -->
+      <div class="chart-card">
+        <h3>₿ Crypto Forecast (BTC)</h3>
+        <canvas id="cryptoChart"></canvas>
+        <div class="crypto-box">
+          <div class="crypto-label">Next Predicted Price</div>
+          <div class="crypto-value" id="crypto-prediction">-</div>
+        </div>
+      </div>
+
+      <!-- Sentiment Chart -->
+      <div class="chart-card">
+        <h3>📊 Market Sentiment</h3>
+        <canvas id="sentimentChart"></canvas>
+        <div class="sentiment-box">
+          <div class="sentiment-label">Sentiment Score</div>
+          <div class="sentiment-value" id="sentiment-value">-</div>
+        </div>
+      </div>
+
+      <!-- Cloud Metrics -->
+      <div class="chart-card">
+        <h3>☁️ Cloud Metrics</h3>
+        <canvas id="cloudChart"></canvas>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+      const forecastData = {{ forecast | tojson }};
+      const walletInfo = {{ wallet | tojson }};
+      let charts = {};
+
+      function initCharts() {
+        // Stock Chart
+        const stockCtx = document.getElementById('stockChart').getContext('2d');
+        charts.stock = new Chart(stockCtx, {
+          type: 'line',
+          data: {
+            labels: forecastData.stocks.labels,
+            datasets: [
+              {
+                label: 'Stock (Actual)',
+                data: forecastData.stocks.actual,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#3b82f6'
+              },
+              {
+                label: 'Predicted',
+                data: forecastData.stocks.predicted,
+                borderColor: '#ef4444',
+                borderDash: [5, 5],
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: false,
+                pointRadius: 4,
+                pointBackgroundColor: '#ef4444'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { position: 'top' }
+            },
+            scales: {
+              y: { beginAtZero: false }
+            }
+          }
+        });
+
+        // Update stock prediction
+        const lastStockPrediction = forecastData.stocks.predicted[forecastData.stocks.predicted.length - 1];
+        document.getElementById('stock-prediction').textContent = lastStockPrediction?.toFixed(2) || '-';
+
+        // Crypto Chart
+        const cryptoCtx = document.getElementById('cryptoChart').getContext('2d');
+        charts.crypto = new Chart(cryptoCtx, {
+          type: 'line',
+          data: {
+            labels: forecastData.crypto.labels,
+            datasets: [
+              {
+                label: 'Crypto (Actual)',
+                data: forecastData.crypto.actual,
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#22c55e'
+              },
+              {
+                label: 'Predicted',
+                data: forecastData.crypto.predicted,
+                borderColor: '#fb923c',
+                borderDash: [5, 5],
+                backgroundColor: 'rgba(251, 146, 60, 0.1)',
+                tension: 0.4,
+                fill: false,
+                pointRadius: 4,
+                pointBackgroundColor: '#fb923c'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { position: 'top' }
+            },
+            scales: {
+              y: { beginAtZero: false }
+            }
+          }
+        });
+
+        // Update crypto prediction
+        const lastCryptoPrediction = forecastData.crypto.predicted[forecastData.crypto.predicted.length - 1];
+        document.getElementById('crypto-prediction').textContent = lastCryptoPrediction?.toFixed(2) || '-';
+
+        // Sentiment Chart (Bar)
+        const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+        charts.sentiment = new Chart(sentimentCtx, {
+          type: 'bar',
+          data: {
+            labels: forecastData.sentiment.labels,
+            datasets: [
+              {
+                label: 'Sentiment Score',
+                data: forecastData.sentiment.values,
+                backgroundColor: '#a855f7'
+              }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { min: 0, max: 100 }
+            }
+          }
+        });
+
+        // Update sentiment value
+        const sentimentValue = forecastData.sentiment.values[0];
+        document.getElementById('sentiment-value').textContent = sentimentValue?.toFixed(1) + '/100' || '-';
+
+        // Cloud Chart (if data available)
+        if (forecastData.cloud.labels && forecastData.cloud.labels.length > 0) {
+          const cloudCtx = document.getElementById('cloudChart').getContext('2d');
+          charts.cloud = new Chart(cloudCtx, {
+            type: 'line',
+            data: {
+              labels: forecastData.cloud.labels,
+              datasets: [
+                {
+                  label: 'CPU Usage (%)',
+                  data: forecastData.cloud.values,
+                  borderColor: '#8b5cf6',
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                  tension: 0.4,
+                  fill: true,
+                  pointRadius: 4,
+                  pointBackgroundColor: '#8b5cf6'
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { position: 'top' }
+              },
+              scales: {
+                y: { min: 0, max: 100 }
+              }
+            }
+          });
+        }
+      }
+
+      // Initialize charts on load
+      document.addEventListener('DOMContentLoaded', () => {
+        initCharts();
+        
+        // Update timestamp
+        const now = new Date();
+        document.getElementById('timestamp').textContent = now.toLocaleTimeString();
+      });
+
+      // Auto-refresh every minute
+      setInterval(() => {
+        location.reload();
+      }, 60000);
+    </script>
+  </div>
+</body>
+</html>

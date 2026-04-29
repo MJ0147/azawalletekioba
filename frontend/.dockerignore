@@ -1,7 +1,13 @@
 Dockerfile
 .dockerignore
-node_modules
-npm-debug.log
 README.md
-.next
 .git
+node_modules
+.next
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache

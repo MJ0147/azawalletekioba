@@ -6,12 +6,6 @@ steps:
       - Dockerfile.universal
       - -t
       - ${_IMAGE}
-      - --build-arg
-      - NEXT_PUBLIC_IYOBO_URL=${_NEXT_PUBLIC_IYOBO_URL}
-      - --build-arg
-      - NEXT_PUBLIC_STORE_PRODUCTS_URL=${_NEXT_PUBLIC_STORE_PRODUCTS_URL}
-      - --build-arg
-      - NEXT_PUBLIC_BACKEND_URL=${_BACKEND_URL}
       - .
 
   - name: docker

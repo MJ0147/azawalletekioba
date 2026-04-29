@@ -2,8 +2,13 @@ import os
 from typing import Any
 from base64 import b64encode, b64decode
 import requests
-from tonsdk.utils import Address
-from tonsdk.boc import Cell
+
+try:
+    from tonsdk.utils import Address
+    from tonsdk.boc import Cell
+except Exception:
+    Address = None  # type: ignore[assignment]
+    Cell = None  # type: ignore[assignment]
 
 IDIA_CONTRACT = "EQC8QIjU-uXwrlj9B9Zc0ZBIaTS5TLzFb6djJIRwyLa6Enqs"
 
@@ -21,6 +26,9 @@ class IdiaContractService:
         return result
 
     def get_wallet_address(self, owner_address: str):
+        if Address is None or Cell is None:
+            return None
+
         try:
             owner_addr = Address(owner_address)
             builder = Cell.new_builder()

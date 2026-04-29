@@ -1,0 +1,155 @@
+name: No-Mock Local Test Sweep
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ai_assistant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ai_assistant/requirements.txt
+
+      - name: Run ai_assistant tests
+        working-directory: ai_assistant
+        run: |
+          python -m pytest tests/test_health_new.py -q
+
+  store:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r store/requirements.txt
+
+      - name: Run store tests (local test settings)
+        working-directory: store
+        run: |
+          python manage.py test core --settings=store_service.settings_test
+
+  language_academy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r language_academy/requirements.txt
+
+      - name: Run language_academy tests
+        working-directory: language_academy
+        run: |
+          python -m pytest tests -q
+
+  cargo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r cargo/requirements.txt
+
+      - name: Run cargo tests
+        working-directory: cargo
+        run: |
+          python -m pytest tests -q
+
+  hotels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r hotels/requirements.txt
+
+      - name: Run hotels tests (local test settings)
+        working-directory: hotels
+        run: |
+          python manage.py test --settings=hotels_service.settings_test
+
+  backend_test_presence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Report backend test status
+        run: |
+          count=$(find backend -type f \( -name "test*.py" -o -name "*_test.py" \) | wc -l)
+          if [ "$count" -eq 0 ]; then
+            echo "No backend tests found. Marking as skipped."
+          else
+            echo "Found $count backend test file(s)."
+            python -m pip install --upgrade pip
+            if [ -f backend/requirements.txt ]; then
+              pip install -r backend/requirements.txt
+            fi
+            python -m pytest backend -q
+          fi
+
+  cloud_functions_test_presence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Report cloud_functions test status
+        run: |
+          if node -e "const p=require('./cloud_functions/package.json'); process.exit(p?.scripts?.test ? 0 : 1)"; then
+            cd cloud_functions
+            npm ci
+            npm test
+          else
+            echo "No cloud_functions test script found. Marking as skipped."
+          fi

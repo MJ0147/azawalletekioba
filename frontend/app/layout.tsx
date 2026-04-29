@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
+import { Space_Grotesk } from "next/font/google";
 import BlockchainProviders from "./components/BlockchainProviders";
 import CopilotProvider from "./components/CopilotProvider";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import "@copilotkit/react-ui/styles.css";
 import "./globals.css";
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Ekioba Frontend",
-  description: "Unified frontend for the Ekioba platform",
+  title: "EKIOBA Multi-Service Platform",
+  description: "Unified ecosystem for store, academy, hotels, tourism, cargo, and crypto forecasting.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -17,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#020617" />
       </head>
-      <body>
+      <body className={spaceGrotesk.className}>
         <CopilotProvider>
           <BlockchainProviders>
             {children}

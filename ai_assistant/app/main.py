@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 import httpx
@@ -21,16 +22,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger("iyobo-service")
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-COPILOT_API_KEY = (
-    getattr(settings, "COPILOT_API_KEY", "")
-    or os.environ.get("COPILOT_API_KEY")
-    or os.environ.get("GITHUB_TOKEN")
-    or os.environ.get("OPENAI_API_KEY")
-    or ""
-)
-COPILOT_BASE_URL = getattr(settings, "COPILOT_BASE_URL", "https://models.inference.ai.azure.com").rstrip("/")
-COPILOT_MODEL = getattr(settings, "COPILOT_MODEL", "gpt-4o-mini")
+TELEGRAM_TOKEN = settings.TELEGRAM_BOT_TOKEN or os.environ.get("TELEGRAM_BOT_TOKEN")
+COPILOT_API_KEY = settings.COPILOT_API_KEY
+COPILOT_BASE_URL = settings.COPILOT_BASE_URL.rstrip("/")
+COPILOT_MODEL = settings.COPILOT_MODEL
 
 IYOBO_SYSTEM_PROMPT = "You are Iyobo, the AI assistant for Ekioba e-commerce. You help users with shopping, orders, and payments via Idia Coin (on TON/Solana). Be helpful, professional, and concise."
 
@@ -39,9 +34,10 @@ app = FastAPI(title="Iyobo AI Assistant", description="AI Service for Ekioba E-c
 # Allow CORS for frontend interaction
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this to your frontend domain
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins_list(),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
@@ -244,7 +240,7 @@ async def generate_ui(payload: UIGenerationRequest):
         "component_type": payload.component_type,
         "markup": markup,
         "theme": payload.theme,
-        "generated_at": "2024-01-01T00:00:00Z"  # Would use datetime.utcnow() in production
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 

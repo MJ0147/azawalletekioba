@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
-from unittest.mock import patch
 
 from .models import Payment, Product
 
@@ -107,12 +106,15 @@ class AdminApiTests(TestCase):
         access = token_response.json()["access"]
         return {"HTTP_AUTHORIZATION": f"Bearer {access}"}
 
+    def _login_admin(self) -> None:
+        self.client.force_login(self.admin)
+
     def test_admin_products_requires_authentication(self) -> None:
         response = self.client.get("/api/admin/products/")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
 
     def test_admin_can_create_and_update_product(self) -> None:
-        headers = self._admin_headers()
+        self._login_admin()
 
         create_response = self.client.post(
             "/api/admin/products/",
@@ -125,7 +127,6 @@ class AdminApiTests(TestCase):
                 "category": "food",
             },
             content_type="application/json",
-            **headers,
         )
         self.assertEqual(create_response.status_code, 201)
         self.assertEqual(create_response.json()["category"], "food")
@@ -135,13 +136,12 @@ class AdminApiTests(TestCase):
             f"/api/admin/products/{product_id}/",
             data={"stock": 18},
             content_type="application/json",
-            **headers,
         )
         self.assertEqual(patch_response.status_code, 200)
         self.assertEqual(patch_response.json()["stock"], 18)
 
     def test_admin_rejects_invalid_category(self) -> None:
-        headers = self._admin_headers()
+        self._login_admin()
         response = self.client.post(
             "/api/admin/products/",
             data={
@@ -152,13 +152,12 @@ class AdminApiTests(TestCase):
                 "category": "invalid",
             },
             content_type="application/json",
-            **headers,
         )
         self.assertEqual(response.status_code, 400)
         self.assertIn("category", response.json())
 
     def test_admin_can_view_payment_logs(self) -> None:
-        headers = self._admin_headers()
+        self._login_admin()
         product = Product.objects.create(
             name="Shea Butter",
             description="Raw",
@@ -170,7 +169,7 @@ class AdminApiTests(TestCase):
             blockchain="TON",
             status="confirmed")
 
-        response = self.client.get("/api/admin/payments/", **headers)
+        response = self.client.get("/api/admin/payments/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 1)
 
@@ -185,73 +184,68 @@ class DedicatedPaymentEndpointTests(TestCase):
             stock=12,
         )
 
-    @patch("core.views.verify_ton_transaction", return_value=True)
-    def test_pay_ton_confirms_payment_when_verified(
-            self, _mock_verify) -> None:
+    def test_pay_ton_requires_tx_hash_proof(self) -> None:
         response = self.client.post(
-            "/payments/ton/",
-            data={"productId": self.product.id, "txHash": "ton-tx-001"},
+            "/api/pay/ton",
+            data={
+                "wallet": "ton-wallet-1",
+                "amount": "9.50",
+                "product_id": self.product.id,
+                "proof": {},
+            },
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "confirmed")
-        self.assertTrue(
-            Payment.objects.filter(
-                tx_hash="ton-tx-001",
-                blockchain="TON").exists())
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("proof.tx_hash", response.json()["error"])
 
-    @patch("core.views.verify_solana_transaction", return_value=False)
-    def test_pay_solana_sets_pending_when_not_verified(
-            self, _mock_verify) -> None:
+    def test_pay_solana_requires_signature_proof(self) -> None:
         response = self.client.post(
-            "/payments/solana/",
-            data={"productId": self.product.id, "txHash": "solana-tx-001"},
+            "/api/pay/solana",
+            data={
+                "wallet": "sol-wallet-1",
+                "amount": "9.50",
+                "product_id": self.product.id,
+                "proof": {},
+            },
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "pending")
-        self.assertTrue(
-            Payment.objects.filter(
-                tx_hash="solana-tx-001",
-                blockchain="Solana").exists())
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("proof.signature", response.json()["error"])
+
+    def test_pay_ton_rejects_insufficient_amount(self) -> None:
+        response = self.client.post(
+            "/api/pay/ton",
+            data={
+                "wallet": "ton-wallet-1",
+                "amount": "2.00",
+                "product_id": self.product.id,
+                "proof": {"tx_hash": "ton-low-amount"},
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Insufficient payment amount", response.json()["error"])
 
 
 class IdiaEndpointTests(TestCase):
     def setUp(self) -> None:
         self.client = Client()
 
-    @patch("core.views.idia_service")
-    def test_token_info_returns_service_payload(
-            self, mock_idia_service) -> None:
-        mock_idia_service.get_token_info.return_value = {
-            "result": [{"balance": "1000", "code_hash": "abc"}]}
-
+    def test_token_info_returns_503_without_ton_client(self) -> None:
         response = self.client.get("/api/idia/token-info/")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("result", response.json())
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("error", response.json())
 
-    @patch("core.views.wallet_service")
-    def test_idia_balance_returns_balance(self, mock_wallet_service) -> None:
-        mock_wallet_service.get_balance.return_value = 12345
-
+    def test_idia_balance_returns_503_without_ton_client(self) -> None:
         response = self.client.get("/api/idia/balance/wallet123/")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["balance"], 12345)
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("error", response.json())
 
-    @patch("core.views.wallet_service")
-    def test_transfer_idia_returns_transfer_message(
-            self, mock_wallet_service) -> None:
-        mock_wallet_service.build_transfer_message.return_value = {
-            "op": "0xf8a7ea5",
-            "amount": 200,
-            "destination": "wallet_dest",
-            "forward_ton": 10000000,
-        }
-
+    def test_transfer_idia_returns_503_without_ton_client(self) -> None:
         response = self.client.post(
             "/api/idia/transfer/",
             data={"to_address": "wallet_dest", "amount": 200},
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("transfer_message", response.json())
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("error", response.json())

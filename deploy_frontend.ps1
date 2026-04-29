@@ -54,7 +54,7 @@ Write-Host "Project: $PROJECT_ID"
 Write-Host "Region: $REGION"
 Write-Host "------------------------------------------------"
 
-# 1. Determine Backend URLs for Environment Variables
+# 1. Determine Backend URLs for Frontend FastAPI Environment Variables
 Write-Host "`n[1/3] resolving backend URLs..."
 
 # Manual override from user request
@@ -65,48 +65,47 @@ $UNIVERSAL_URL = (gcloud run services describe ekioba-universal --region $REGION
 
 if ($MANUAL_BACKEND_URL) {
     Write-Host "--> Using Manual Backend Service: $MANUAL_BACKEND_URL"
-    $NEXT_PUBLIC_IYOBO_URL = "$MANUAL_BACKEND_URL/chat"
-    $NEXT_PUBLIC_STORE_PRODUCTS_URL = "$MANUAL_BACKEND_URL/api/store/products/"
-    $NEXT_PUBLIC_BACKEND_URL = "$MANUAL_BACKEND_URL"
+    $STORE_BACKEND_URL = "$MANUAL_BACKEND_URL/api/store/products/"
+    $STORE_PAYMENTS_URL = "$MANUAL_BACKEND_URL/payments/process/"
+    $AI_ASSISTANT_URL = "$MANUAL_BACKEND_URL"
+    $FRONTEND_IYOBO_URL = "/chat"
 } elseif ($UNIVERSAL_URL) {
     Write-Host "--> Found Universal Service: $UNIVERSAL_URL"
-    $NEXT_PUBLIC_IYOBO_URL = "$UNIVERSAL_URL/chat"
-    $NEXT_PUBLIC_STORE_PRODUCTS_URL = "$UNIVERSAL_URL/api/store/products/"
-    $NEXT_PUBLIC_BACKEND_URL = "$UNIVERSAL_URL"
+    $STORE_BACKEND_URL = "$UNIVERSAL_URL/api/store/products/"
+    $STORE_PAYMENTS_URL = "$UNIVERSAL_URL/payments/process/"
+    $AI_ASSISTANT_URL = "$UNIVERSAL_URL"
+    $FRONTEND_IYOBO_URL = "/chat"
 } else {
     # Fallback to looking for individual microservices
     Write-Host "--> Universal service not found. Looking for individual services..."
     $IYOBO_RAW = (gcloud run services describe ekioba-ai-assistant --region $REGION --project $PROJECT_ID --format "value(status.url)" 2>$null)
     $STORE_RAW = (gcloud run services describe ekioba-store --region $REGION --project $PROJECT_ID --format "value(status.url)" 2>$null)
     
-    if ($IYOBO_RAW) { $NEXT_PUBLIC_IYOBO_URL = "$IYOBO_RAW/chat" } else { $NEXT_PUBLIC_IYOBO_URL = "" }
+    if ($IYOBO_RAW) {
+        $AI_ASSISTANT_URL = "$IYOBO_RAW"
+        $FRONTEND_IYOBO_URL = "/chat"
+    } else {
+        $AI_ASSISTANT_URL = ""
+        $FRONTEND_IYOBO_URL = "/chat"
+    }
     if ($STORE_RAW) { 
-        $NEXT_PUBLIC_STORE_PRODUCTS_URL = "$STORE_RAW/api/products/" 
-        $NEXT_PUBLIC_BACKEND_URL = "$STORE_RAW"
+        $STORE_BACKEND_URL = "$STORE_RAW/api/products/"
+        $STORE_PAYMENTS_URL = "$STORE_RAW/payments/process/"
     } else { 
-        $NEXT_PUBLIC_STORE_PRODUCTS_URL = "" 
-        $NEXT_PUBLIC_BACKEND_URL = ""
+        $STORE_BACKEND_URL = ""
+        $STORE_PAYMENTS_URL = ""
     }
 }
 
-Write-Host "   > NEXT_PUBLIC_IYOBO_URL: $NEXT_PUBLIC_IYOBO_URL"
-Write-Host "   > NEXT_PUBLIC_STORE_PRODUCTS_URL: $NEXT_PUBLIC_STORE_PRODUCTS_URL"
-Write-Host "   > NEXT_PUBLIC_BACKEND_URL: $NEXT_PUBLIC_BACKEND_URL"
+Write-Host "   > STORE_BACKEND_URL: $STORE_BACKEND_URL"
+Write-Host "   > STORE_PAYMENTS_URL: $STORE_PAYMENTS_URL"
+Write-Host "   > AI_ASSISTANT_URL: $AI_ASSISTANT_URL"
+Write-Host "   > FRONTEND_IYOBO_URL: $FRONTEND_IYOBO_URL"
 
 # 2. Build the Frontend Container
 Write-Host "`n[2/3] Building Frontend Container..."
 $IMAGE_TAG = (Get-Date -Format "yyyyMMdd-HHmmss")
 $IMAGE = "${REGION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/ekioba-frontend:$IMAGE_TAG"
-
-# Ensure lockfiles exist in the frontend directory for the build context
-if (Test-Path "package-lock.json") {
-    Write-Host "Syncing package-lock.json to frontend build context..."
-    Copy-Item "package-lock.json" -Destination "frontend/package-lock.json" -Force
-}
-if (Test-Path "yarn.lock") {
-    Write-Host "Syncing yarn.lock to frontend build context..."
-    Copy-Item "yarn.lock" -Destination "frontend/yarn.lock" -Force
-}
 
 # Ensure Artifact Registry repository exists before pushing image.
 & gcloud artifacts repositories describe $REPO_NAME --location=$REGION --project=$PROJECT_ID > $null 2>&1
@@ -127,27 +126,8 @@ if (-not (Test-Path "./frontend/Dockerfile")) {
     exit 1
 }
 
-# Using a temporary cloudbuild config to inject build args dynamically
-$cloudbuild_content = @"
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '--build-arg', 'NEXT_PUBLIC_IYOBO_URL=$NEXT_PUBLIC_IYOBO_URL', '--build-arg', 'NEXT_PUBLIC_STORE_PRODUCTS_URL=$NEXT_PUBLIC_STORE_PRODUCTS_URL', '--build-arg', 'NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL', '-t', '$IMAGE', '.']
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['push', '$IMAGE']
-images:
-- '$IMAGE'
-"@
-
-$CB_FILE = "cloudbuild_frontend_temp.yaml"
-Set-Content -Path $CB_FILE -Value $cloudbuild_content -Encoding UTF8
-
-try {
-    # Submit build from the frontend directory
-    Invoke-GCloudCommand -Args @("builds", "submit", "./frontend", "--config", $CB_FILE, "--project", $PROJECT_ID) -FailureMessage "Frontend build failed: image was not created/pushed."
-}
-finally {
-    if (Test-Path $CB_FILE) { Remove-Item $CB_FILE }
-}
+# Submit build from the frontend directory (Python FastAPI image)
+Invoke-GCloudCommand -Args @("builds", "submit", "./frontend", "--tag", $IMAGE, "--project", $PROJECT_ID) -FailureMessage "Frontend build failed: image was not created/pushed."
 
 # 3. Deploy to Cloud Run
 Write-Host "`n[3/3] Deploying to Cloud Run ($SERVICE_NAME)..."
@@ -161,7 +141,8 @@ Invoke-GCloudCommand -Args @(
     "--service-account", $SERVICE_ACCOUNT,
     "--platform", "managed",
     "--allow-unauthenticated",
-    "--memory", "1Gi"
+    "--memory", "1Gi",
+    "--set-env-vars", "STORE_BACKEND_URL=$STORE_BACKEND_URL,STORE_PAYMENTS_URL=$STORE_PAYMENTS_URL,AI_ASSISTANT_URL=$AI_ASSISTANT_URL,FRONTEND_IYOBO_URL=$FRONTEND_IYOBO_URL"
 ) -FailureMessage "Frontend deployment failed."
 
 Write-Host "`n------------------------------------------------"

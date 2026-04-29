@@ -1,13 +1,15 @@
 import os
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", get_random_secret_key())
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# In production set ALLOWED_HOSTS to your actual domain(s), e.g. "ekioba.com,www.ekioba.com"
+_raw_hosts = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1" if not DEBUG else "*")
+ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -51,29 +53,10 @@ WSGI_APPLICATION = "hotels_service.wsgi.application"
 ASGI_APPLICATION = "hotels_service.asgi.application"
 
 def _database_config_from_env() -> dict[str, object]:
-    database_url = os.getenv("COCKROACHDB_URL", "")
-    if not database_url:
-        return {
-            "ENGINE": "django_cockroachdb",
-            "NAME": "ekioba_hotels",
-            "USER": "root",
-            "PASSWORD": "",
-            "HOST": "cockroachdb",
-            "PORT": 26257,
-            "OPTIONS": {"sslmode": "disable"},
-        }
-
-    parsed = urlparse(database_url)
-    query = parse_qs(parsed.query)
-    sslmode = query.get("sslmode", ["require"])[0]
+    sqlite_name = os.getenv("SQLITE_DB_PATH", str(BASE_DIR / "db.sqlite3"))
     return {
-        "ENGINE": "django_cockroachdb",
-        "NAME": parsed.path.lstrip("/") or "ekioba_hotels",
-        "USER": parsed.username or "root",
-        "PASSWORD": parsed.password or "",
-        "HOST": parsed.hostname or "localhost",
-        "PORT": parsed.port or 26257,
-        "OPTIONS": {"sslmode": sslmode},
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": sqlite_name,
     }
 
 
@@ -88,6 +71,19 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Security headers — active in production (DEBUG=False)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [],
