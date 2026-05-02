@@ -1,96 +1,49 @@
 EKIOBA Deployment
 
-Local Orchestration (Docker Compose)
+Supported deployment path
 
-Run all local services:
+Local Docker build and Docker Hub push scripts have been removed from the repository. The supported deployment path is GitHub Actions.
 
-docker compose up --build
+GitHub Actions workflows
 
-Services:
+.github/workflows/ci.yml: runs backend and frontend validation checks
 
-store on http://localhost:8001
+.github/workflows/azure-pipeline.yml: single deployment pipeline that targets Azure Web Apps
 
-cargo on http://localhost:8002
+.github/workflows/django.yml: runs Django validation on main
 
-hotels on http://localhost:8003
+Azure deployment secrets and variables
 
-language_academy on http://localhost:8004
+Required secrets:
 
-ai_assistant on http://localhost:8005
+AZURE_CREDENTIALS
 
-frontend on http://localhost:3000
+AZURE_BACKEND_APP
 
-Local Frontend Development (Standalone)
+AZURE_FRONTEND_APP
 
-To run only the frontend locally (useful for UI testing) while pointing to local backend services:
+BACKEND_URL_PROD
 
-./run_frontend_local.ps1
+Optional for tests/validation:
 
-CI/CD (GitHub Actions)
-
-Current workflows:
-
-.github/workflows/ci.yml: integration build and test on develop
-
-.github/workflows/django.yml: Django checks on main
-
-.github/workflows/cloud-run.yml: deploy universal service to Google Cloud Run
-
-Google Cloud Run
-
-The deployment is now consolidated into a single "Universal" container ekioba-universal. This container runs Nginx, which routes traffic to the Frontend, Store, Cargo, Hotels, and AI Assistant services running internally.
-
-Google Secret Manager (Blockchain Keys)
-
-Create required secrets:
-
-echo -n "https://api.mainnet-beta.solana.com" | gcloud secrets create SOLANA_RPC_URL --data-file=-
-echo -n "<your-ton-api-key>" | gcloud secrets create TON_API_KEY --data-file=-
-echo -n "<your-django-secret-key>" | gcloud secrets create DJANGO_SECRET_KEY --data-file=-
-echo -n "postgresql://<user>:<password>@<digitalocean-host>:26257/ekioba_store?sslmode=require" | doctl secrets create COCKROACHDB_STORE_URL --data-file=-
-echo -n "postgresql://<user>:<password>@<digitalocean-host>:26257/ekioba_hotels?sslmode=require" | doctl secrets create COCKROACHDB_HOTELS_URL --data-file=-
-
-Grant Cloud Run runtime service account access:
-
-gcloud secrets add-iam-policy-binding SOLANA_RPC_URL \
-  --member="serviceAccount:<runtime-service-account>" \
-  --role="roles/secretmanager.secretAccessor"
-
-gcloud secrets add-iam-policy-binding TON_API_KEY \
-  --member="serviceAccount:<runtime-service-account>" \
-  --role="roles/secretmanager.secretAccessor"
-
-gcloud secrets add-iam-policy-binding DJANGO_SECRET_KEY \
-  --member="serviceAccount:<runtime-service-account>" \
-  --role="roles/secretmanager.secretAccessor"
-
-gcloud secrets add-iam-policy-binding COCKROACHDB_STORE_URL \
-  --member="serviceAccount:<runtime-service-account>" \
-  --role="roles/secretmanager.secretAccessor"
-
-gcloud secrets add-iam-policy-binding COCKROACHDB_HOTELS_URL \
-  --member="serviceAccount:<runtime-service-account>" \
-  --role="roles/secretmanager.secretAccessor"
-
-Required GitHub Repository Secrets
-
-Set these in GitHub Actions secrets:
-
-GCP_PROJECT_ID
-
-GCP_REGION (example: us-central1)
-
-GCP_WORKLOAD_IDENTITY_PROVIDER
-
-GCP_SERVICE_ACCOUNT
-
-Optional app secrets still used by tests/workflows:
+COCKROACHDB_URL (secret or repository variable)
 
 DJANGO_SECRET_KEY
 
 TON_API_KEY
 
 SOLANA_API_KEY
+
+Recommended usage
+
+1. Push changes to a feature branch and open a pull request.
+2. Let GitHub Actions validate the branch.
+3. Merge to main to trigger the deployment workflow for the target platform.
+4. Use workflow_dispatch when you need a manual deployment run.
+
+Repository secrets
+
+Keep deployment credentials in GitHub Actions secrets or repository variables only. Do not rely on local Docker login state or local image publishing.
 
 Environment File Safety
 

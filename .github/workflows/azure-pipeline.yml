@@ -1,0 +1,102 @@
+name: Azure Deploy Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: azure-deploy-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: pip install -r store/requirements.txt
+
+      - name: Validate database connection string
+        env:
+          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
+        run: |
+          if [ -z "${COCKROACHDB_URL}" ]; then
+            echo "COCKROACHDB_URL is not set. Configure repository variable COCKROACHDB_URL (preferred) or secret COCKROACHDB_URL."
+            exit 1
+          fi
+
+      - name: Run Django tests
+        env:
+          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
+        run: python manage.py test
+
+  validate-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Inject environment
+        run: echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.BACKEND_URL_PROD }}" >> frontend/.env.production
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build Next.js frontend
+        run: |
+          cd frontend
+          npm run build
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    needs: [validate-backend, validate-frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy backend to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_BACKEND_APP }}
+          package: ./language_academy
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    needs: [validate-backend, validate-frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy frontend to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_FRONTEND_APP }}
+          package: ./frontend

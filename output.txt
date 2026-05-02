@@ -1,0 +1,81 @@
+[
+  {
+    "id": "/subscriptions/a7d19646-d243-46e3-8127-1ebfdf7beae5/resourceGroups/Azawallet",
+    "location": "uksouth",
+    "managedBy": null,
+    "name": "Azawallet",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": {
+      "azawalletekioba": "20614313"
+    },
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a7d19646-d243-46e3-8127-1ebfdf7beae5/resourceGroups/DefaultResourceGroup-SUK",
+    "location": "uksouth",
+    "managedBy": null,
+    "name": "DefaultResourceGroup-SUK",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a7d19646-d243-46e3-8127-1ebfdf7beae5/resourceGroups/NetworkWatcherRG",
+    "location": "uksouth",
+    "managedBy": null,
+    "name": "NetworkWatcherRG",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a7d19646-d243-46e3-8127-1ebfdf7beae5/resourceGroups/VisualStudioOnline-A2D79CD42C2046EC9507263EB0073F61",
+    "location": "uksouth",
+    "managedBy": null,
+    "name": "VisualStudioOnline-A2D79CD42C2046EC9507263EB0073F61",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a7d19646-d243-46e3-8127-1ebfdf7beae5/resourceGroups/myResourceGroup",
+    "location": "uksouth",
+    "managedBy": null,
+    "name": "myResourceGroup",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a7d19646-d243-46e3-8127-1ebfdf7beae5/resourceGroups/DefaultResourceGroup-WUS",
+    "location": "westus",
+    "managedBy": null,
+    "name": "DefaultResourceGroup-WUS",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a7d19646-d243-46e3-8127-1ebfdf7beae5/resourceGroups/DefaultResourceGroup-CCAN",
+    "location": "canadacentral",
+    "managedBy": null,
+    "name": "DefaultResourceGroup-CCAN",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  }
+]
