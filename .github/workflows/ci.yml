@@ -27,16 +27,16 @@ jobs:
 
       - name: Validate database connection string
         env:
-          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
+          DATABASE_URL: ${{ vars.DATABASE_URL || secrets.DATABASE_URL }}
         run: |
-          if [ -z "${COCKROACHDB_URL}" ]; then
-            echo "COCKROACHDB_URL is not set. Configure repository variable COCKROACHDB_URL (preferred) or secret COCKROACHDB_URL."
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "DATABASE_URL is not set. Configure repository variable DATABASE_URL (preferred) or secret DATABASE_URL."
             exit 1
           fi
 
       - name: Run Django tests
         env:
-          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
+          DATABASE_URL: ${{ vars.DATABASE_URL || secrets.DATABASE_URL }}
         run: |
           python manage.py test
 

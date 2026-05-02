@@ -26,7 +26,7 @@ BACKEND_URL_PROD
 
 Optional for tests/validation:
 
-COCKROACHDB_URL (secret or repository variable)
+DATABASE_URL (secret or repository variable)
 
 DJANGO_SECRET_KEY
 

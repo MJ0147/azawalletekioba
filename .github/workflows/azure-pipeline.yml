@@ -27,18 +27,7 @@ jobs:
       - name: Install backend dependencies
         run: pip install -r store/requirements.txt
 
-      - name: Validate database connection string
-        env:
-          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
-        run: |
-          if [ -z "${COCKROACHDB_URL}" ]; then
-            echo "COCKROACHDB_URL is not set. Configure repository variable COCKROACHDB_URL (preferred) or secret COCKROACHDB_URL."
-            exit 1
-          fi
-
       - name: Run Django tests
-        env:
-          COCKROACHDB_URL: ${{ vars.COCKROACHDB_URL || secrets.COCKROACHDB_URL }}
         run: python manage.py test
 
   validate-frontend:

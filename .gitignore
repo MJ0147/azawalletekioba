@@ -37,3 +37,7 @@ ekioba.pub
 
 # Kubernetes secrets (never commit real values)
 k8s/secrets.yaml
+
+# Local Azure credential exports (generated for GitHub Actions setup)
+azure_credentials.json
+azure-credentials.json
