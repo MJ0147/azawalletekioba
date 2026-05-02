@@ -31,7 +31,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Django tests
-        run: python manage.py test
+        run: python manage.py test --settings=store_service.settings_test
 
   validate-frontend:
     runs-on: ubuntu-latest
