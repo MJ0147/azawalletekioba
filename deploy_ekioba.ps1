@@ -93,7 +93,7 @@ if ($LASTEXITCODE -ne 0) {
     Invoke-GCloudCommand -Args @("iam", "service-accounts", "create", $SERVICE_ACCOUNT_NAME, "--display-name=Ekioba Runtime Identity", "--project=$PROJECT_ID") -FailureMessage "Failed to create service account '$SERVICE_ACCOUNT'."
 }
 
-$SECRETS = @("TON_API_KEY", "SOLANA_RPC_URL", "DJANGO_SECRET_KEY", "COCKROACHDB_STORE_URL", "COCKROACHDB_HOTELS_URL")
+$SECRETS = @("TON_API_KEY", "SOLANA_RPC_URL", "DJANGO_SECRET_KEY", "AZURE_SQL_HOST", "AZURE_SQL_USER", "AZURE_SQL_PASSWORD")
 $MISSING_SECRETS = @()
 
 foreach ($SECRET in $SECRETS) {
@@ -139,7 +139,9 @@ $SERVICE_URL = Invoke-GCloudCommand -Args @(
     "--memory", "2Gi",
     "--concurrency", "20",
     "--timeout", "300",
-    "--set-secrets", "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,SOLANA_RPC_URL=SOLANA_RPC_URL:latest,TON_API_KEY=TON_API_KEY:latest,COCKROACHDB_STORE_URL=COCKROACHDB_STORE_URL:latest,COCKROACHDB_HOTELS_URL=COCKROACHDB_HOTELS_URL:latest",
+    # NOTE: :latest refers to GCP Secret Manager secret VERSION (not Docker tag).
+    # This is correct — Secret Manager uses version syntax :latest, :previous, or explicit version IDs.
+    "--set-secrets", "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,SOLANA_RPC_URL=SOLANA_RPC_URL:latest,TON_API_KEY=TON_API_KEY:latest,AZURE_SQL_HOST=AZURE_SQL_HOST:latest,AZURE_SQL_USER=AZURE_SQL_USER:latest,AZURE_SQL_PASSWORD=AZURE_SQL_PASSWORD:latest",
     "--set-env-vars", "NEXT_PUBLIC_IYOBO_URL=/chat,NEXT_PUBLIC_STORE_PRODUCTS_URL=/api/store/products/,STORE_PAYMENTS_URL=http://127.0.0.1:8000/payments/process/",
     "--format", "value(status.url)"
 ) -FailureMessage "Deployment failed: Cloud Run deploy command did not succeed." -CaptureOutput

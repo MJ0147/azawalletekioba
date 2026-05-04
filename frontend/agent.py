@@ -6,19 +6,15 @@ from datetime import datetime, timedelta, timezone
 from statistics import mean
 from typing import Any
 
-import requests
+import httpx
 import yfinance as yf
 
 HTTP_TIMEOUT = 12.0
 SERIES_LENGTH = 10
 STOCK_SYMBOL = os.getenv("AGENT_STOCK_SYMBOL", os.getenv("DASHBOARD_STOCK_SYMBOL", "AAPL"))
 CRYPTO_SYMBOL = os.getenv("AGENT_CRYPTO_SYMBOL", os.getenv("DASHBOARD_CRYPTO_SYMBOL", "BTCUSDT"))
-CLOUD_PROVIDER = os.getenv("CLOUD_PROVIDER", "azure").strip().lower()
 AZURE_ACCESS_TOKEN = os.getenv("AZURE_ACCESS_TOKEN", "")
 AZURE_VM_RESOURCE_ID = os.getenv("AZURE_VM_RESOURCE_ID", "")
-DIGITALOCEAN_API_TOKEN = os.getenv("DO_TOKEN", os.getenv("DIGITALOCEAN_API_TOKEN", ""))
-DIGITALOCEAN_DROPLET_ID = os.getenv("DO_DROPLET_ID", os.getenv("DIGITALOCEAN_DROPLET_ID", ""))
-DO_HEADERS = {"Authorization": f"Bearer {DIGITALOCEAN_API_TOKEN}"} if DIGITALOCEAN_API_TOKEN else {}
 AZURE_HEADERS = {"Authorization": f"Bearer {AZURE_ACCESS_TOKEN}"} if AZURE_ACCESS_TOKEN else {}
 
 DEFAULT_FORECAST_DATA: dict[str, dict[str, list[Any]]] = {
@@ -92,11 +88,11 @@ async def fetch_stock_data(symbol: str = STOCK_SYMBOL) -> dict[str, list[float] 
 
 def get_crypto_data(symbol: str = CRYPTO_SYMBOL) -> dict[str, list[float] | list[str]]:
     try:
-        response = requests.get(
-            "https://api.binance.com/api/v3/klines",
-            params={"symbol": symbol, "interval": "1h", "limit": SERIES_LENGTH},
-            timeout=HTTP_TIMEOUT,
-        )
+        with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+            response = client.get(
+                "https://api.binance.com/api/v3/klines",
+                params={"symbol": symbol, "interval": "1h", "limit": SERIES_LENGTH},
+            )
         response.raise_for_status()
         payload = response.json()
         closes = [_safe_float(item[4]) for item in payload]
@@ -112,7 +108,8 @@ async def fetch_crypto_data(symbol: str = CRYPTO_SYMBOL) -> dict[str, list[float
 
 def get_sosovalue_sentiment() -> dict[str, list[float] | list[str]]:
     try:
-        response = requests.get("https://api.sosovalue.com/crypto/index", timeout=HTTP_TIMEOUT)
+        with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+            response = client.get("https://api.sosovalue.com/crypto/index")
         response.raise_for_status()
         payload = response.json()
         sentiment = _safe_float(payload.get("sentiment", 50))
@@ -133,18 +130,18 @@ def get_azure_metrics(resource_id: str = AZURE_VM_RESOURCE_ID) -> dict[str, list
     start = now - timedelta(hours=SERIES_LENGTH)
 
     try:
-        response = requests.get(
-            f"https://management.azure.com{resource_id}/providers/microsoft.insights/metrics",
-            params={
-                "api-version": "2018-01-01",
-                "metricnames": "Percentage CPU",
-                "aggregation": "Average",
-                "interval": "PT1H",
-                "timespan": f"{start.isoformat()}/{now.isoformat()}",
-            },
-            headers=AZURE_HEADERS,
-            timeout=HTTP_TIMEOUT,
-        )
+        with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+            response = client.get(
+                f"https://management.azure.com{resource_id}/providers/microsoft.insights/metrics",
+                params={
+                    "api-version": "2018-01-01",
+                    "metricnames": "Percentage CPU",
+                    "aggregation": "Average",
+                    "interval": "PT1H",
+                    "timespan": f"{start.isoformat()}/{now.isoformat()}",
+                },
+                headers=AZURE_HEADERS,
+            )
         response.raise_for_status()
         payload = response.json()
         values = payload.get("value", [])
@@ -171,45 +168,8 @@ async def fetch_azure_data(resource_id: str = AZURE_VM_RESOURCE_ID) -> dict[str,
     return await asyncio.to_thread(get_azure_metrics, resource_id)
 
 
-def get_digitalocean_metrics(droplet_id: str = DIGITALOCEAN_DROPLET_ID) -> dict[str, list[float] | list[str]]:
-    if not droplet_id or not DO_HEADERS:
-        return _empty_series()
-
-    try:
-        response = requests.get(
-            "https://api.digitalocean.com/v2/monitoring/metrics/droplet/cpu",
-            params={"host_id": droplet_id},
-            headers=DO_HEADERS,
-            timeout=HTTP_TIMEOUT,
-        )
-        response.raise_for_status()
-        payload = response.json()
-        values = payload.get("data", {}).get("result", [])
-        if not values:
-            return _empty_series()
-
-        series = values[0].get("values", [])[-SERIES_LENGTH:]
-        labels = [datetime.fromtimestamp(int(item[0]), tz=timezone.utc).strftime("%b %d %H:%M") for item in series if len(item) >= 2]
-        cpu_usage = [_safe_float(item[1]) for item in series if len(item) >= 2]
-        return {"labels": labels, "values": cpu_usage}
-    except Exception:
-        return _empty_series()
-
-
-async def fetch_cloud_data(droplet_id: str = DIGITALOCEAN_DROPLET_ID) -> dict[str, list[float] | list[str]]:
-    if CLOUD_PROVIDER == "azure":
-        return await fetch_azure_data()
-
-    if CLOUD_PROVIDER in {"digitalocean", "do"}:
-        return await asyncio.to_thread(get_digitalocean_metrics, droplet_id)
-
-    if CLOUD_PROVIDER == "auto":
-        azure = await fetch_azure_data()
-        if azure.get("values"):
-            return azure
-        return await asyncio.to_thread(get_digitalocean_metrics, droplet_id)
-
-    return _empty_series()
+async def fetch_cloud_data() -> dict[str, list[float] | list[str]]:
+    return await fetch_azure_data()
 
 
 async def build_dashboard_forecast() -> dict[str, Any]:

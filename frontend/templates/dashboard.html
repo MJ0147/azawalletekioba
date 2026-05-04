@@ -1,56 +1,110 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>AI Agent Dashboard</title>
-  <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-  <h1>Live Market & Cloud Dashboard</h1>
+{% extends "base.html" %}
 
-  <canvas id="stockChart"></canvas>
-  <canvas id="cryptoChart"></canvas>
-  <canvas id="sentimentChart"></canvas>
-  <canvas id="cloudChart"></canvas>
+{% block title %}Market Dashboard — EKIOBA{% endblock %}
+{% block description %}Live stock, crypto, sentiment, and Azure cloud metrics for EKIOBA.{% endblock %}
 
-  <button onclick="startReader()">Start Screen Reader</button>
-  <button onclick="stopReader()">Stop Screen Reader</button>
+{% block content %}
+<div class="shell"
+     data-reader-text="Dashboard loaded. Stock, crypto, sentiment, and Azure cloud metrics are now live.">
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const forecastData = {{ forecast | tojson }};
+  <section class="hero" style="padding:1rem 1.15rem;">
+    <div>
+      <p class="eyebrow">Live Market Intelligence</p>
+      <h1>Forecast Dashboard</h1>
+      <p class="sub">Real-time stock, crypto, sentiment, and Azure cloud metrics.</p>
+    </div>
+    <div style="align-self:center;display:flex;gap:.5rem;">
+      <button class="btn-ghost" onclick="startReader()" aria-label="Start screen reader">🔊 Read</button>
+      <button class="btn-ghost" onclick="stopReader()" aria-label="Stop screen reader">⏹ Stop</button>
+    </div>
+  </section>
 
-    new Chart(document.getElementById("stockChart"), {
-      type: "line",
-      data: { labels: forecastData.stocks.labels,
-              datasets: [{ label: "Stock (AAPL)", data: forecastData.stocks.actual, borderColor: "blue" },
-                         { label: "Predicted", data: forecastData.stocks.predicted, borderColor: "red", borderDash:[5,5]}] }
+  <div class="forecast-grid">
+
+    <!-- Stock -->
+    <div class="chart-card">
+      <h3>📈 Stock Forecast</h3>
+      <canvas id="stockChart" role="img" aria-label="Stock price forecast chart"></canvas>
+      <div class="prediction-box">
+        <div class="prediction-label">Next Predicted Price</div>
+        <div class="prediction-value" id="stock-next">—</div>
+      </div>
+    </div>
+
+    <!-- Crypto -->
+    <div class="chart-card">
+      <h3>₿ Crypto Forecast (BTC)</h3>
+      <canvas id="cryptoChart" role="img" aria-label="BTC price forecast chart"></canvas>
+      <div class="prediction-box">
+        <div class="prediction-label">Next Predicted Price</div>
+        <div class="prediction-value" id="crypto-next">—</div>
+      </div>
+    </div>
+
+    <!-- Sentiment -->
+    <div class="chart-card">
+      <h3>📊 Market Sentiment</h3>
+      <canvas id="sentimentChart" role="img" aria-label="Market sentiment score"></canvas>
+    </div>
+
+    <!-- Azure Cloud CPU -->
+    <div class="chart-card">
+      <h3>☁️ Azure CPU Usage</h3>
+      <canvas id="cloudChart" role="img" aria-label="Azure VM CPU usage over time"></canvas>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const d = {{ forecast | tojson }};
+  const ACCENT   = '#dd5b2f';
+  const DARK     = '#1d2a33';
+  const PRED_CLR = '#9f3f1f';
+
+  function lineChart(id, label, actual, predicted, labels) {
+    new Chart(document.getElementById(id), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: label,      data: actual,    borderColor: ACCENT,   backgroundColor: 'transparent', tension: 0.3, pointRadius: 3 },
+          { label: 'Predicted', data: predicted, borderColor: PRED_CLR, backgroundColor: 'transparent', tension: 0.3, borderDash: [5, 4], pointRadius: 3 },
+        ],
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
     });
+  }
 
-    new Chart(document.getElementById("cryptoChart"), {
-      type: "line",
-      data: { labels: forecastData.crypto.labels,
-              datasets: [{ label: "Crypto (BTC)", data: forecastData.crypto.actual, borderColor: "green" },
-                         { label: "Predicted", data: forecastData.crypto.predicted, borderColor: "orange", borderDash:[5,5]}] }
-    });
+  lineChart('stockChart',  'Stock (AAPL)',  d.stocks.actual,  d.stocks.predicted,  d.stocks.labels);
+  lineChart('cryptoChart', 'BTC (USDT)',    d.crypto.actual,  d.crypto.predicted,  d.crypto.labels);
 
-    new Chart(document.getElementById("sentimentChart"), {
-      type: "bar",
-      data: { labels: forecastData.sentiment.labels,
-              datasets: [{ label: "Sentiment Score", data: forecastData.sentiment.values, backgroundColor: "purple"}] },
-      options: { scales: { y: { min: 0, max: 100 } } }
-    });
+  new Chart(document.getElementById('sentimentChart'), {
+    type: 'bar',
+    data: {
+      labels: d.sentiment.labels,
+      datasets: [{ label: 'Sentiment Score', data: d.sentiment.values, backgroundColor: DARK }],
+    },
+    options: { responsive: true, scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } },
+  });
 
-    new Chart(document.getElementById("cloudChart"), {
-      type: "line",
-      data: { labels: forecastData.cloud.labels,
-              datasets: [{ label: "Droplet CPU Usage", data: forecastData.cloud.values, borderColor: "brown"}] }
-    });
+  new Chart(document.getElementById('cloudChart'), {
+    type: 'line',
+    data: {
+      labels: d.cloud.labels,
+      datasets: [{ label: 'Azure CPU %', data: d.cloud.values, borderColor: ACCENT, backgroundColor: 'transparent', tension: 0.3 }],
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } },
+  });
 
-    function startReader() {
-      const msg = new SpeechSynthesisUtterance("Dashboard loaded. Stock, crypto, sentiment, and cloud metrics are now live.");
-      window.speechSynthesis.speak(msg);
-    }
-    function stopReader() { window.speechSynthesis.cancel(); }
-  </script>
-</body>
-</html>
+  // Show next predicted values
+  const sNext = d.stocks.predicted;
+  if (sNext && sNext.length) document.getElementById('stock-next').textContent = '$' + sNext[sNext.length - 1].toFixed(2);
+  const cNext = d.crypto.predicted;
+  if (cNext && cNext.length) document.getElementById('crypto-next').textContent = '$' + cNext[cNext.length - 1].toFixed(2);
+}());
+</script>
+{% endblock %}

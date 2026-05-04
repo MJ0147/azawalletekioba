@@ -62,6 +62,8 @@ ASGI_APPLICATION = "store_service.asgi.application"
 
 def _database_config_from_env() -> dict[str, object]:
     db_engine = DJANGO_DB_ENGINE
+
+    # SQLite — tests and local dev only
     if db_engine == "sqlite":
         sqlite_name = DATABASE_URL.replace("sqlite:///", "", 1)
         if not os.path.isabs(sqlite_name):
@@ -71,6 +73,22 @@ def _database_config_from_env() -> dict[str, object]:
             "NAME": os.getenv("SQLITE_DB_PATH", sqlite_name),
         }
 
+    # Azure SQL Managed Instance / Azure SQL Database
+    if db_engine == "mssql":
+        return {
+            "ENGINE": "mssql",
+            "NAME": os.getenv("AZURE_SQL_STORE_DB", "ekioba_store"),
+            "USER": os.getenv("AZURE_SQL_USER", ""),
+            "PASSWORD": os.getenv("AZURE_SQL_PASSWORD", ""),
+            "HOST": os.getenv("AZURE_SQL_HOST", ""),
+            "PORT": os.getenv("AZURE_SQL_PORT", "1433"),
+            "OPTIONS": {
+                "driver": "ODBC Driver 18 for SQL Server",
+                "extra_params": "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30",
+            },
+        }
+
+    # PostgreSQL — legacy / non-Azure fallback
     database_url = DATABASE_URL
     if not database_url:
         return {
@@ -89,10 +107,10 @@ def _database_config_from_env() -> dict[str, object]:
     return {
         "ENGINE": db_engine,
         "NAME": parsed.path.lstrip("/") or "ekioba_store",
-        "USER": parsed.username or "root",
+        "USER": parsed.username or "postgres",
         "PASSWORD": parsed.password or "",
         "HOST": parsed.hostname or "localhost",
-        "PORT": parsed.port or 26257,
+        "PORT": parsed.port or 5432,
         "OPTIONS": {"sslmode": sslmode},
     }
 

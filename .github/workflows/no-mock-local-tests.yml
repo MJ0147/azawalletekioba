@@ -47,6 +47,9 @@ jobs:
 
       - name: Run store tests (local test settings)
         working-directory: store
+        env:
+          DJANGO_DB_ENGINE: django.db.backends.sqlite3
+          DATABASE_URL: "sqlite:///:memory:"
         run: |
           python manage.py test core --settings=store_service.settings_test
 
@@ -110,6 +113,9 @@ jobs:
 
       - name: Run hotels tests (local test settings)
         working-directory: hotels
+        env:
+          DJANGO_DB_ENGINE: django.db.backends.sqlite3
+          DATABASE_URL: "sqlite:///:memory:"
         run: |
           python manage.py test --settings=hotels_service.settings_test
 

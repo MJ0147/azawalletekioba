@@ -11,8 +11,46 @@ concurrency:
 
 permissions:
   contents: read
+  security-events: write   # required for Trivy SARIF upload
 
 jobs:
+  scan-images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [store, frontend, language_academy, cargo, hotels, ai_assistant, backend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image for scanning
+        run: docker build -t ekioba/${{ matrix.service }}:scan ./${{ matrix.service }}
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install -y trivy
+
+      - name: Run Trivy vulnerability scan
+        run: |
+          trivy image \
+            --exit-code 1 \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --format sarif \
+            --output trivy-${{ matrix.service }}.sarif \
+            ekioba/${{ matrix.service }}:scan
+
+      - name: Upload Trivy results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-${{ matrix.service }}.sarif
+
   validate-backend:
     runs-on: ubuntu-latest
     defaults:
@@ -31,6 +69,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Django tests
+        env:
+          DJANGO_DB_ENGINE: django.db.backends.sqlite3
+          DATABASE_URL: "sqlite:///:memory:"
         run: python manage.py test --settings=store_service.settings_test
 
   validate-frontend:
@@ -52,7 +93,8 @@ jobs:
 
   deploy-backend:
     runs-on: ubuntu-latest
-    needs: [validate-backend, validate-frontend]
+    needs: [scan-images, validate-backend, validate-frontend]
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.ENABLE_AZURE_DEPLOY == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -70,7 +112,8 @@ jobs:
 
   deploy-frontend:
     runs-on: ubuntu-latest
-    needs: [validate-backend, validate-frontend]
+    needs: [scan-images, validate-backend, validate-frontend]
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.ENABLE_AZURE_DEPLOY == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,3 +128,46 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_FRONTEND_APP }}
           package: ./frontend
+
+  deploy-k8s:
+    runs-on: ubuntu-latest
+    needs: [scan-images, validate-backend, validate-frontend]
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.ENABLE_AZURE_DEPLOY == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set K8s context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+
+      - name: Substitute image tags with git SHA
+        run: |
+          TAG=$(echo "${{ github.sha }}" | head -c 8)
+          echo "Deploying image tag: $TAG"
+          find k8s -name 'deployment.yaml' \
+            -exec sed -i "s|azawalletekioba/\(.*\):v[0-9.]*|azawalletekioba/\1:${TAG}|g" {} \;
+
+      - name: Apply K8s manifests
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/secrets.example.yaml --dry-run=client  # validate only
+          for dir in store cargo hotels language-academy ai-assistant frontend; do
+            kubectl apply -f k8s/$dir/ --namespace=ekioba
+          done
+
+      - name: Wait for rollout
+        run: |
+          for svc in store cargo hotels language-academy ai-assistant frontend; do
+            kubectl rollout status deployment/$svc --namespace=ekioba --timeout=5m
+          done

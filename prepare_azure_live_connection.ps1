@@ -22,8 +22,8 @@ param(
 
     [string]$ServicePrincipalName = "github-actions",
     [string]$AppServicePlanName = "ekioba-linux-plan",
-    [string]$BackendImage = "backend:latest",
-    [string]$FrontendImage = "frontend:latest"
+    [string]$BackendImage = "backend:main",  # Use branch tag, never :latest for production
+    [string]$FrontendImage = "frontend:main" # Use branch tag, never :latest for production
 )
 
 $ErrorActionPreference = "Stop"

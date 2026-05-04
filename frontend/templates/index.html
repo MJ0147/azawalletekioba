@@ -1,20 +1,98 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>AI Agent Forecasts</title>
-  <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-  <h1>Market Forecast Dashboard</h1>
+{% extends "base.html" %}
 
-  <!-- Chart Canvas -->
-  <canvas id="forecastChart" width="400" height="200"></canvas>
+{% block title %}EKIOBA — Edo Cultural Marketplace{% endblock %}
+{% block description %}Authentic artifacts, fashion, and food from the Edo Kingdom — powered by blockchain payments and AI market forecasts.{% endblock %}
 
-  <!-- Screen Reader Controls -->
-  <button onclick="startReader()">🔊 Start Screen Reader</button>
-  <button onclick="stopReader()">⏹️ Stop Screen Reader</button>
+{% block content %}
+<div class="shell">
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/static/app.js"></script>
-</body>
-</html>
+  <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div>
+      <p class="eyebrow">The Kingdom of Benin</p>
+      <h1>Discover Edo Culture &amp; Commerce</h1>
+      <p class="sub">
+        Authentic artifacts, fashion, and food from Edo artisans —
+        pay with TON or Solana blockchain, powered by Azure AI forecasts.
+      </p>
+      <div class="row">
+        <a href="#store" class="btn-primary">Browse Store</a>
+        <a href="{{ iyobo_url }}" class="btn-ghost">AI Chat</a>
+      </div>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-pill">⬡ Web3 Payments</span>
+      <span class="hero-pill">🏺 Edo Artifacts</span>
+    </div>
+  </section>
+
+  <!-- ── Store ─────────────────────────────────────────────────────────── -->
+  <section id="store" class="panel">
+    <div class="panel-header">
+      <h2>Marketplace</h2>
+      <p>Handcrafted goods from Edo artisans</p>
+    </div>
+    <div class="product-grid"
+         hx-get="/partials/products"
+         hx-trigger="load"
+         hx-target="this"
+         hx-swap="outerHTML">
+      {% include "partials/products_grid.html" %}
+    </div>
+    {# embed product data for cart JS — no XSS risk, server-rendered JSON #}
+    <script id="products-json" type="application/json">{{ products_json | safe }}</script>
+  </section>
+
+  <!-- ── Category Chart + Wallet ───────────────────────────────────────── -->
+  <div class="grid-two">
+    <div class="panel chart-panel">
+      <div class="panel-header">
+        <h2>Product Categories</h2>
+      </div>
+      <canvas id="categoryChart" role="img" aria-label="Product category distribution"></canvas>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Wallet &amp; Payments</h2>
+        <p>Pay with TON or Solana blockchain</p>
+      </div>
+      {% if ton_wallet %}
+      <p class="wallet-hint">TON: <code>{{ ton_wallet[:20] }}…</code></p>
+      {% endif %}
+      {% if solana_wallet %}
+      <p class="wallet-hint" style="margin-top:.4rem;">Solana: <code>{{ solana_wallet[:20] }}…</code></p>
+      {% endif %}
+      <div class="row" style="margin-top:1rem;">
+        <a href="/wallet-dashboard" class="btn-primary">Open Wallet Dashboard</a>
+        <a href="/dashboard" class="btn-ghost">Market Forecast</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const labels = {{ chart_labels | tojson }};
+  const values = {{ chart_values | tojson }};
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#dd5b2f', '#1d2a33', '#9f3f1f', '#dbe8e0', '#b9d8c8', '#f1d9b6'],
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      responsive: true,
+    },
+  });
+}());
+</script>
+{% endblock %}
+

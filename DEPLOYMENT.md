@@ -1,65 +1,100 @@
-EKIOBA Deployment
+# EKIOBA Deployment Guide
 
-Supported deployment path
+## Deployment Target: Azure Only
 
-Local Docker build and Docker Hub push scripts have been removed from the repository. The supported deployment path is GitHub Actions.
+All deployment targets (GCP Cloud Run, DigitalOcean App Platform, AWS) have been removed.
+The sole deployment stack is **Azure**.
 
-GitHub Actions workflows
+---
 
-.github/workflows/ci.yml: runs backend and frontend validation checks
+## Azure Infrastructure
 
-.github/workflows/azure-pipeline.yml: single deployment pipeline that targets Azure Web Apps
+| Component | Resource |
+|-----------|----------|
+| Container Registry | `azawallet.azurecr.io` |
+| Backend Web App | `$AZURE_BACKEND_APP` (language_academy) |
+| Frontend Web App | `$AZURE_FRONTEND_APP` (frontend) |
+| Kubernetes | AKS — namespace `ekioba` |
+| Database | Azure SQL Managed Instance (port 3342) |
+| Secrets | Azure Key Vault (verify with `verify_azure_secrets.ps1`) |
 
-.github/workflows/django.yml: runs Django validation on main
+---
 
-Azure deployment secrets and variables
+## GitHub Actions Workflows
 
-Required secrets:
+| File | Purpose |
+|------|---------|
+| `.github/workflows/azure-pipeline.yml` | Primary CI/CD — Trivy scan → validate → deploy Web Apps + AKS |
+| `.github/workflows/ci.yml` | PR validation (backend + frontend, no deploy) |
+| `.github/workflows/no-mock-local-tests.yml` | Django tests with in-memory SQLite |
 
-AZURE_CREDENTIALS
+## Azure DevOps Pipeline
 
-AZURE_BACKEND_APP
+`azure-pipelines.yml` — Builds root `Dockerfile` → pushes to `azawallet.azurecr.io` with `$(Build.BuildId)` tag.
 
-AZURE_FRONTEND_APP
+---
 
-BACKEND_URL_PROD
+## Required GitHub Secrets
 
-Optional for tests/validation:
+```
+AZURE_CREDENTIALS          # Service principal JSON
+AZURE_BACKEND_APP          # Azure Web App name (language_academy)
+AZURE_FRONTEND_APP         # Azure Web App name (frontend)
+AKS_RESOURCE_GROUP         # Resource group containing the AKS cluster
+AKS_CLUSTER_NAME           # AKS cluster name
+```
 
-DATABASE_URL (secret or repository variable)
+## Repository Variable
 
-DJANGO_SECRET_KEY
+```
+ENABLE_AZURE_DEPLOY=true   # Set to enable deploy jobs on push to main
+```
 
-TON_API_KEY
+---
 
-SOLANA_API_KEY
+## Deploy Flow
 
-Recommended usage
+1. Push to a feature branch → opens PR → `ci.yml` validates (no deploy).
+2. Merge to `main` → `azure-pipeline.yml` triggers:
+   - **scan-images**: Trivy CRITICAL/HIGH scan gates deploy.
+   - **validate-backend**: Django tests (SQLite in-memory).
+   - **validate-frontend**: Python import check.
+   - **deploy-backend** + **deploy-frontend**: Azure Web Apps via `azure/webapps-deploy@v3`.
+   - **deploy-k8s**: AKS manifest apply with git SHA image tag substitution.
+3. Use `workflow_dispatch` for manual deploys.
 
-1. Push changes to a feature branch and open a pull request.
-2. Let GitHub Actions validate the branch.
-3. Merge to main to trigger the deployment workflow for the target platform.
-4. Use workflow_dispatch when you need a manual deployment run.
+---
 
-Repository secrets
+## Azure Credential Rotation
 
-Keep deployment credentials in GitHub Actions secrets or repository variables only. Do not rely on local Docker login state or local image publishing.
+If Azure login fails with `AADSTS7000222`, the service principal secret is expired.
 
-Environment File Safety
+1. Rotate secret: `az ad sp credential reset --id <SP_APP_ID>`
+2. Update GitHub secret `AZURE_CREDENTIALS` with the new JSON payload.
+3. While rotating, set `ENABLE_AZURE_DEPLOY` to `false` so validation jobs still run.
 
-Never commit real .env files to source control.
+---
 
-Keep only template files like .env.example in git.
+## Key Vault Secret Verification
 
-For production deployments, inject secrets only from Google Secret Manager and/or CI secret stores.
+```powershell
+.\verify_azure_secrets.ps1 -KeyVaultName "ekioba-kv"
+```
 
-Do not bake secrets into Docker images, compose files, or committed config.
+---
+
+## Environment File Safety
+
+- Never commit real `.env` files to source control.
+- Keep only `.env.example` in git.
+- For production, inject secrets from **Azure Key Vault** and GitHub Actions secrets only.
+- Do not bake secrets into Docker images or compose files.
 
 Pre-deployment check:
-
+```sh
 git ls-files ".env*" "**/.env*"
-
-The command should return no real .env files.
+```
+Should return no real `.env` files.
 
 Blockchain Integration
 

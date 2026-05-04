@@ -24,7 +24,8 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: cargo
-          image: azawalletekioba/ekioba-cargo:latest
+          # CI replaces this tag on deploy. Never use 'latest' in production.
+          image: azawalletekioba/ekioba-cargo:v1.0.0
           imagePullPolicy: Always
           command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]
           ports:

@@ -19,7 +19,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -32,10 +32,10 @@ jobs:
     - name: Run Tests
       working-directory: store
       env:
-        DJANGO_DB_ENGINE: ${{ vars.DJANGO_DB_ENGINE }}
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DJANGO_DB_ENGINE: django.db.backends.sqlite3
+        DATABASE_URL: "sqlite:///:memory:"
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
         TON_API_KEY: ${{ secrets.TON_API_KEY }}
         SOLANA_API_KEY: ${{ secrets.SOLANA_API_KEY }}
       run: |
-        python manage.py test
+        python manage.py test --settings=store_service.settings_test

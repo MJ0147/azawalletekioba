@@ -22,8 +22,9 @@ $SECRETS = @(
     "TON_API_KEY", 
     "SOLANA_RPC_URL", 
     "DJANGO_SECRET_KEY", 
-    "COCKROACHDB_STORE_URL", 
-    "COCKROACHDB_HOTELS_URL"
+    "AZURE_SQL_HOST",
+    "AZURE_SQL_USER",
+    "AZURE_SQL_PASSWORD"
 )
 
 $allPassed = $true

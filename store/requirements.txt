@@ -3,6 +3,8 @@ djangorestframework
 djangorestframework-simplejwt
 gunicorn
 psycopg2-binary
+mssql-django
+pyodbc
 django-redis
 redis
 python-dotenv

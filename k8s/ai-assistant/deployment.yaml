@@ -24,7 +24,8 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: ai-assistant
-          image: azawalletekioba/ekioba-ai-assistant:latest
+          # CI replaces this tag on deploy. Never use 'latest' in production.
+          image: azawalletekioba/ekioba-ai-assistant:v1.0.0
           imagePullPolicy: Always
           ports:
             - name: http

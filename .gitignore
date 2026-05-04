@@ -41,3 +41,34 @@ k8s/secrets.yaml
 # Local Azure credential exports (generated for GitHub Actions setup)
 azure_credentials.json
 azure-credentials.json
+azure_credentials_*.json
+azure-credentials-*.json
+sp_*.json
+new_sp_*.json
+
+# Deployment artifacts and logs — never commit these
+*.zip
+appservice-logs/
+backend_logs/
+backend_diag/
+frontend_diag/
+backend_after.html
+backend_home.html
+chk_backend.html
+frontend_after.html
+frontend_home.html
+backend_log2.txt
+backend_zip_list.txt
+frontend_log.txt
+frontend_zip_list.txt
+job_log.txt
+run2.txt
+webapps_out.txt
+new_sp_appid.txt
+az_out.txt
+output.txt
+None
+'
+
+# Next.js build artifacts
+frontend/.next/

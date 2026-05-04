@@ -53,6 +53,24 @@ WSGI_APPLICATION = "hotels_service.wsgi.application"
 ASGI_APPLICATION = "hotels_service.asgi.application"
 
 def _database_config_from_env() -> dict[str, object]:
+    db_engine = os.environ.get("DJANGO_DB_ENGINE", "sqlite")
+
+    # Azure SQL Managed Instance / Azure SQL Database
+    if db_engine == "mssql":
+        return {
+            "ENGINE": "mssql",
+            "NAME": os.environ.get("AZURE_SQL_HOTELS_DB", "ekioba_hotels"),
+            "USER": os.environ.get("AZURE_SQL_USER", ""),
+            "PASSWORD": os.environ.get("AZURE_SQL_PASSWORD", ""),
+            "HOST": os.environ.get("AZURE_SQL_HOST", ""),
+            "PORT": os.environ.get("AZURE_SQL_PORT", "1433"),
+            "OPTIONS": {
+                "driver": "ODBC Driver 18 for SQL Server",
+                "extra_params": "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30",
+            },
+        }
+
+    # SQLite — tests and local dev only
     sqlite_name = os.getenv("SQLITE_DB_PATH", str(BASE_DIR / "db.sqlite3"))
     return {
         "ENGINE": "django.db.backends.sqlite3",

@@ -24,7 +24,8 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: frontend
-          image: azawalletekioba/ekioba-frontend:latest
+          # CI replaces this tag on deploy. Never use 'latest' in production.
+          image: azawalletekioba/ekioba-frontend:v1.0.0
           imagePullPolicy: Always
           ports:
             - name: http

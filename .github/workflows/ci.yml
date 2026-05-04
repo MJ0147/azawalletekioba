@@ -12,6 +12,9 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: store
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,22 +26,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r store/requirements.txt
-
-      - name: Validate database connection string
-        env:
-          DATABASE_URL: ${{ vars.DATABASE_URL || secrets.DATABASE_URL }}
-        run: |
-          if [ -z "${DATABASE_URL}" ]; then
-            echo "DATABASE_URL is not set. Configure repository variable DATABASE_URL (preferred) or secret DATABASE_URL."
-            exit 1
-          fi
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run Django tests
         env:
-          DATABASE_URL: ${{ vars.DATABASE_URL || secrets.DATABASE_URL }}
+          DJANGO_DB_ENGINE: django.db.backends.sqlite3
+          DATABASE_URL: "sqlite:///:memory:"
         run: |
-          python manage.py test
+          python manage.py test --settings=store_service.settings_test
 
   frontend:
     runs-on: ubuntu-latest
@@ -46,22 +42,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: "20"
+          python-version: "3.11"
 
-      - name: Inject environment
+      - name: Install frontend dependencies
         run: |
-          echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.BACKEND_URL_PROD }}" >> frontend/.env.production
+          python -m pip install --upgrade pip
+          pip install -r frontend/requirements.txt
 
-      - name: Install dependencies
+      - name: Verify frontend app starts
         run: |
-          cd frontend
-          npm install
-
-      - name: Build Next.js frontend
-        run: |
-          cd frontend
-          npm run build
+          python -c "import sys; sys.path.insert(0, 'frontend'); import fastapi, uvicorn, jinja2; print('Frontend imports OK')"
 

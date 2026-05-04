@@ -11,10 +11,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "EKIOBA AI Assistant"
     API_V1_STR: str = "/api/v1"
 
-    # Database provider selection: auto | azure | digitalocean
-    DATABASE_PROVIDER: str = "auto"
+    # Database provider — set AZURE_DATABASE_URL for Azure SQL/PostgreSQL
     AZURE_DATABASE_URL: str = ""
-    DIGITALOCEAN_DATABASE_URL: str = ""
     DATABASE_URL: str = ""
 
     # Auth — must be a strong secret, at least 32 characters
@@ -49,33 +47,12 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def validate_database_url(cls, v: str) -> str:
-        provider = (os.getenv("DATABASE_PROVIDER") or "auto").strip().lower()
         azure_url = (os.getenv("AZURE_DATABASE_URL") or "").strip()
-        do_url = (os.getenv("DIGITALOCEAN_DATABASE_URL") or "").strip()
         primary_url = str(v or "").strip()
-
-        if provider not in {"auto", "azure", "digitalocean", "do"}:
-            raise ValueError("DATABASE_PROVIDER must be one of: auto, azure, digitalocean")
-
-        if provider == "azure":
-            resolved = azure_url or primary_url
-        elif provider in {"digitalocean", "do"}:
-            resolved = do_url or primary_url
-        else:
-            if primary_url:
-                resolved = primary_url
-            elif azure_url and do_url:
-                raise ValueError(
-                    "Both AZURE_DATABASE_URL and DIGITALOCEAN_DATABASE_URL are set. "
-                    "Set DATABASE_PROVIDER to select one."
-                )
-            else:
-                resolved = azure_url or do_url
-
+        resolved = primary_url or azure_url
         if not resolved or "://" not in resolved:
             raise ValueError(
-                "Provide a valid database URI via DATABASE_URL, or set DATABASE_PROVIDER with "
-                "AZURE_DATABASE_URL / DIGITALOCEAN_DATABASE_URL"
+                "Provide a valid database URI via DATABASE_URL or AZURE_DATABASE_URL."
             )
         return resolved
 

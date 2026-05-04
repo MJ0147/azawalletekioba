@@ -24,7 +24,8 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: hotels
-          image: azawalletekioba/ekioba-hotels:latest
+          # CI replaces this tag on deploy. Never use 'latest' in production.
+          image: azawalletekioba/ekioba-hotels:v1.0.0
           imagePullPolicy: Always
           ports:
             - name: http

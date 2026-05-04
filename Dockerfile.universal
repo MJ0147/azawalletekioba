@@ -1,11 +1,10 @@
 # Universal Runtime (Python + Nginx)
-FROM python:3.11-slim-trixie
+FROM python:3.11-slim-bookworm
 
-# Install only necessary system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Apply OS security patches, then install runtime deps
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
     nginx supervisor \
-    openssl=3.5.5-1~deb13u2 \
-    libssl3t64=3.5.5-1~deb13u2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
