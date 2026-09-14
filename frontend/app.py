@@ -29,9 +29,9 @@ try:
 except ImportError:  # python-dotenv is optional at runtime
     pass
 
-from agent import get_dashboard_forecast
-
-# Make services importable
+# Make the frontend's own modules (agent, services, app/) importable no matter
+# which directory the server is started from — Vercel imports this file as the
+# entrypoint rather than running it from inside frontend/.
 _SVC_DIR = Path(__file__).resolve().parent
 if str(_SVC_DIR) not in sys.path:
     sys.path.insert(0, str(_SVC_DIR))
@@ -40,24 +40,28 @@ _APP_FEATURE_DIR = _SVC_DIR / "app"
 if str(_APP_FEATURE_DIR) not in sys.path:
     sys.path.insert(0, str(_APP_FEATURE_DIR))
 
+from agent import get_dashboard_forecast
 from services.ton import TonServiceError
 
 BASE_DIR = Path(__file__).resolve().parent
 PUBLIC_DIR = BASE_DIR / "public"
 
-# Defensive startup: ensure expected asset folders exist so App Service won't
-# crash on cold start if a deployment package is incomplete.
-(BASE_DIR / "static").mkdir(parents=True, exist_ok=True)
-PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
+# Defensive startup: ensure expected asset folders exist so a cold start does
+# not crash on an incomplete deployment package. Serverless filesystems such as
+# Vercel's are read-only, so a folder that cannot be created is not fatal.
+for _asset_dir in (BASE_DIR / "static", PUBLIC_DIR):
+    try:
+        _asset_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
 app = FastAPI(title="Ekioba Frontend")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static"), check_dir=False), name="static")
 
-# Serve public/ folder (static token metadata and PWA manifest)
-_public_dir = BASE_DIR / "public"
-if _public_dir.exists():
-    app.mount("/public", StaticFiles(directory=str(_public_dir), check_dir=False), name="public")
+# public/ (PWA manifest, token metadata) is served at root URLs by
+# `public_root_files` below, and directly by Vercel's CDN. It must not also be
+# mounted with app.mount(): Vercel handles that folder at the platform level.
 
 STORE_BACKEND_URL = os.getenv("STORE_BACKEND_URL", "http://localhost:8001/api/products/")
 STORE_PAYMENTS_URL = os.getenv("STORE_PAYMENTS_URL", "http://localhost:8001/payments/process/")

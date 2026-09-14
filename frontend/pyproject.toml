@@ -1,11 +1,8 @@
-﻿[build-system]
-requires = ["setuptools>=70"]
-build-backend = "setuptools.backends.legacy:build"
-
 [project]
 name = "ekioba-frontend"
 version = "1.0.0"
 requires-python = ">=3.11"
+# Keep in sync with requirements.txt.
 dependencies = [
     "fastapi==0.116.1",
     "uvicorn[standard]==0.35.0",
@@ -14,8 +11,11 @@ dependencies = [
     "aiofiles==24.1.0",
     "python-multipart==0.0.20",
     "yfinance==0.2.54",
+    "tonsdk==1.0.15",
+    "supabase==2.31.0",
+    "python-dotenv==1.0.1",
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
-
+[tool.vercel]
+# Deploy with the Vercel project's Root Directory set to `frontend`.
+entrypoint = "app:app"

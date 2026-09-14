@@ -1,0 +1,9 @@
+# Keep the Vercel function bundle to what the app needs at runtime.
+__pycache__/
+*.pyc
+tests/
+*.zip
+.env
+.env.*
+Dockerfile
+.dockerignore

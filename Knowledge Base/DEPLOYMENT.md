@@ -10,17 +10,46 @@ Azure has been removed. Supabase is the only platform EKIOBA depends on.
 | Schema | SQL files in `Knowledge Base/Supabase/`, run in the SQL Editor |
 | Access control | Row Level Security on every table; the service-role key is used server-side only |
 | Secrets | Edge Function secrets (`supabase secrets set`) and GitHub Actions secrets |
-| Hosting | Supabase Edge Functions — migration in progress, see below |
+| Hosting | Website (`frontend/`) on Vercel; Supabase Edge Functions for APIs — migration in progress |
 
 ### Limits that shape the migration
 
 - **Edge Functions run TypeScript on Deno, not Python.** The FastAPI and Django services have to be
   ported before they can be hosted on Supabase.
 - **No HTML on the default domain.** Responses with `text/html` from `*.supabase.co` are rewritten
-  to `text/plain`. Serving pages needs a Pro plan plus the custom-domain add-on.
+  to `text/plain`. Serving pages needs a Pro plan plus the custom-domain add-on — which is why the
+  website is hosted on Vercel instead.
 - **2 s CPU time and 256 MB memory per request.** Long-running work must stay off Edge Functions.
 
-Until the port is complete, run the services locally with `docker compose up`.
+Until the port is complete, run the other services locally with `docker compose up`.
+
+---
+
+## Frontend on Vercel
+
+The FastAPI website in `frontend/` deploys to Vercel as a single Python function. Its data stays in
+Supabase.
+
+1. Vercel project → **Settings → Build and Deployment → Root Directory** = `frontend`.
+   Built from the repository root, Vercel finds no entrypoint and installs the wrong dependencies.
+2. `frontend/pyproject.toml` declares the entrypoint (`[tool.vercel] entrypoint = "app:app"`) and
+   the dependencies. Keep it in sync with `frontend/requirements.txt`.
+3. `frontend/.vercelignore` keeps tests, archives and `.env*` files out of the bundle.
+4. Set environment variables under **Settings → Environment Variables**:
+
+| Variable | Needed for |
+|----------|------------|
+| `SUPABASE_URL`, `SUPABASE_KEY` | Supabase access, todos page, Supabase Health card |
+| `SUPABASE_SERVICE_KEY` | Recording and verifying orders (server-side only) |
+| `ORDERS_ADMIN_TOKEN` | `GET /api/orders` and `/api/orders/{id}` |
+| `TON_MERCHANT_WALLET`, `TON_API_KEY` | IDIA checkout and payment verification |
+| `FLW_SECRET_KEY` | Live USDT → NGN rate |
+| `PUBLIC_BASE_URL` | Optional — only if the TON Connect manifest origin can't be derived from the request |
+
+The chat, cargo, academy, hotels and store-catalog features call separate services
+(`AI_ASSISTANT_URL`, `CARGO_SERVICE_URL`, `LANGUAGE_ACADEMY_URL`, `HOTELS_SERVICE_URL`,
+`STORE_BACKEND_URL`). Those services are not deployed on Vercel, so those features won't have live
+data until the services are hosted and their URLs are set.
 
 ---
 

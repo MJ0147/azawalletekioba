@@ -9,5 +9,5 @@ yfinance==0.2.54
 tonsdk==1.0.15
 # Supabase (async client; the sync one would block the FastAPI event loop)
 supabase==2.31.0
-# Load .env for local development (App Service settings still take precedence)
+# Load .env for local development (host environment variables still take precedence)
 python-dotenv==1.0.1
