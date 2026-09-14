@@ -1,0 +1,54 @@
+2026-05-05T16:54:07.6914088Z State: Starting, Action: EstablishingSiteNetworks, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-05T16:54:12.4535625Z State: Starting, Action: StartingSiteContainers, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-05-05T16:54:12.4735792Z Container start method called.
+2026-05-05T16:54:12.5125017Z State: Starting, Action: PullingImage, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pulling image 10.1.0.4:13209/appsvc/python:3.12_20260203.2.tuxprod for ekioba-frontend-ccan-20260502., DetailsLevel: INFO
+2026-05-05T16:54:12.5504518Z Establishing network.
+2026-05-05T16:54:12.5545704Z Pulling image: appsvc/python:3.12_20260203.2.tuxprod.
+2026-05-05T16:54:15.2268933Z Image appsvc/python:3.12_20260203.2.tuxprod is pulled from registry 10.1.0.4:13209
+2026-05-05T16:54:15.2344929Z Container is starting.
+2026-05-05T16:54:15.2353458Z State: Starting, Action: MountingVolumes, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Mounting volumes for ekioba-frontend-ccan-20260502., DetailsLevel: INFO
+2026-05-05T16:54:15.2368039Z Establishing user namespace if not established already.
+2026-05-05T16:54:15.2430274Z Establishing network if not established already.
+2026-05-05T16:54:15.2435421Z Mounting volumes.
+2026-05-05T16:54:15.2564649Z Nested mountpoint 
+2026-05-05T16:54:15.3544409Z Nested mountpoint volatile/logs
+2026-05-05T16:54:15.3653733Z Nested mountpoint 
+2026-05-05T16:54:15.3936798Z Nested mountpoint 
+2026-05-05T16:54:15.6212100Z Nested mountpoint 
+2026-05-05T16:54:16.0888300Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Finished pulling container image and mounting volumes for ekioba-frontend-ccan-20260502. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-05-05T16:54:16.0890288Z Creating container.
+2026-05-05T16:54:16.0893403Z Creating pipes for streaming container io.
+2026-05-05T16:54:16.0900243Z Creating stdout named pipe at /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stdout_f57fc0ec4e3e42b1b6adcddb73e11fac.
+2026-05-05T16:54:16.0918877Z Successfully created stdout named pipe at: /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stdout_f57fc0ec4e3e42b1b6adcddb73e11fac.
+2026-05-05T16:54:16.1011402Z Opening named pipe /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stdout_f57fc0ec4e3e42b1b6adcddb73e11fac for reading in non-blocking mode.
+2026-05-05T16:54:16.1077900Z Successfully opened named pipe: /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stdout_f57fc0ec4e3e42b1b6adcddb73e11fac.
+2026-05-05T16:54:16.1087081Z Successfully removed non-blocking flag from /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stdout_f57fc0ec4e3e42b1b6adcddb73e11fac.
+2026-05-05T16:54:16.1111616Z Creating stderr named pipe at /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stderr_7759e617bb3f4a1688cf27222621915a.
+2026-05-05T16:54:16.1116137Z Successfully created stderr named pipe at: /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stderr_7759e617bb3f4a1688cf27222621915a.
+2026-05-05T16:54:16.1176304Z Opening named pipe /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stderr_7759e617bb3f4a1688cf27222621915a for reading in non-blocking mode.
+2026-05-05T16:54:16.1184808Z Successfully opened named pipe: /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stderr_7759e617bb3f4a1688cf27222621915a.
+2026-05-05T16:54:16.1189625Z Successfully removed non-blocking flag from /podr/container/pipe/ffa1ce70e049_ekioba-frontend-ccan-20260502/stderr_7759e617bb3f4a1688cf27222621915a.
+2026-05-05T16:54:16.1205123Z Creating container with image: appsvc/python:3.12_20260203.2.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/python:3.12_20260203.2.tuxprod
+2026-05-05T16:54:17.2736876Z Starting container: ffa1ce70e049_ekioba-frontend-ccan-20260502.
+2026-05-05T16:54:17.5001096Z Starting watchers and probes.
+2026-05-05T16:54:17.5082288Z Starting metrics collection.
+2026-05-05T16:54:17.5092714Z Container is running.
+2026-05-05T16:54:17.5094205Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container ekioba-frontend-ccan-20260502 successfully created and is running., DetailsLevel: INFO
+2026-05-05T16:54:17.6693908Z Container start method finished after 5176 ms.
+2026-05-05T16:54:17.6697653Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container ekioba-frontend-ccan-20260502 successfully created and is running., DetailsLevel: INFO
+2026-05-05T16:54:17.6897169Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-05-05T16:55:16.8659016Z Site startup probe succeeded after 59.0718506 seconds.
+2026-05-05T16:55:17.1992996Z State: Starting, Action: WarmUpProbeSucceeded, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site startup probe succeeded after 59.0718506 seconds., DetailsLevel: INFO
+2026-05-05T16:55:17.9335473Z Site is running with deployment version: 37b0d39b-f84b-4d44-9475-aa7bed11ef22
+2026-05-05T16:55:17.9345476Z Site started.
+2026-05-05T16:55:17.9346457Z State: Started, Action: None, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site started at 05/05/2026 16:55:17 (UTC), DetailsLevel: INFO
+2026-05-05T16:55:17.9436371Z Site is running with patch version PYTHON 3.12.12
+2026-05-05T16:55:38.1394445Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 05/04/2026 10:54:18, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site started at 05/04/2026 12:53:21 (UTC), DetailsLevel: INFO
+2026-05-05T16:55:38.2167000Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 05/04/2026 10:54:18, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site started at 05/04/2026 12:53:21 (UTC), DetailsLevel: INFO
+2026-05-05T16:55:38.3040249Z Container is terminating. Grace period: 5 seconds.
+2026-05-05T16:55:38.7339873Z Stop and delete container. Retry count = 0
+2026-05-05T16:55:38.8028592Z Stopping container: 6bf697cafa20_ekioba-frontend-ccan-20260502.
+2026-05-05T16:55:43.8186138Z Deleting container: 6bf697cafa20_ekioba-frontend-ccan-20260502. Retry count = 0
+2026-05-05T16:55:46.4873891Z Container spec TerminationMessagePolicy  path 
+2026-05-05T16:55:46.4895747Z Container is terminated. Total time elapsed: 8184 ms.
+2026-05-05T16:55:46.5065491Z Site: ekioba-frontend-ccan-20260502 stopped.

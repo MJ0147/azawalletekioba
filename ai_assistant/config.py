@@ -8,11 +8,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # Project
-    PROJECT_NAME: str = "EKIOBA AI Assistant"
+    PROJECT_NAME: str = "Iyobo AI (Aza AI) — EKIOBA"
     API_V1_STR: str = "/api/v1"
 
-    # Database provider — set AZURE_DATABASE_URL for Azure SQL/PostgreSQL
-    AZURE_DATABASE_URL: str = ""
+    # Database — Supabase Postgres connection string (Supabase -> Connect)
     DATABASE_URL: str = ""
 
     # Auth — must be a strong secret, at least 32 characters
@@ -47,12 +46,11 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def validate_database_url(cls, v: str) -> str:
-        azure_url = (os.getenv("AZURE_DATABASE_URL") or "").strip()
-        primary_url = str(v or "").strip()
-        resolved = primary_url or azure_url
+        resolved = str(v or "").strip()
         if not resolved or "://" not in resolved:
             raise ValueError(
-                "Provide a valid database URI via DATABASE_URL or AZURE_DATABASE_URL."
+                "Provide a valid database URI via DATABASE_URL "
+                "(your Supabase Postgres connection string)."
             )
         return resolved
 

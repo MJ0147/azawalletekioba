@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Service Unavailable — EKIOBA{% endblock %}
+{% block description %}EKIOBA service fallback page.{% endblock %}
+
+{% block content %}
+<div class="shell">
+  <section class="panel" style="text-align:center;padding:2rem 1.25rem;">
+    <p class="eyebrow">EKIOBA</p>
+    <h1 style="margin:0 0 .5rem;">{{ status_code or 500 }}</h1>
+    <p class="sub" style="margin:0 auto;max-width:58ch;">{{ message or 'Service temporarily unavailable. Please try again shortly.' }}</p>
+    <div class="row" style="justify-content:center;margin-top:1rem;">
+      <a href="/" class="btn-primary">Go Home</a>
+      <a href="/#services" class="btn-ghost">All Services</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

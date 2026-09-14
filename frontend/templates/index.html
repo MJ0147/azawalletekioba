@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}EKIOBA — Edo Cultural Marketplace{% endblock %}
-{% block description %}Authentic artifacts, fashion, and food from the Edo Kingdom — powered by blockchain payments and AI market forecasts.{% endblock %}
+{% block description %}Authentic artifacts, fashion, and food from the Edo Kingdom — powered by Aza Wallet and TON blockchain payments.{% endblock %}
 
 {% block content %}
 <div class="shell">
@@ -13,11 +13,12 @@
       <h1>Discover Edo Culture &amp; Commerce</h1>
       <p class="sub">
         Authentic artifacts, fashion, and food from Edo artisans —
-        pay with TON or Solana blockchain, powered by Azure AI forecasts.
+         pay with IDIA Coin, powered by Aza Wallet.
       </p>
       <div class="row">
         <a href="#store" class="btn-primary">Browse Store</a>
-        <a href="{{ iyobo_url }}" class="btn-ghost">AI Chat</a>
+        <a href="#services" class="btn-primary">All Services</a>
+        <a href="{{ iyobo_url }}" class="btn-ghost">Iyobo AI</a>
       </div>
     </div>
     <div class="hero-badge">
@@ -43,8 +44,62 @@
     <script id="products-json" type="application/json">{{ products_json | safe }}</script>
   </section>
 
+  <!-- ── Services Hub ─────────────────────────────────────────────────── -->
+  <section id="services" class="panel">
+    <div class="panel-header">
+      <h2>All Services</h2>
+      <p>One menu for every EKIOBA app service</p>
+    </div>
+    <div class="service-menu">
+      <a class="service-tile" href="/">🏠 Home</a>
+      <a class="service-tile" href="/#store">🛍️ Store</a>
+      <a class="service-tile" href="/hotels">🏨 Hotels</a>
+      <a class="service-tile" href="/cargo">🚚 Cargo</a>
+      <a class="service-tile" href="/academy">🎓 Academy</a>
+      <a class="service-tile" href="/#home-dashboard">📊 Home Dashboard</a>
+      <a class="service-tile" href="/#wallet-forecast">💳 Wallet + Forecast</a>
+      <a class="service-tile" href="{{ iyobo_url }}">🤖 Iyobo (Aza AI)</a>
+    </div>
+  </section>
+
+  <section id="home-dashboard" class="panel">
+    <div class="panel-header">
+      <h2>General Dashboard</h2>
+      <p>Dynamic market intelligence sourced from SoSoValue, Google Finance, and Yahoo Finance</p>
+    </div>
+    <div class="forecast-grid">
+      <article class="chart-card">
+        <h3>📈 Stock Forecast</h3>
+        <canvas id="homeStockChart" role="img" aria-label="Stock price forecast chart"></canvas>
+        <div class="prediction-box">
+          <div class="prediction-label">Next Predicted Price</div>
+          <div class="prediction-value" id="home-stock-next">—</div>
+        </div>
+      </article>
+
+      <article class="chart-card">
+        <h3>₿ Crypto Forecast (BTC)</h3>
+        <canvas id="homeCryptoChart" role="img" aria-label="BTC price forecast chart"></canvas>
+        <div class="prediction-box">
+          <div class="prediction-label">Next Predicted Price</div>
+          <div class="prediction-value" id="home-crypto-next">—</div>
+        </div>
+      </article>
+
+      <article class="chart-card">
+        <h3>📊 Market Sentiment</h3>
+        <canvas id="homeSentimentChart" role="img" aria-label="Market sentiment score chart"></canvas>
+      </article>
+
+      <article class="chart-card">
+        <h3>☁️ Cloud Metrics</h3>
+        <canvas id="homeCloudChart" role="img" aria-label="Cloud metrics chart"></canvas>
+      </article>
+    </div>
+  </section>
+
   <!-- ── Category Chart + Wallet ───────────────────────────────────────── -->
-  <div class="grid-two">
+  <div class="grid-two" id="wallet-forecast">
     <div class="panel chart-panel">
       <div class="panel-header">
         <h2>Product Categories</h2>
@@ -55,17 +110,12 @@
     <div class="panel">
       <div class="panel-header">
         <h2>Wallet &amp; Payments</h2>
-        <p>Pay with TON or Solana blockchain</p>
+        <p>IDIA Coin is the native and only checkout currency</p>
       </div>
-      {% if ton_wallet %}
-      <p class="wallet-hint">TON: <code>{{ ton_wallet[:20] }}…</code></p>
-      {% endif %}
-      {% if solana_wallet %}
-      <p class="wallet-hint" style="margin-top:.4rem;">Solana: <code>{{ solana_wallet[:20] }}…</code></p>
-      {% endif %}
+      <p class="wallet-hint" style="margin-top:.6rem;">Connect Tonkeeper or any TON Connect wallet with the Connect Wallet button, then pay with IDIA Coin.</p>
       <div class="row" style="margin-top:1rem;">
-        <a href="/wallet-dashboard" class="btn-primary">Open Wallet Dashboard</a>
-        <a href="/dashboard" class="btn-ghost">Market Forecast</a>
+        <a href="/#home-dashboard" class="btn-primary">Open Home Dashboard</a>
+        <a href="{{ iyobo_url }}" class="btn-ghost">Ask Aza AI Assistant</a>
       </div>
     </div>
   </div>
@@ -75,6 +125,110 @@
 <script>
 (function () {
   'use strict';
+  const forecast = {{ forecast | tojson }};
+
+  function renderLineChart(elId, seriesLabel, labels, actual, predicted, colors) {
+    const canvas = document.getElementById(elId);
+    if (!canvas) return;
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels || [],
+        datasets: [
+          {
+            label: seriesLabel,
+            data: actual || [],
+            borderColor: colors.main,
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            pointRadius: 2,
+          },
+          {
+            label: 'Predicted',
+            data: predicted || [],
+            borderColor: colors.pred,
+            backgroundColor: 'transparent',
+            borderDash: [5, 4],
+            tension: 0.3,
+            pointRadius: 2,
+          }
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+      },
+    });
+  }
+
+  renderLineChart(
+    'homeStockChart',
+    'Stock',
+    forecast.stocks?.labels || [],
+    forecast.stocks?.actual || [],
+    forecast.stocks?.predicted || [],
+    { main: '#dd5b2f', pred: '#9f3f1f' }
+  );
+
+  renderLineChart(
+    'homeCryptoChart',
+    'BTC',
+    forecast.crypto?.labels || [],
+    forecast.crypto?.actual || [],
+    forecast.crypto?.predicted || [],
+    { main: '#1d2a33', pred: '#dd5b2f' }
+  );
+
+  const sentimentCanvas = document.getElementById('homeSentimentChart');
+  if (sentimentCanvas) {
+    new Chart(sentimentCanvas, {
+      type: 'bar',
+      data: {
+        labels: forecast.sentiment?.labels || ['Market'],
+        datasets: [{
+          label: 'Sentiment Score',
+          data: forecast.sentiment?.values || [50],
+          backgroundColor: '#1d2a33',
+        }],
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0, max: 100 } },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+
+  const cloudCanvas = document.getElementById('homeCloudChart');
+  if (cloudCanvas) {
+    new Chart(cloudCanvas, {
+      type: 'line',
+      data: {
+        labels: forecast.cloud?.labels || [],
+        datasets: [{
+          label: 'Cloud Usage',
+          data: forecast.cloud?.values || [],
+          borderColor: '#dd5b2f',
+          backgroundColor: 'transparent',
+          tension: 0.3,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+
+  const stockPred = forecast.stocks?.predicted || [];
+  const cryptoPred = forecast.crypto?.predicted || [];
+  if (stockPred.length) {
+    document.getElementById('home-stock-next').textContent = '$' + Number(stockPred[stockPred.length - 1]).toFixed(2);
+  }
+  if (cryptoPred.length) {
+    document.getElementById('home-crypto-next').textContent = '$' + Number(cryptoPred[cryptoPred.length - 1]).toFixed(2);
+  }
+
   const labels = {{ chart_labels | tojson }};
   const values = {{ chart_values | tojson }};
   new Chart(document.getElementById('categoryChart'), {

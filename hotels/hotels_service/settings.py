@@ -1,11 +1,15 @@
 import os
 from pathlib import Path
+from urllib.parse import parse_qs, unquote, urlparse
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", get_random_secret_key())
 DEBUG = os.environ.get("DEBUG", "False") == "True"
+# Supabase Postgres connection string (Supabase -> Connect). Empty or
+# non-postgres values fall back to SQLite for tests and local dev.
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
 # In production set ALLOWED_HOSTS to your actual domain(s), e.g. "ekioba.com,www.ekioba.com"
 _raw_hosts = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1" if not DEBUG else "*")
@@ -24,6 +28,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -53,21 +58,20 @@ WSGI_APPLICATION = "hotels_service.wsgi.application"
 ASGI_APPLICATION = "hotels_service.asgi.application"
 
 def _database_config_from_env() -> dict[str, object]:
-    db_engine = os.environ.get("DJANGO_DB_ENGINE", "sqlite")
+    parsed = urlparse(DATABASE_URL)
 
-    # Azure SQL Managed Instance / Azure SQL Database
-    if db_engine == "mssql":
+    # Supabase Postgres
+    if parsed.scheme in ("postgres", "postgresql"):
+        query = parse_qs(parsed.query)
         return {
-            "ENGINE": "mssql",
-            "NAME": os.environ.get("AZURE_SQL_HOTELS_DB", "ekioba_hotels"),
-            "USER": os.environ.get("AZURE_SQL_USER", ""),
-            "PASSWORD": os.environ.get("AZURE_SQL_PASSWORD", ""),
-            "HOST": os.environ.get("AZURE_SQL_HOST", ""),
-            "PORT": os.environ.get("AZURE_SQL_PORT", "1433"),
-            "OPTIONS": {
-                "driver": "ODBC Driver 18 for SQL Server",
-                "extra_params": "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30",
-            },
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": parsed.path.lstrip("/") or "postgres",
+            "USER": unquote(parsed.username or "postgres"),
+            "PASSWORD": unquote(parsed.password or ""),
+            "HOST": parsed.hostname or "",
+            "PORT": parsed.port or 5432,
+            # Supabase only accepts TLS connections.
+            "OPTIONS": {"sslmode": query.get("sslmode", ["require"])[0]},
         }
 
     # SQLite — tests and local dev only
@@ -88,6 +92,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Security headers — active in production (DEBUG=False)

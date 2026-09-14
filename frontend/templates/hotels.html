@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Hotels — EKIOBA{% endblock %}
+{% block description %}Browse hotel listings across Nigeria with EKIOBA.{% endblock %}
+
+{% block content %}
+<div class="shell"
+     x-data="{
+       city: '',
+       listings: {{ listings | tojson | safe }},
+       filteredListings: {{ listings | tojson | safe }},
+       loading: false,
+       bookModal: false,
+       selectedHotel: null,
+       checkIn: '',
+       checkOut: '',
+       nights: 1,
+       chain: 'ton',
+       bookingResult: null,
+       bookingError: '',
+       bookingLoading: false,
+
+       filterByCity() {
+         if (!this.city.trim()) { this.filteredListings = this.listings; return; }
+         const q = this.city.toLowerCase();
+         this.filteredListings = this.listings.filter(h => (h.city||'').toLowerCase().includes(q));
+       },
+
+       async searchCity() {
+         this.loading = true;
+         try {
+           const r = await fetch('/api/hotels/listings?city=' + encodeURIComponent(this.city));
+           const d = await r.json();
+           this.filteredListings = d.listings || d || [];
+         } catch(e) {
+           this.filterByCity();
+         }
+         this.loading = false;
+       },
+
+       openBook(hotel) {
+         this.selectedHotel = hotel;
+         this.bookingResult = null;
+         this.bookingError = '';
+         const today = new Date();
+         const tom = new Date(today); tom.setDate(tom.getDate()+1);
+         this.checkIn = today.toISOString().slice(0,10);
+         this.checkOut = tom.toISOString().slice(0,10);
+         this.nights = 1;
+         this.bookModal = true;
+       },
+
+       calcNights() {
+         if (this.checkIn && this.checkOut) {
+           const d = (new Date(this.checkOut) - new Date(this.checkIn)) / 86400000;
+           this.nights = d > 0 ? d : 1;
+         }
+       },
+
+       totalCost() {
+         if (!this.selectedHotel) return 0;
+         return (parseFloat(this.selectedHotel.price_per_night) || 0) * this.nights;
+       },
+
+       async confirmBook() {
+         this.bookingError = ''; this.bookingResult = null;
+         if (!this.checkIn || !this.checkOut || this.nights < 1) {
+           this.bookingError = 'Check-in and check-out dates are required.'; return;
+         }
+         this.bookingLoading = true;
+         try {
+           const r = await fetch('/api/hotels/book', {
+             method: 'POST',
+             headers: {'Content-Type':'application/json'},
+             body: JSON.stringify({
+               hotel_id: this.selectedHotel.id || this.selectedHotel.title,
+               // The API reads hotel_title; hotel_name was silently ignored.
+               hotel_title: this.selectedHotel.title,
+               city: this.selectedHotel.city || '',
+               check_in: this.checkIn,
+               check_out: this.checkOut,
+               nights: this.nights,
+               price_per_night: this.selectedHotel.price_per_night,
+               chain: this.chain
+             })
+           });
+           const d = await r.json();
+           if (d.booking_ref) {
+             this.bookingResult = d;
+             if (d.payment_error) {
+               this.bookingError = d.payment_error;
+             } else {
+               // Open the IDIA modal for every successful booking; the old
+               // gate tested a response field the TON flow never returns.
+               this.bookModal = false;
+               openIdiaPayment(this.selectedHotel.id || 'hotel', this.selectedHotel.title, this.totalCost());
+             }
+           } else {
+             this.bookingError = d.error || 'Booking failed.';
+           }
+         } catch(e) {
+           this.bookingError = 'Service unavailable. Please try again.';
+         }
+         this.bookingLoading = false;
+       }
+     }">
+
+  <section class="hero" style="padding-bottom:2rem">
+    <div>
+      <p class="eyebrow">Accommodation</p>
+      <h1>Hotel Listings</h1>
+      <p class="sub">Find comfortable stays across Nigeria, curated for Edo Kingdom visitors and travellers.</p>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-pill">🏨 Hotels</span>
+      <span class="hero-pill">⬡ Idia Coin Payments</span>
+    </div>
+  </section>
+
+  <!-- Service status banner -->
+  {% if service_offline %}
+  <div class="panel" style="background:var(--color-warn,#fffbeb);border:1px solid #fbbf24;margin-bottom:1.5rem">
+    <p style="margin:0;color:#92400e">⚠️ Hotel service is temporarily offline. Showing sample listings.</p>
+  </div>
+  {% endif %}
+
+  <!-- City filter -->
+  <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap">
+    <input type="search" x-model="city" placeholder="Filter by city (e.g. Benin City)"
+           @input.debounce.400ms="filterByCity()"
+           @keyup.enter="searchCity()"
+           style="padding:.6rem .9rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.95rem;background:#fff;min-width:240px" />
+    <button @click="searchCity()" :disabled="loading" class="btn-primary" style="padding:.6rem 1.1rem;font-size:.9rem">
+      <span x-text="loading ? 'Searching…' : '🔍 Search'"></span>
+    </button>
+    <button x-show="city" @click="city='';filteredListings=listings" class="btn-ghost"
+            style="padding:.6rem 1rem;font-size:.85rem">Clear</button>
+    <span style="font-size:.85rem;color:var(--color-muted)" x-text="filteredListings.length + ' listing' + (filteredListings.length===1?'':'s') + ' found'"></span>
+  </div>
+
+  <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin:-.55rem 0 1rem">
+    <button class="btn-ghost" style="padding:.35rem .65rem;font-size:.78rem" @click="city='Benin City';searchCity()">Benin City</button>
+    <button class="btn-ghost" style="padding:.35rem .65rem;font-size:.78rem" @click="city='Abuja';searchCity()">Abuja</button>
+    <button class="btn-ghost" style="padding:.35rem .65rem;font-size:.78rem" @click="city='Lagos';searchCity()">Lagos</button>
+    <button class="btn-ghost" style="padding:.35rem .65rem;font-size:.78rem" @click="city='Port Harcourt';searchCity()">Port Harcourt</button>
+  </div>
+
+  <!-- Listings grid -->
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Available Hotels</h2>
+      <p>Book now with Idia Coin on TON</p>
+    </div>
+
+    <template x-if="filteredListings.length > 0">
+      <div class="product-grid">
+        <template x-for="hotel in filteredListings" :key="hotel.id || hotel.title">
+          <article class="product-card">
+            <div class="product-img-wrap"
+                 :style="'background:' + (hotel.image_url ? 'url(' + hotel.image_url + ') center/cover' : 'linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%)') + ';display:flex;align-items:center;justify-content:center;min-height:160px'">
+              <span x-show="!hotel.image_url" style="font-size:2.5rem">🏨</span>
+            </div>
+            <div class="product-info">
+              <h3 class="product-name" x-text="hotel.title"></h3>
+              <p class="product-desc" style="color:var(--color-muted)" x-text="'📍 ' + hotel.city"></p>
+              <p x-show="hotel.description" style="font-size:.83rem;color:var(--color-muted);margin:.3rem 0" x-text="hotel.description"></p>
+              <div style="display:flex;align-items:center;gap:.5rem;margin:.4rem 0;flex-wrap:wrap">
+                <span x-show="hotel.rating"
+                      style="font-size:.8rem;background:#fef9c3;color:#854d0e;padding:.15rem .5rem;border-radius:999px;font-weight:600"
+                      x-text="'⭐ ' + hotel.rating"></span>
+                <span x-show="hotel.available !== undefined"
+                      :style="'font-size:.78rem;padding:.15rem .5rem;border-radius:999px;font-weight:600;' + (hotel.available ? 'background:#dcfce7;color:#166534' : 'background:#fee2e2;color:#991b1b')"
+                      x-text="hotel.available ? '✓ Available' : '✗ Full'"></span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.75rem;flex-wrap:wrap;gap:.5rem">
+                <span class="product-price" x-text="'₦' + Number(hotel.price_per_night || 0).toLocaleString() + '/night'"></span>
+                <div style="display:flex;gap:.4rem">
+                  <button @click="openIdiaPayment(hotel.id || hotel.title, hotel.title, hotel.price_per_night || 0)"
+                          class="btn-ghost"
+                          style="padding:.4rem .7rem;font-size:.8rem;white-space:nowrap">
+                    ⬡ Pay Idia
+                  </button>
+                  <button @click="openBook(hotel)"
+                          :disabled="hotel.available === false"
+                          class="btn-primary"
+                          style="padding:.4rem .9rem;font-size:.85rem;white-space:nowrap">
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </template>
+      </div>
+    </template>
+
+    <template x-if="filteredListings.length === 0">
+      <div style="text-align:center;padding:3rem 1rem;color:var(--color-muted)">
+        <p style="font-size:2rem">🏨</p>
+        <p>No hotels found for your search.</p>
+      </div>
+    </template>
+  </section>
+
+  <!-- Booking Modal (Alpine teleport) -->
+  <div x-show="bookModal"
+       style="position:fixed;inset:0;z-index:8500;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:1rem"
+       @click.self="bookModal=false">
+    <div style="background:#fff;border-radius:1rem;padding:2rem;max-width:480px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h2 style="margin:0;font-size:1.2rem">Book Hotel</h2>
+        <button @click="bookModal=false" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#666">✕</button>
+      </div>
+
+      <template x-if="selectedHotel">
+        <div>
+          <p style="font-weight:700;font-size:1.05rem" x-text="selectedHotel.title"></p>
+          <p style="color:var(--color-muted);font-size:.88rem;margin-bottom:1.25rem" x-text="'📍 ' + selectedHotel.city"></p>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+            <label style="font-size:.85rem;font-weight:600;display:flex;flex-direction:column;gap:.3rem">
+              Check-in
+              <input type="date" x-model="checkIn" @change="calcNights()"
+                     style="padding:.55rem .7rem;border:1px solid #ddd;border-radius:.5rem;font-size:.9rem" />
+            </label>
+            <label style="font-size:.85rem;font-weight:600;display:flex;flex-direction:column;gap:.3rem">
+              Check-out
+              <input type="date" x-model="checkOut" @change="calcNights()"
+                     style="padding:.55rem .7rem;border:1px solid #ddd;border-radius:.5rem;font-size:.9rem" />
+            </label>
+          </div>
+
+          <div style="background:#f8fafc;border-radius:.75rem;padding:.9rem;margin-bottom:1rem">
+            <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.3rem">
+              <span style="color:#666" x-text="'₦' + Number(selectedHotel.price_per_night||0).toLocaleString() + ' × ' + nights + ' night' + (nights===1?'':'s')"></span>
+              <span style="font-weight:700" x-text="'₦' + totalCost().toLocaleString()"></span>
+            </div>
+          </div>
+
+          <p style="font-size:.85rem;font-weight:600;margin-bottom:1.25rem">Pay with Idia Coin on TON ⬡</p>
+
+          <button @click="confirmBook()" :disabled="bookingLoading" class="btn-primary" style="width:100%;padding:.75rem;font-size:1rem">
+            <span x-text="bookingLoading ? 'Booking…' : 'Confirm Booking'"></span>
+          </button>
+
+          <template x-if="bookingError">
+            <p style="color:#ef4444;font-size:.88rem;margin-top:.75rem" x-text="bookingError"></p>
+          </template>
+
+          <template x-if="bookingResult">
+            <div style="margin-top:1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:.75rem;padding:1rem">
+              <p style="font-weight:700;color:#16a34a">✅ Booking Confirmed!</p>
+              <p style="font-size:.88rem;margin:.35rem 0">Ref: <strong x-text="bookingResult.booking_ref"></strong></p>
+              <p style="font-size:.83rem;color:#555">Payment request sent to your wallet. Complete the Idia Coin transfer to finalise.</p>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Add listing CTA -->
+  <section class="panel" style="margin-top:1.5rem">
+    <div class="panel-header">
+      <h2>List Your Property</h2>
+      <p>Are you a hotel owner? Contact us to list your property on EKIOBA.</p>
+    </div>
+    <a href="/chat" class="btn-primary">Chat with Iyobo AI</a>
+  </section>
+
+</div>
+{% endblock %}

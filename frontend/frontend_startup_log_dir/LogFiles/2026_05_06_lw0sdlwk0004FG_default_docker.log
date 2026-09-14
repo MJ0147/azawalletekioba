@@ -1,0 +1,843 @@
+2026-05-06T10:46:18.6326323Z    _____                               
+2026-05-06T10:46:18.6328036Z   /  _  \ __________ _________   ____  
+2026-05-06T10:46:18.6328105Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T10:46:18.6328183Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T10:46:18.6328208Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T10:46:18.6328240Z         \/      \/                  \/ 
+2026-05-06T10:46:18.6328263Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T10:46:18.6328285Z 
+2026-05-06T10:46:18.6328316Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T10:46:18.6328367Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T10:46:18.6328391Z Python version   : 3.12.12
+2026-05-06T10:46:18.6328415Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T10:46:18.6328442Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T10:46:18.6328464Z 
+2026-05-06T10:46:18.6328487Z Note: Any data outside '/home' is not persisted
+2026-05-06T10:46:21.8163429Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T10:46:21.8675093Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T10:46:22.0623193Z Updating certificates in /etc/ssl/certs...
+2026-05-06T10:46:42.9572207Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T10:46:42.9572595Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T10:46:43.0652126Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T10:46:43.1507375Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T10:46:43.1905314Z 4 added, 0 removed; done.
+2026-05-06T10:46:43.1905931Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T10:46:43.1905986Z done.
+2026-05-06T10:46:43.2320254Z CA certificates copied and updated successfully.
+2026-05-06T10:46:43.5053495Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T10:46:44.3229654Z Starting periodic command scheduler: cron.
+2026-05-06T10:46:44.3230950Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T10:46:44.4890289Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-05-06T10:46:44.5113475Z Build Operation ID: 87d46acc6790f6c5
+2026-05-06T10:46:44.5575022Z Output is compressed. Extracting it...
+2026-05-06T10:46:44.5578281Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T10:46:44.5602686Z Found zstd-compressed tarball.
+2026-05-06T10:46:44.5603503Z Extracting '/home/site/wwwroot/output.tar.zst' to directory '/tmp/8deab5926821131'...
+2026-05-06T10:46:44.5603553Z Using zstd for decompression of file: /home/site/wwwroot/output.tar.zst
+2026-05-06T10:47:12.7878598Z zstd tar Successfully extracted '/home/site/wwwroot/output.tar.zst' to '/tmp/8deab5926821131'
+2026-05-06T10:47:12.7879227Z App path is set to '/tmp/8deab5926821131'
+2026-05-06T10:47:12.9362158Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T10:47:13.5729396Z Using packages from virtual environment antenv located at /tmp/8deab5926821131/antenv.
+2026-05-06T10:47:13.5753708Z Updated PYTHONPATH to '/opt/startup/app_logs:/tmp/8deab5926821131/antenv/lib/python3.12/site-packages'
+2026-05-06T10:47:38.8002014Z Traceback (most recent call last):
+2026-05-06T10:47:38.8020377Z   File "/tmp/8deab5926821131/antenv/bin/uvicorn", line 10, in <module>
+2026-05-06T10:47:38.8024837Z     sys.exit(main())
+2026-05-06T10:47:38.8026702Z              ^^^^^^
+2026-05-06T10:47:38.8104209Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1514, in __call__
+2026-05-06T10:47:38.8303695Z     return self.main(*args, **kwargs)
+2026-05-06T10:47:38.8312045Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8976149Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1435, in main
+2026-05-06T10:47:38.8976738Z     rv = self.invoke(ctx)
+2026-05-06T10:47:38.8976799Z          ^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8976842Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1298, in invoke
+2026-05-06T10:47:38.8976876Z     return ctx.invoke(self.callback, **ctx.params)
+2026-05-06T10:47:38.8977225Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8977271Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 853, in invoke
+2026-05-06T10:47:38.8977303Z     return callback(*args, **kwargs)
+2026-05-06T10:47:38.8977332Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8977364Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 413, in main
+2026-05-06T10:47:38.8977392Z     run(
+2026-05-06T10:47:38.8977450Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 580, in run
+2026-05-06T10:47:38.8977479Z     server.run()
+2026-05-06T10:47:38.8977512Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+2026-05-06T10:47:38.8977543Z     return asyncio.run(self.serve(sockets=sockets))
+2026-05-06T10:47:38.8977573Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8977606Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 195, in run
+2026-05-06T10:47:38.8977681Z     return runner.run(main)
+2026-05-06T10:47:38.8977710Z            ^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8977741Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 118, in run
+2026-05-06T10:47:38.8977769Z     return self._loop.run_until_complete(task)
+2026-05-06T10:47:38.8977798Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8977833Z   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+2026-05-06T10:47:38.8977891Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+2026-05-06T10:47:38.8977921Z     await self._serve(sockets)
+2026-05-06T10:47:38.8977952Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+2026-05-06T10:47:38.8977980Z     config.load()
+2026-05-06T10:47:38.8978012Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+2026-05-06T10:47:38.8978042Z     self.loaded_app = import_from_string(self.app)
+2026-05-06T10:47:38.8978091Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8978126Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2026-05-06T10:47:38.8978155Z     module = importlib.import_module(module_str)
+2026-05-06T10:47:38.8990496Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.8990615Z   File "/opt/python/3.12.12/lib/python3.12/importlib/__init__.py", line 90, in import_module
+2026-05-06T10:47:38.9179071Z     return _bootstrap._gcd_import(name[level:], package, level)
+2026-05-06T10:47:38.9202992Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.9203066Z   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+2026-05-06T10:47:38.9203098Z   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+2026-05-06T10:47:38.9203308Z   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+2026-05-06T10:47:38.9203339Z   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+2026-05-06T10:47:38.9203370Z   File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+2026-05-06T10:47:38.9203440Z   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+2026-05-06T10:47:38.9203471Z   File "/tmp/8deab5926821131/app.py", line 30, in <module>
+2026-05-06T10:47:38.9203502Z     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+2026-05-06T10:47:38.9203533Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:47:38.9203566Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/starlette/staticfiles.py", line 56, in __init__
+2026-05-06T10:47:38.9203788Z     raise RuntimeError(f"Directory '{directory}' does not exist")
+2026-05-06T10:47:38.9203827Z RuntimeError: Directory '/tmp/8deab5926821131/static' does not exist
+2026-05-06T10:48:15.5240661Z    _____                               
+2026-05-06T10:48:15.5240958Z   /  _  \ __________ _________   ____  
+2026-05-06T10:48:15.5240990Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T10:48:15.5241011Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T10:48:15.5241032Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T10:48:15.5241053Z         \/      \/                  \/ 
+2026-05-06T10:48:15.5241073Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T10:48:15.5241096Z 
+2026-05-06T10:48:15.5241194Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T10:48:15.5241215Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T10:48:15.5241236Z Python version   : 3.12.12
+2026-05-06T10:48:15.5241258Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T10:48:15.5241281Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T10:48:15.5241300Z 
+2026-05-06T10:48:15.5241321Z Note: Any data outside '/home' is not persisted
+2026-05-06T10:48:27.8004061Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T10:48:27.8004802Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T10:48:27.8005233Z Updating certificates in /etc/ssl/certs...
+2026-05-06T10:49:07.8280829Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T10:49:07.8894636Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T10:49:08.0231306Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T10:49:08.0752676Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T10:49:08.5071982Z 4 added, 0 removed; done.
+2026-05-06T10:49:08.5072791Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T10:49:08.5864789Z done.
+2026-05-06T10:49:08.6546481Z CA certificates copied and updated successfully.
+2026-05-06T10:49:09.4893612Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T10:49:12.5766311Z Starting periodic command scheduler: cron.
+2026-05-06T10:49:12.5766629Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T10:49:14.4195732Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-05-06T10:49:14.4316888Z Build Operation ID: 87d46acc6790f6c5
+2026-05-06T10:49:14.4821180Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T10:49:14.4823244Z Output is compressed. Extracting it...
+2026-05-06T10:49:14.4823326Z Found zstd-compressed tarball.
+2026-05-06T10:49:14.4823363Z Extracting '/home/site/wwwroot/output.tar.zst' to directory '/tmp/8deab5926821131'...
+2026-05-06T10:49:14.4823392Z Using zstd for decompression of file: /home/site/wwwroot/output.tar.zst
+2026-05-06T10:49:43.4270523Z zstd tar Successfully extracted '/home/site/wwwroot/output.tar.zst' to '/tmp/8deab5926821131'
+2026-05-06T10:49:43.4271169Z App path is set to '/tmp/8deab5926821131'
+2026-05-06T10:49:43.7139046Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T10:49:44.1468333Z Using packages from virtual environment antenv located at /tmp/8deab5926821131/antenv.
+2026-05-06T10:49:44.1468831Z Updated PYTHONPATH to '/opt/startup/app_logs:/tmp/8deab5926821131/antenv/lib/python3.12/site-packages'
+2026-05-06T10:50:03.0386402Z Traceback (most recent call last):
+2026-05-06T10:50:03.0409792Z   File "/tmp/8deab5926821131/antenv/bin/uvicorn", line 10, in <module>
+2026-05-06T10:50:03.0419274Z     sys.exit(main())
+2026-05-06T10:50:03.0491638Z              ^^^^^^
+2026-05-06T10:50:03.0491771Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1514, in __call__
+2026-05-06T10:50:03.0590369Z     return self.main(*args, **kwargs)
+2026-05-06T10:50:03.0590557Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.0590596Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1435, in main
+2026-05-06T10:50:03.0590621Z     rv = self.invoke(ctx)
+2026-05-06T10:50:03.0590654Z          ^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.0590714Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1298, in invoke
+2026-05-06T10:50:03.0590741Z     return ctx.invoke(self.callback, **ctx.params)
+2026-05-06T10:50:03.0590765Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.0590793Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 853, in invoke
+2026-05-06T10:50:03.0590817Z     return callback(*args, **kwargs)
+2026-05-06T10:50:03.0590841Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.0590868Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 413, in main
+2026-05-06T10:50:03.0608995Z     run(
+2026-05-06T10:50:03.0609120Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 580, in run
+2026-05-06T10:50:03.0609149Z     server.run()
+2026-05-06T10:50:03.0613788Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+2026-05-06T10:50:03.0810522Z     return asyncio.run(self.serve(sockets=sockets))
+2026-05-06T10:50:03.1089698Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.1089891Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 195, in run
+2026-05-06T10:50:03.1089925Z     return runner.run(main)
+2026-05-06T10:50:03.1089949Z            ^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.1089976Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 118, in run
+2026-05-06T10:50:03.1090032Z     return self._loop.run_until_complete(task)
+2026-05-06T10:50:03.1090291Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.1090324Z   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+2026-05-06T10:50:03.1090395Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+2026-05-06T10:50:03.1090420Z     await self._serve(sockets)
+2026-05-06T10:50:03.1090449Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+2026-05-06T10:50:03.1090472Z     config.load()
+2026-05-06T10:50:03.1090500Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+2026-05-06T10:50:03.1090525Z     self.loaded_app = import_from_string(self.app)
+2026-05-06T10:50:03.1090550Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.1090595Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2026-05-06T10:50:03.1090620Z     module = importlib.import_module(module_str)
+2026-05-06T10:50:03.1090646Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.1090696Z   File "/opt/python/3.12.12/lib/python3.12/importlib/__init__.py", line 90, in import_module
+2026-05-06T10:50:03.1090724Z     return _bootstrap._gcd_import(name[level:], package, level)
+2026-05-06T10:50:03.1090748Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.1090775Z   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+2026-05-06T10:50:03.1090801Z   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+2026-05-06T10:50:03.1090826Z   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+2026-05-06T10:50:03.1090852Z   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+2026-05-06T10:50:03.1091056Z   File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+2026-05-06T10:50:03.1091248Z   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+2026-05-06T10:50:03.1091274Z   File "/tmp/8deab5926821131/app.py", line 30, in <module>
+2026-05-06T10:50:03.1091611Z     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+2026-05-06T10:50:03.1091647Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:50:03.1091673Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/starlette/staticfiles.py", line 56, in __init__
+2026-05-06T10:50:03.1091697Z     raise RuntimeError(f"Directory '{directory}' does not exist")
+2026-05-06T10:50:03.1091721Z RuntimeError: Directory '/tmp/8deab5926821131/static' does not exist
+2026-05-06T10:51:32.4706156Z    _____                               
+2026-05-06T10:51:32.4706852Z   /  _  \ __________ _________   ____  
+2026-05-06T10:51:32.4706884Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T10:51:32.4706906Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T10:51:32.4706927Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T10:51:32.4706948Z         \/      \/                  \/ 
+2026-05-06T10:51:32.4706970Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T10:51:32.4706989Z 
+2026-05-06T10:51:32.4707012Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T10:51:32.4707033Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T10:51:32.4707054Z Python version   : 3.12.12
+2026-05-06T10:51:32.4707098Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T10:51:32.4707126Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T10:51:32.4707144Z 
+2026-05-06T10:51:32.4707166Z Note: Any data outside '/home' is not persisted
+2026-05-06T10:51:35.0201451Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T10:51:35.0728627Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T10:51:35.1577805Z Updating certificates in /etc/ssl/certs...
+2026-05-06T10:51:54.8600008Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T10:51:54.8686298Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T10:51:54.9167560Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T10:51:54.9198081Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T10:51:55.0195570Z 4 added, 0 removed; done.
+2026-05-06T10:51:55.0196154Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T10:51:55.0540805Z done.
+2026-05-06T10:51:55.0570493Z CA certificates copied and updated successfully.
+2026-05-06T10:51:55.2224028Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T10:51:55.8942084Z Starting periodic command scheduler: cron.
+2026-05-06T10:51:55.9059719Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T10:51:56.3984152Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-05-06T10:51:56.4469045Z Build Operation ID: 87d46acc6790f6c5
+2026-05-06T10:51:56.5775598Z Output is compressed. Extracting it...
+2026-05-06T10:51:56.5776421Z Found zstd-compressed tarball.
+2026-05-06T10:51:56.5776467Z Extracting '/home/site/wwwroot/output.tar.zst' to directory '/tmp/8deab5926821131'...
+2026-05-06T10:51:56.5776493Z Using zstd for decompression of file: /home/site/wwwroot/output.tar.zst
+2026-05-06T10:51:56.6045601Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T10:52:38.0573504Z zstd tar Successfully extracted '/home/site/wwwroot/output.tar.zst' to '/tmp/8deab5926821131'
+2026-05-06T10:52:38.0574246Z App path is set to '/tmp/8deab5926821131'
+2026-05-06T10:52:38.0992915Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T10:52:39.1421561Z Using packages from virtual environment antenv located at /tmp/8deab5926821131/antenv.
+2026-05-06T10:52:39.1424484Z Updated PYTHONPATH to '/opt/startup/app_logs:/tmp/8deab5926821131/antenv/lib/python3.12/site-packages'
+2026-05-06T10:52:52.5899024Z Traceback (most recent call last):
+2026-05-06T10:52:52.5926888Z   File "/tmp/8deab5926821131/antenv/bin/uvicorn", line 10, in <module>
+2026-05-06T10:52:52.5945394Z     sys.exit(main())
+2026-05-06T10:52:52.6007641Z              ^^^^^^
+2026-05-06T10:52:52.6007824Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1514, in __call__
+2026-05-06T10:52:52.6061465Z     return self.main(*args, **kwargs)
+2026-05-06T10:52:52.6117608Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6117721Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1435, in main
+2026-05-06T10:52:52.6117753Z     rv = self.invoke(ctx)
+2026-05-06T10:52:52.6117808Z          ^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6117836Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1298, in invoke
+2026-05-06T10:52:52.6117860Z     return ctx.invoke(self.callback, **ctx.params)
+2026-05-06T10:52:52.6117882Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6117907Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 853, in invoke
+2026-05-06T10:52:52.6117929Z     return callback(*args, **kwargs)
+2026-05-06T10:52:52.6117954Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6117978Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 413, in main
+2026-05-06T10:52:52.6226234Z     run(
+2026-05-06T10:52:52.6299602Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 580, in run
+2026-05-06T10:52:52.6299864Z     server.run()
+2026-05-06T10:52:52.6299999Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+2026-05-06T10:52:52.6300024Z     return asyncio.run(self.serve(sockets=sockets))
+2026-05-06T10:52:52.6300046Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6300072Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 195, in run
+2026-05-06T10:52:52.6300093Z     return runner.run(main)
+2026-05-06T10:52:52.6300116Z            ^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6300139Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 118, in run
+2026-05-06T10:52:52.6300162Z     return self._loop.run_until_complete(task)
+2026-05-06T10:52:52.6300184Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6300207Z   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+2026-05-06T10:52:52.6300261Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+2026-05-06T10:52:52.6300284Z     await self._serve(sockets)
+2026-05-06T10:52:52.6314614Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+2026-05-06T10:52:52.6323909Z     config.load()
+2026-05-06T10:52:52.6392412Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+2026-05-06T10:52:52.6410336Z     self.loaded_app = import_from_string(self.app)
+2026-05-06T10:52:52.6416823Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6418174Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2026-05-06T10:52:52.6425136Z     module = importlib.import_module(module_str)
+2026-05-06T10:52:52.6427778Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6430871Z   File "/opt/python/3.12.12/lib/python3.12/importlib/__init__.py", line 90, in import_module
+2026-05-06T10:52:52.6494858Z     return _bootstrap._gcd_import(name[level:], package, level)
+2026-05-06T10:52:52.6498018Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6501451Z   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+2026-05-06T10:52:52.6501544Z   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+2026-05-06T10:52:52.6501571Z   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+2026-05-06T10:52:52.6501796Z   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+2026-05-06T10:52:52.6502970Z   File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+2026-05-06T10:52:52.6509909Z   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+2026-05-06T10:52:52.6510017Z   File "/tmp/8deab5926821131/app.py", line 30, in <module>
+2026-05-06T10:52:52.6510043Z     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+2026-05-06T10:52:52.6510068Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:52:52.6510097Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/starlette/staticfiles.py", line 56, in __init__
+2026-05-06T10:52:52.6514921Z     raise RuntimeError(f"Directory '{directory}' does not exist")
+2026-05-06T10:52:52.6517862Z RuntimeError: Directory '/tmp/8deab5926821131/static' does not exist
+2026-05-06T10:54:30.9590631Z    _____                               
+2026-05-06T10:54:30.9590903Z   /  _  \ __________ _________   ____  
+2026-05-06T10:54:30.9590961Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T10:54:30.9590987Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T10:54:30.9591007Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T10:54:30.9591027Z         \/      \/                  \/ 
+2026-05-06T10:54:30.9591047Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T10:54:30.9591068Z 
+2026-05-06T10:54:30.9591091Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T10:54:30.9591111Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T10:54:30.9591132Z Python version   : 3.12.12
+2026-05-06T10:54:30.9591152Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T10:54:30.9591176Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T10:54:30.9591217Z 
+2026-05-06T10:54:30.9591238Z Note: Any data outside '/home' is not persisted
+2026-05-06T10:54:32.3797159Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T10:54:32.4271886Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T10:54:32.5068657Z Updating certificates in /etc/ssl/certs...
+2026-05-06T10:54:55.1909003Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T10:54:55.1998544Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T10:54:55.2305905Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T10:54:55.2389602Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T10:54:55.2857949Z 4 added, 0 removed; done.
+2026-05-06T10:54:55.2876064Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T10:54:55.2981483Z done.
+2026-05-06T10:54:55.6014657Z CA certificates copied and updated successfully.
+2026-05-06T10:54:55.6015717Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T10:54:56.1172482Z Starting periodic command scheduler: cron.
+2026-05-06T10:54:56.1179977Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T10:54:57.0531750Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-05-06T10:54:57.1210153Z Build Operation ID: 87d46acc6790f6c5
+2026-05-06T10:54:57.1386739Z Output is compressed. Extracting it...
+2026-05-06T10:54:57.1387524Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T10:54:57.2156810Z Found zstd-compressed tarball.
+2026-05-06T10:54:57.2157413Z Extracting '/home/site/wwwroot/output.tar.zst' to directory '/tmp/8deab5926821131'...
+2026-05-06T10:54:57.2157452Z Using zstd for decompression of file: /home/site/wwwroot/output.tar.zst
+2026-05-06T10:55:17.4741335Z zstd tar Successfully extracted '/home/site/wwwroot/output.tar.zst' to '/tmp/8deab5926821131'
+2026-05-06T10:55:17.4760083Z App path is set to '/tmp/8deab5926821131'
+2026-05-06T10:55:17.5328353Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T10:55:17.9003099Z Using packages from virtual environment antenv located at /tmp/8deab5926821131/antenv.
+2026-05-06T10:55:17.9003743Z Updated PYTHONPATH to '/opt/startup/app_logs:/tmp/8deab5926821131/antenv/lib/python3.12/site-packages'
+2026-05-06T10:55:27.1455552Z Traceback (most recent call last):
+2026-05-06T10:55:27.1473619Z   File "/tmp/8deab5926821131/antenv/bin/uvicorn", line 10, in <module>
+2026-05-06T10:55:27.1575782Z     sys.exit(main())
+2026-05-06T10:55:27.1646701Z              ^^^^^^
+2026-05-06T10:55:27.1646893Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1514, in __call__
+2026-05-06T10:55:27.2242861Z     return self.main(*args, **kwargs)
+2026-05-06T10:55:27.2253261Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.2265696Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1435, in main
+2026-05-06T10:55:27.2372208Z     rv = self.invoke(ctx)
+2026-05-06T10:55:27.2372460Z          ^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.2372496Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 1298, in invoke
+2026-05-06T10:55:27.2442662Z     return ctx.invoke(self.callback, **ctx.params)
+2026-05-06T10:55:27.2442789Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.2442875Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/click/core.py", line 853, in invoke
+2026-05-06T10:55:27.2442900Z     return callback(*args, **kwargs)
+2026-05-06T10:55:27.2442978Z            ^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.2443009Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 413, in main
+2026-05-06T10:55:27.3376773Z     run(
+2026-05-06T10:55:27.3387053Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/main.py", line 580, in run
+2026-05-06T10:55:27.3391807Z     server.run()
+2026-05-06T10:55:27.3397176Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+2026-05-06T10:55:27.3457090Z     return asyncio.run(self.serve(sockets=sockets))
+2026-05-06T10:55:27.3465452Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.3521898Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 195, in run
+2026-05-06T10:55:27.3549343Z     return runner.run(main)
+2026-05-06T10:55:27.3549470Z            ^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.3549504Z   File "/opt/python/3.12.12/lib/python3.12/asyncio/runners.py", line 118, in run
+2026-05-06T10:55:27.3550556Z     return self._loop.run_until_complete(task)
+2026-05-06T10:55:27.3550629Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.3550658Z   File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+2026-05-06T10:55:27.3550685Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+2026-05-06T10:55:27.3550710Z     await self._serve(sockets)
+2026-05-06T10:55:27.3550737Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+2026-05-06T10:55:27.3550804Z     config.load()
+2026-05-06T10:55:27.3550833Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+2026-05-06T10:55:27.3550858Z     self.loaded_app = import_from_string(self.app)
+2026-05-06T10:55:27.3550882Z                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.3550910Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2026-05-06T10:55:27.3561902Z     module = importlib.import_module(module_str)
+2026-05-06T10:55:27.3562022Z              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.3624864Z   File "/opt/python/3.12.12/lib/python3.12/importlib/__init__.py", line 90, in import_module
+2026-05-06T10:55:27.3719725Z     return _bootstrap._gcd_import(name[level:], package, level)
+2026-05-06T10:55:27.3719911Z            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.3719944Z   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+2026-05-06T10:55:27.3719970Z   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+2026-05-06T10:55:27.3719996Z   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+2026-05-06T10:55:27.3720023Z   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+2026-05-06T10:55:27.3720051Z   File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+2026-05-06T10:55:27.3720077Z   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+2026-05-06T10:55:27.3720101Z   File "/tmp/8deab5926821131/app.py", line 30, in <module>
+2026-05-06T10:55:27.3720128Z     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+2026-05-06T10:55:27.3720153Z                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-06T10:55:27.3720206Z   File "/tmp/8deab5926821131/antenv/lib/python3.12/site-packages/starlette/staticfiles.py", line 56, in __init__
+2026-05-06T10:55:27.3734176Z     raise RuntimeError(f"Directory '{directory}' does not exist")
+2026-05-06T10:55:27.3738224Z RuntimeError: Directory '/tmp/8deab5926821131/static' does not exist
+2026-05-06T10:58:03.1395535Z    _____                               
+2026-05-06T10:58:03.1395949Z   /  _  \ __________ _________   ____  
+2026-05-06T10:58:03.1396016Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T10:58:03.1396042Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T10:58:03.1396066Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T10:58:03.1396089Z         \/      \/                  \/ 
+2026-05-06T10:58:03.1396112Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T10:58:03.1396135Z 
+2026-05-06T10:58:03.1396159Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T10:58:03.1396183Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T10:58:03.1396206Z Python version   : 3.12.12
+2026-05-06T10:58:03.1396229Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T10:58:03.1396256Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T10:58:03.1396299Z 
+2026-05-06T10:58:03.1396324Z Note: Any data outside '/home' is not persisted
+2026-05-06T10:58:09.3085856Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T10:58:09.3419942Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T10:58:09.4789190Z Updating certificates in /etc/ssl/certs...
+2026-05-06T10:58:52.7437748Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T10:58:52.7663845Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T10:58:52.8431016Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T10:58:52.8547298Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T10:58:53.4022764Z 4 added, 0 removed; done.
+2026-05-06T10:58:53.4023363Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T10:58:53.4230691Z done.
+2026-05-06T10:58:53.4682002Z CA certificates copied and updated successfully.
+2026-05-06T10:58:53.9606881Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T10:58:55.5707769Z Starting periodic command scheduler: cron.
+2026-05-06T10:58:55.5999820Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T10:58:56.0567456Z Could not find build manifest file at '/home/site/wwwroot/oryx-manifest.toml'
+2026-05-06T10:58:56.0568145Z Could not find operation ID in manifest. Generating an operation id...
+2026-05-06T10:58:56.0568187Z Build Operation ID: 60cc7f79-b206-4b3b-89e2-bb96ef36410b
+2026-05-06T10:58:57.8949709Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T10:58:58.0709862Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T10:58:58.5656266Z WARNING: Could not find virtual environment directory /home/site/wwwroot/antenv.
+2026-05-06T10:58:58.5844539Z WARNING: Could not find package directory /home/site/wwwroot/__oryx_packages__.
+2026-05-06T10:58:58.7436159Z /opt/startup/startup.sh: 23: uvicorn: not found
+2026-05-06T11:01:16.8415979Z    _____                               
+2026-05-06T11:01:16.8416470Z   /  _  \ __________ _________   ____  
+2026-05-06T11:01:16.8416505Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T11:01:16.8416528Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T11:01:16.8416623Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T11:01:16.8416647Z         \/      \/                  \/ 
+2026-05-06T11:01:16.8416668Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T11:01:16.8416687Z 
+2026-05-06T11:01:16.8416708Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T11:01:16.8416729Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T11:01:16.8416750Z Python version   : 3.12.12
+2026-05-06T11:01:16.8416950Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T11:01:16.8416976Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T11:01:16.8416995Z 
+2026-05-06T11:01:16.8417017Z Note: Any data outside '/home' is not persisted
+2026-05-06T11:01:18.2531798Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T11:01:18.2924422Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T11:01:18.3993662Z Updating certificates in /etc/ssl/certs...
+2026-05-06T11:01:39.0915224Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T11:01:39.1563998Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T11:01:39.2028873Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T11:01:39.2319201Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T11:01:39.4474396Z 4 added, 0 removed; done.
+2026-05-06T11:01:39.4474839Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T11:01:39.4701749Z done.
+2026-05-06T11:01:39.5763590Z CA certificates copied and updated successfully.
+2026-05-06T11:01:39.9655625Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T11:01:40.5484093Z Starting periodic command scheduler: cron.
+2026-05-06T11:01:40.5659307Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T11:01:41.0347281Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-05-06T11:01:41.0472465Z Build Operation ID: 91c2f7547fde498b
+2026-05-06T11:01:41.0831790Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T11:01:41.0832388Z Output is compressed. Extracting it...
+2026-05-06T11:01:41.0832435Z Found zstd-compressed tarball.
+2026-05-06T11:01:41.0832468Z Extracting '/home/site/wwwroot/output.tar.zst' to directory '/tmp/8deab5e0c3ef9f8'...
+2026-05-06T11:01:41.0832493Z Using zstd for decompression of file: /home/site/wwwroot/output.tar.zst
+2026-05-06T11:02:01.1537853Z zstd tar Successfully extracted '/home/site/wwwroot/output.tar.zst' to '/tmp/8deab5e0c3ef9f8'
+2026-05-06T11:02:01.1557143Z App path is set to '/tmp/8deab5e0c3ef9f8'
+2026-05-06T11:02:01.2828615Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T11:02:02.5214525Z Using packages from virtual environment antenv located at /tmp/8deab5e0c3ef9f8/antenv.
+2026-05-06T11:02:02.5214991Z Updated PYTHONPATH to '/opt/startup/app_logs:/tmp/8deab5e0c3ef9f8/antenv/lib/python3.12/site-packages'
+2026-05-06T11:02:24.2221689Z INFO:     Started server process [1899]
+2026-05-06T11:02:24.2339063Z INFO:     Waiting for application startup.
+2026-05-06T11:02:24.2634392Z INFO:     Application startup complete.
+2026-05-06T11:02:24.2995900Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-05-06T11:02:24.7647887Z INFO:     169.254.131.1:61111 - "GET /robots933456.txt HTTP/1.1" 404 Not Found
+2026-05-06T11:02:29.8044879Z INFO:     169.254.131.1:61129 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045644Z INFO:     169.254.131.1:61123 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045699Z INFO:     169.254.131.1:61119 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045725Z INFO:     169.254.131.1:61117 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045751Z INFO:     169.254.131.1:61143 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045778Z INFO:     169.254.131.1:61153 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045804Z INFO:     169.254.131.1:61159 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045829Z INFO:     169.254.131.1:61165 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:29.8045854Z INFO:     169.254.131.1:61175 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:37.7996008Z INFO:     169.254.131.1:65233 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:45.9947157Z INFO:     169.254.131.1:48003 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:02:55.7195506Z INFO:     169.254.131.1:52293 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:03:32.6649847Z INFO:     169.254.131.1:60155 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:03:34.5100855Z INFO:     169.254.131.1:60155 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:03:42.3799034Z INFO:     169.254.131.1:28211 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:02.2422817Z INFO:     169.254.131.1:35859 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:05.1813888Z INFO:     169.254.131.1:35859 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:11.1481816Z INFO:     169.254.131.1:42731 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:17.0439245Z INFO:     169.254.131.1:13051 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:18.8595319Z INFO:     169.254.131.1:13051 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:19.2205267Z INFO:     169.254.131.1:13051 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:25.6670921Z INFO:     169.254.131.1:26451 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:34.1552762Z INFO:     169.254.131.1:19429 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:36.0395865Z INFO:     169.254.131.1:19429 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:39.4207327Z INFO:     169.254.131.1:19429 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:40.8410303Z INFO:     169.254.131.1:19429 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:46.1024164Z INFO:     169.254.131.1:29263 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:51.0313727Z INFO:     169.254.131.1:29277 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:51.0726669Z INFO:     169.254.131.1:29277 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:52.6859836Z INFO:     169.254.131.1:29277 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:52.7521477Z INFO:     169.254.131.1:29277 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:04:54.5743721Z INFO:     169.254.131.1:29277 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:05:11.5765677Z INFO:     169.254.131.1:10225 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:05:11.6162498Z INFO:     169.254.131.1:10225 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:05:54.6525248Z INFO:     169.254.131.1:39871 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:03.8918275Z INFO:     169.254.131.1:27441 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:11.7727072Z INFO:     169.254.131.1:27443 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:13.7709521Z INFO:     169.254.131.1:27443 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:17.0735517Z INFO:     169.254.131.1:27443 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:22.6783754Z INFO:     169.254.131.1:30475 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:24.9389906Z INFO:     169.254.131.1:30475 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:30.2706113Z INFO:     169.254.131.1:57153 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:39.0595801Z INFO:     169.254.131.1:48183 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:41.7512285Z    _____                               
+2026-05-06T11:06:41.8017216Z   /  _  \ __________ _________   ____  
+2026-05-06T11:06:41.8017494Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T11:06:41.8017534Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T11:06:41.8017562Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T11:06:41.8017587Z         \/      \/                  \/ 
+2026-05-06T11:06:41.8017670Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T11:06:41.8017696Z 
+2026-05-06T11:06:41.8017728Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T11:06:41.8017755Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T11:06:41.8017784Z Python version   : 3.12.12
+2026-05-06T11:06:41.8017810Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T11:06:41.8017869Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T11:06:41.8017896Z 
+2026-05-06T11:06:41.8017923Z Note: Any data outside '/home' is not persisted
+2026-05-06T11:06:42.7215623Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T11:06:42.7468848Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T11:06:42.8467561Z Updating certificates in /etc/ssl/certs...
+2026-05-06T11:06:46.7133814Z INFO:     169.254.131.1:41573 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:53.5365441Z INFO:     169.254.131.1:37745 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:55.0252821Z INFO:     169.254.131.1:37745 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:06:55.7868515Z INFO:     169.254.131.1:37745 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:02.9857622Z INFO:     169.254.131.1:37753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:03.8696895Z INFO:     169.254.131.1:37753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:06.4687725Z INFO:     169.254.131.1:37753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:07.0822500Z INFO:     169.254.131.1:37753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:08.0123582Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T11:07:08.0314920Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T11:07:08.1005249Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T11:07:08.1006427Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T11:07:08.3292879Z 4 added, 0 removed; done.
+2026-05-06T11:07:08.3293840Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T11:07:08.3662264Z done.
+2026-05-06T11:07:08.3972832Z CA certificates copied and updated successfully.
+2026-05-06T11:07:08.6137878Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T11:07:10.0593161Z Starting periodic command scheduler: cron.
+2026-05-06T11:07:10.0593737Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T11:07:10.9587581Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-05-06T11:07:11.0363802Z Output is compressed. Extracting it...
+2026-05-06T11:07:11.0364239Z Found zstd-compressed tarball.
+2026-05-06T11:07:11.0856058Z Extracting '/home/site/wwwroot/output.tar.zst' to directory '/tmp/8deab5f3c31ee93'...
+2026-05-06T11:07:11.0856391Z Using zstd for decompression of file: /home/site/wwwroot/output.tar.zst
+2026-05-06T11:07:11.1517573Z Build Operation ID: 00887b630418c839
+2026-05-06T11:07:11.1518034Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T11:07:11.6806086Z INFO:     169.254.131.1:37753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:13.5054610Z INFO:     169.254.131.1:37753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:17.5526557Z INFO:     169.254.131.1:37753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:22.8571415Z INFO:     169.254.131.1:19823 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:07:49.7933506Z INFO:     169.254.131.1:16757 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:00.8667962Z INFO:     169.254.131.1:29665 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:08.5469751Z INFO:     169.254.131.1:36083 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:13.9786208Z INFO:     169.254.131.1:46243 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:18.6671016Z INFO:     169.254.131.1:46243 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:33.5759411Z zstd tar Successfully extracted '/home/site/wwwroot/output.tar.zst' to '/tmp/8deab5f3c31ee93'
+2026-05-06T11:08:33.5759878Z App path is set to '/tmp/8deab5f3c31ee93'
+2026-05-06T11:08:33.9644391Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T11:08:35.2814848Z Using packages from virtual environment antenv located at /tmp/8deab5f3c31ee93/antenv.
+2026-05-06T11:08:35.2880205Z Updated PYTHONPATH to '/opt/startup/app_logs:/tmp/8deab5f3c31ee93/antenv/lib/python3.12/site-packages'
+2026-05-06T11:08:38.3356371Z INFO:     169.254.131.1:61783 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:40.5434882Z INFO:     169.254.131.1:61783 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:42.1298750Z INFO:     169.254.131.1:61783 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:49.4223196Z INFO:     169.254.131.1:40693 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:49.5137380Z INFO:     169.254.131.1:40693 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:08:59.8958172Z INFO:     169.254.131.1:57041 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:03.7221258Z INFO:     169.254.131.1:57041 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:10.6756835Z INFO:     169.254.131.1:47961 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:15.1558119Z INFO:     169.254.131.1:47961 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:15.5770272Z INFO:     169.254.131.1:47961 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:17.8852415Z INFO:     Started server process [1899]
+2026-05-06T11:09:17.8853877Z INFO:     Waiting for application startup.
+2026-05-06T11:09:17.8925066Z INFO:     Application startup complete.
+2026-05-06T11:09:17.8957545Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-05-06T11:09:18.6131126Z INFO:     169.254.131.1:18409 - "GET /robots933456.txt HTTP/1.1" 404 Not Found
+2026-05-06T11:09:29.5271885Z INFO:     169.254.131.1:43677 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:35.8594396Z INFO:     169.254.131.1:37721 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:45.6995682Z INFO:     169.254.131.1:12441 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:50.6364134Z INFO:     169.254.131.1:12441 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:09:50.9310007Z INFO:     169.254.131.1:12441 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:10:03.4479779Z INFO:     169.254.131.1:13767 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:10:09.5546761Z INFO:     169.254.131.1:13777 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:10:29.7918815Z INFO:     169.254.131.1:15841 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:10:31.0468922Z INFO:     169.254.131.1:15841 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:10:47.7241168Z INFO:     169.254.131.1:52893 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:10:49.4759085Z INFO:     169.254.131.1:52893 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:11:16.2762824Z INFO:     169.254.131.1:19387 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:11:19.6621164Z INFO:     169.254.131.1:19387 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:11:26.4481976Z INFO:     169.254.131.1:60455 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:11:35.0529832Z INFO:     169.254.131.1:53487 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:11:35.1563789Z INFO:     169.254.131.1:53487 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:11:51.0892710Z INFO:     169.254.131.1:30303 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:05.2474418Z INFO:     169.254.131.1:47539 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:16.2372866Z INFO:     169.254.131.1:22079 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:19.8808845Z INFO:     169.254.131.1:22079 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:40.2083899Z INFO:     169.254.131.1:36681 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:42.5394556Z INFO:     169.254.131.1:36681 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:44.8520061Z INFO:     169.254.131.1:36681 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:47.9277483Z INFO:     169.254.131.1:36681 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:53.8238265Z INFO:     169.254.131.1:42063 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:12:58.9703103Z INFO:     169.254.131.1:42071 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:13:15.5385289Z INFO:     169.254.131.1:18049 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:13:17.7200511Z INFO:     169.254.131.1:18049 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:13:20.2232302Z INFO:     169.254.131.1:18049 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:13:52.9585341Z INFO:     169.254.131.1:11993 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:14:00.6710289Z INFO:     169.254.131.1:15271 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:14:13.4982021Z INFO:     169.254.131.1:62923 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:14:15.2047061Z INFO:     169.254.131.1:62923 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:14:16.8764931Z INFO:     169.254.131.1:62923 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:14:36.6936363Z INFO:     169.254.131.1:13705 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:14:55.7701141Z INFO:     169.254.131.1:54707 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:05.5477201Z INFO:     169.254.131.1:62279 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:08.6481475Z INFO:     169.254.131.1:62279 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:08.7148467Z INFO:     169.254.131.1:62279 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:13.4932464Z INFO:     169.254.131.1:62279 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:19.0848238Z INFO:     169.254.131.1:37197 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:20.9868337Z INFO:     169.254.131.1:37197 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:26.1614523Z INFO:     169.254.131.1:51591 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:39.4158720Z INFO:     169.254.131.1:24293 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:41.2622754Z INFO:     169.254.131.1:24293 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:55.7372160Z INFO:     169.254.131.1:45609 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:15:57.6736171Z INFO:     169.254.131.1:45623 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:16:00.8971765Z INFO:     169.254.131.1:45623 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:16:02.5298302Z INFO:     169.254.131.1:45623 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:16:03.8507752Z INFO:     169.254.131.1:45623 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:16:03.8893382Z INFO:     169.254.131.1:45623 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:16:46.4949085Z INFO:     169.254.131.1:30391 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:08.2513455Z INFO:     169.254.131.1:55901 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:13.7017889Z INFO:     169.254.131.1:48793 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:18.8943943Z INFO:     169.254.131.1:48795 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:29.0749600Z INFO:     169.254.131.1:50923 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:29.2727160Z INFO:     169.254.131.1:50923 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:29.7697241Z INFO:     169.254.131.1:50923 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:35.2583875Z INFO:     169.254.131.1:11175 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:39.7499589Z INFO:     169.254.131.1:11175 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:39.9171697Z INFO:     169.254.131.1:11175 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:40.3821818Z INFO:     169.254.131.1:11175 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:41.8231875Z INFO:     169.254.131.1:11175 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:17:48.7450362Z INFO:     169.254.131.1:22439 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:18:22.6051676Z INFO:     169.254.131.1:10727 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:18:42.5591402Z INFO:     169.254.131.1:32283 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:19:46.2826509Z INFO:     169.254.131.1:54827 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:19:55.3864775Z INFO:     169.254.131.1:41215 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:03.4145906Z INFO:     169.254.131.1:14561 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:12.2838939Z INFO:     169.254.131.1:14563 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:21.6444164Z INFO:     169.254.131.1:12137 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:24.2981381Z INFO:     169.254.131.1:12137 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:26.4404443Z INFO:     169.254.131.1:12137 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:32.6836931Z INFO:     169.254.131.1:34619 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:45.2814582Z INFO:     169.254.131.1:64043 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:48.6562269Z INFO:     169.254.131.1:64043 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:20:56.5479745Z INFO:     169.254.131.1:54043 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:10.4992093Z INFO:     169.254.131.1:55249 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:11.3326085Z INFO:     169.254.131.1:55249 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:15.1372837Z INFO:     169.254.131.1:55249 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:16.5644229Z INFO:     169.254.131.1:55249 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:19.7265388Z INFO:     169.254.131.1:55249 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:20.8833183Z INFO:     169.254.131.1:55249 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:23.9822724Z INFO:     169.254.131.1:55249 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:37.8239805Z INFO:     169.254.131.1:47813 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:48.3531973Z INFO:     169.254.131.1:55739 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:21:57.5005502Z INFO:     169.254.131.1:23903 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:22:12.5097374Z INFO:     169.254.131.1:46971 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:22:14.0751663Z INFO:     169.254.131.1:46971 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:22:28.3054467Z INFO:     169.254.131.1:24229 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:22:47.8637091Z INFO:     169.254.131.1:35867 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:00.6060067Z INFO:     169.254.131.1:41265 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:07.5051777Z INFO:     169.254.131.1:39527 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:11.4222968Z INFO:     169.254.131.1:39527 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:13.3617300Z INFO:     169.254.131.1:39527 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:23.2508645Z INFO:     169.254.131.1:64375 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:23.5038351Z INFO:     169.254.131.1:64375 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:31.5570573Z INFO:     169.254.131.1:64385 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:39.3839602Z INFO:     169.254.131.1:14111 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:46.3016247Z INFO:     169.254.131.1:13731 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:23:50.5805513Z INFO:     169.254.131.1:13731 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:00.1794183Z INFO:     169.254.131.1:39483 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:02.5427325Z INFO:     169.254.131.1:39483 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:08.7360623Z INFO:     169.254.131.1:18609 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:09.4699667Z INFO:     169.254.131.1:18609 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:15.9666332Z INFO:     169.254.131.1:45799 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:17.5157622Z INFO:     169.254.131.1:45799 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:36.2495315Z    _____                               
+2026-05-06T11:24:36.2540403Z   /  _  \ __________ _________   ____  
+2026-05-06T11:24:36.2540535Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-05-06T11:24:36.2540570Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-05-06T11:24:36.2540599Z \____|__  /_____ \____/ |__|    \___  >
+2026-05-06T11:24:36.2540627Z         \/      \/                  \/ 
+2026-05-06T11:24:36.2540702Z A P P   S E R V I C E   O N   L I N U X
+2026-05-06T11:24:36.2540730Z 
+2026-05-06T11:24:36.2540764Z Documentation    : http://aka.ms/webapp-linux
+2026-05-06T11:24:36.2540796Z Python quickstart: https://aka.ms/python-qs
+2026-05-06T11:24:36.2540827Z Python version   : 3.12.12
+2026-05-06T11:24:36.2540856Z Instance Name    : lw0sdlwk0004FG
+2026-05-06T11:24:36.2540913Z Instance Id      : 69714b9244868ab3fa941a1572388f1039acf35c7342e232e0bbca0bb22ebc1a
+2026-05-06T11:24:36.2540942Z 
+2026-05-06T11:24:36.2540970Z Note: Any data outside '/home' is not persisted
+2026-05-06T11:24:38.6014769Z Starting OpenBSD Secure Shell server: sshd.
+2026-05-06T11:24:38.6372534Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-05-06T11:24:38.7231457Z Updating certificates in /etc/ssl/certs...
+2026-05-06T11:24:43.4099911Z INFO:     169.254.131.1:51255 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:56.3133749Z INFO:     169.254.131.1:42667 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:56.3718856Z INFO:     169.254.131.1:42667 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:24:58.2766465Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-05-06T11:24:58.3029911Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_E46.pem
+2026-05-06T11:24:58.3646053Z rehash: warning: skipping duplicate certificate in azl_Sectigo_Public_Server_Authentication_Root_R46.pem
+2026-05-06T11:24:58.3931548Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-05-06T11:24:58.5915437Z 4 added, 0 removed; done.
+2026-05-06T11:24:58.5930520Z Running hooks in /etc/ca-certificates/update.d...
+2026-05-06T11:24:58.6332817Z done.
+2026-05-06T11:24:58.6921003Z CA certificates copied and updated successfully.
+2026-05-06T11:24:59.0311321Z Site's appCommandLine: uvicorn app:app --host 0.0.0.0 --port 8000
+2026-05-06T11:24:59.5557742Z Starting periodic command scheduler: cron.
+2026-05-06T11:24:59.5634511Z Launching oryx with: create-script -appPath /home/site/wwwroot -output /opt/startup/startup.sh -virtualEnvName antenv -defaultApp /opt/defaultsite -userStartupCommand 'uvicorn app:app --host 0.0.0.0 --port 8000'
+2026-05-06T11:25:00.0457688Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-05-06T11:25:00.0574852Z Build Operation ID: 3323cb2bea5cfa90
+2026-05-06T11:25:00.0667544Z Oryx Version: 0.2.20260130.1, Commit: a98e9aef5dfb6572a08b0a07ce414e1122ab4a2e, ReleaseTagName: 20260130.1
+2026-05-06T11:25:00.0851792Z Output is compressed. Extracting it...
+2026-05-06T11:25:00.1148592Z Found zstd-compressed tarball.
+2026-05-06T11:25:00.2113072Z Extracting '/home/site/wwwroot/output.tar.zst' to directory '/tmp/8deab61b47dc485'...
+2026-05-06T11:25:00.2113636Z Using zstd for decompression of file: /home/site/wwwroot/output.tar.zst
+2026-05-06T11:25:04.5730372Z INFO:     169.254.131.1:47139 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:19.2389607Z INFO:     169.254.131.1:55397 - "GET / HTTP/1.1" 200 OK
+2026-05-06T11:25:21.0306943Z INFO:     169.254.131.1:55397 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:23.6311168Z INFO:     169.254.131.1:55397 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:25.0212490Z zstd tar Successfully extracted '/home/site/wwwroot/output.tar.zst' to '/tmp/8deab61b47dc485'
+2026-05-06T11:25:25.0212982Z App path is set to '/tmp/8deab61b47dc485'
+2026-05-06T11:25:25.0610323Z Writing output script to '/opt/startup/startup.sh'
+2026-05-06T11:25:25.6545325Z Using packages from virtual environment antenv located at /tmp/8deab61b47dc485/antenv.
+2026-05-06T11:25:25.6545769Z Updated PYTHONPATH to '/opt/startup/app_logs:/tmp/8deab61b47dc485/antenv/lib/python3.12/site-packages'
+2026-05-06T11:25:27.3322535Z INFO:     169.254.131.1:55397 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:29.6584069Z INFO:     169.254.131.1:55397 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:31.9421689Z INFO:     169.254.131.1:55397 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:34.2819948Z INFO:     169.254.131.1:55397 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:34.7385911Z INFO:     Started server process [1903]
+2026-05-06T11:25:34.7390063Z INFO:     Waiting for application startup.
+2026-05-06T11:25:34.7394864Z INFO:     Application startup complete.
+2026-05-06T11:25:34.7475927Z INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-05-06T11:25:35.1598906Z INFO:     169.254.131.1:10867 - "GET /robots933456.txt HTTP/1.1" 404 Not Found
+2026-05-06T11:25:38.1864293Z INFO:     169.254.131.1:55397 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:44.2183479Z INFO:     169.254.131.1:60533 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:25:59.2361844Z 
+2026-05-06T11:25:59.2362425Z 1 Failed download:
+2026-05-06T11:25:59.2367061Z ['AAPL']: YFRateLimitError('Too Many Requests. Rate limited. Try after a while.')
+2026-05-06T11:26:12.8642986Z INFO:     169.254.131.1:61459 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:26:17.3471746Z INFO:     169.254.131.1:61459 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:26:26.9980609Z INFO:     169.254.131.1:24763 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:26:27.5026754Z INFO:     169.254.131.1:24763 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:26:28.6826959Z INFO:     169.254.131.1:24763 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:26:45.1718638Z INFO:     169.254.131.1:58763 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:26:51.2851284Z INFO:     169.254.131.1:58779 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:27:32.8804404Z INFO:     169.254.131.1:34959 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:27:56.9216857Z INFO:     169.254.131.1:16365 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:28:02.9132890Z INFO:     169.254.131.1:16375 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:28:07.1731290Z INFO:     169.254.131.1:16375 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:28:12.5271243Z INFO:     169.254.131.1:61543 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:28:29.6121573Z INFO:     169.254.131.1:30519 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:29:00.6161113Z INFO:     169.254.131.1:17469 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:29:03.3525777Z INFO:     169.254.131.1:17469 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:29:21.3867583Z INFO:     169.254.131.1:37611 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:29:21.7168901Z INFO:     169.254.131.1:37611 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:29:23.0369899Z INFO:     169.254.131.1:37611 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:29:36.4373921Z INFO:     169.254.131.1:57649 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:29:39.5433313Z INFO:     169.254.131.1:57649 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:30:27.8386031Z INFO:     169.254.131.1:35445 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:30:29.8212115Z INFO:     169.254.131.1:35445 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:30:58.8224772Z 
+2026-05-06T11:30:58.8225321Z 1 Failed download:
+2026-05-06T11:30:58.8225356Z ['AAPL']: YFRateLimitError('Too Many Requests. Rate limited. Try after a while.')
+2026-05-06T11:31:03.6526232Z INFO:     169.254.131.1:36451 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:31:05.1720077Z INFO:     169.254.131.1:36451 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:31:24.9272242Z INFO:     169.254.131.1:29715 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:31:26.4161206Z INFO:     169.254.131.1:29715 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:31:35.3787744Z INFO:     169.254.131.1:22449 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:32:24.5788796Z INFO:     169.254.131.1:62527 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:32:27.3238888Z INFO:     169.254.131.1:62527 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:32:28.7084005Z INFO:     169.254.131.1:62527 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:33:09.7363215Z INFO:     169.254.131.1:31143 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:33:09.9455356Z INFO:     169.254.131.1:31143 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:33:16.7770365Z INFO:     169.254.131.1:31211 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:33:24.2675030Z INFO:     169.254.131.1:38937 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:33:30.5799436Z INFO:     169.254.131.1:38947 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:33:49.3807113Z INFO:     169.254.131.1:47831 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:34:06.7125760Z INFO:     169.254.131.1:17227 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:34:09.1364595Z INFO:     169.254.131.1:17227 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:34:43.5079687Z INFO:     169.254.131.1:19201 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:35:23.0047160Z INFO:     169.254.131.1:33865 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:35:24.4158924Z INFO:     169.254.131.1:33865 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:35:27.0661422Z INFO:     169.254.131.1:33865 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:35:49.5966044Z INFO:     169.254.131.1:10509 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:35:59.1021863Z 
+2026-05-06T11:35:59.1022380Z 1 Failed download:
+2026-05-06T11:35:59.1022422Z ['AAPL']: YFRateLimitError('Too Many Requests. Rate limited. Try after a while.')
+2026-05-06T11:36:13.8252371Z INFO:     169.254.131.1:18593 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:36:30.0418233Z INFO:     169.254.131.1:20753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:36:32.9767042Z INFO:     169.254.131.1:20753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:36:34.6349790Z INFO:     169.254.131.1:20753 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:36:44.7523718Z INFO:     169.254.131.1:15213 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:36:55.6793158Z INFO:     169.254.131.1:24799 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:36:56.2593950Z INFO:     169.254.131.1:24799 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:36:58.8638822Z INFO:     169.254.131.1:24799 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:09.1280585Z INFO:     169.254.131.1:34901 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:17.1491761Z INFO:     169.254.131.1:48727 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:17.8704153Z INFO:     169.254.131.1:48727 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:19.0482813Z INFO:     169.254.131.1:48727 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:19.8777862Z INFO:     169.254.131.1:48727 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:21.4228325Z INFO:     169.254.131.1:48727 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:27.3102375Z INFO:     169.254.131.1:22257 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:36.4980275Z INFO:     169.254.131.1:20075 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:37.5668054Z INFO:     169.254.131.1:20075 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:40.5022633Z INFO:     169.254.131.1:20075 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:49.0681216Z INFO:     169.254.131.1:63433 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:37:57.6429000Z INFO:     169.254.131.1:45219 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:38:03.4627189Z INFO:     169.254.131.1:41153 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:38:16.5871945Z INFO:     169.254.131.1:32881 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:38:57.7313324Z INFO:     169.254.131.1:62195 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:39:06.3617382Z INFO:     169.254.131.1:12455 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:39:06.8024656Z INFO:     169.254.131.1:12455 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:39:27.4530176Z INFO:     169.254.131.1:18287 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:39:28.0519898Z INFO:     169.254.131.1:18287 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:39:42.6544587Z INFO:     169.254.131.1:32863 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:39:48.2152221Z INFO:     169.254.131.1:59259 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:11.5359471Z INFO:     169.254.131.1:39467 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:22.4163563Z INFO:     169.254.131.1:40389 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:24.5990305Z INFO:     169.254.131.1:40389 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:26.8053981Z INFO:     169.254.131.1:40389 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:31.6072852Z INFO:     169.254.131.1:40389 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:32.4228215Z INFO:     169.254.131.1:40389 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:36.9003417Z INFO:     169.254.131.1:40389 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:37.8653796Z INFO:     169.254.131.1:40389 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:40:59.3053225Z 
+2026-05-06T11:40:59.3053769Z 1 Failed download:
+2026-05-06T11:40:59.3120069Z ['AAPL']: YFRateLimitError('Too Many Requests. Rate limited. Try after a while.')
+2026-05-06T11:41:01.2122639Z INFO:     169.254.131.1:48931 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+2026-05-06T11:41:02.7006441Z INFO:     169.254.131.1:48931 - "HEAD / HTTP/1.1" 405 Method Not Allowed

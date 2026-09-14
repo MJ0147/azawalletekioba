@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
@@ -27,7 +28,64 @@ COPILOT_API_KEY = settings.COPILOT_API_KEY
 COPILOT_BASE_URL = settings.COPILOT_BASE_URL.rstrip("/")
 COPILOT_MODEL = settings.COPILOT_MODEL
 
-IYOBO_SYSTEM_PROMPT = "You are Iyobo, the AI assistant for Ekioba e-commerce. You help users with shopping, orders, and payments via Idia Coin (on TON/Solana). Be helpful, professional, and concise."
+IYOBO_SYSTEM_PROMPT = """
+You are Iyobo — the intelligent, culturally-grounded AI assistant of EKIOBA, the premier Edo Kingdom
+cultural marketplace and Web3 commerce platform.
+
+## Identity & Tone
+- Warm, knowledgeable, and precise. You blend Edo royal hospitality with expert-level accuracy.
+- Address users respectfully; occasionally use real Edo greetings such as "Koyo" (hello/hi),
+  "Obowie" (good morning/greetings), or "Vhe o ye rie?" (how are you?) to set a cultural tone,
+  but never overdo it.
+- You NEVER fabricate facts. If you are uncertain, say so and offer to research further.
+
+## EKIOBA Platform Knowledge
+- EKIOBA sells authentic Edo Kingdom artifacts, fashion, jewelry, bronze works, food, and cultural items.
+- Payment is processed with **Idia Coin (IDIA)** — EKIOBA's native Web3 token, a Jetton on the
+  **TON** blockchain. TON is the only chain EKIOBA settles on.
+  - Merchant receives IDIA Jettons on the TON chain; transfers are verified via the TON API.
+  - Conversion: NGN → IDIA via live CoinGecko rate (fallback: 1 IDIA ≈ ₦30, ~0.02 USD).
+- Cart checkout aggregates all items into a single blockchain payment (one transaction for the whole
+  cart total, not per-item).
+- Users connect wallets via **TON Connect 2** — Tonkeeper, MyTonWallet, Telegram Wallet and any
+  other TON Connect compatible wallet.
+
+## Edo Academy (Language & Culture)
+- EKIOBA hosts an **Edo Language Academy** with structured lesson packs covering greetings,
+  numbers, family terms, market vocabulary, royal court phrases, proverbs, and song lyrics.
+- After each lesson set, users take a **50-question randomised quiz**. Correct answers award
+  **Aza Points** redeemable in the store.
+- Sample Edo vocabulary you know:
+  - Ẹ káàbọ̀ = Welcome | Ọ dẹ = Goodbye | Ima = I/Me | Ọ se = Thank you
+  - Ẹvbo = Town/Village | Ọba = King | Iye = Mother | Ọse = Fish
+  - Ígho = Money | Ọghẹn = God | Ẹmwi = Thing | Vhe o ye rie? = How are you?
+
+## Forecast & Market Intelligence
+- You can discuss crypto/stock/market forecasts using live data sourced from SoSoValue, Yahoo Finance,
+  and Google Finance search snippets.
+- Provide nuanced, caveated analysis: distinguish trend signals from predictions, cite sources, and
+  always remind users that this is not financial advice.
+
+## Cargo & Shipping
+- EKIOBA's cargo service uses best-in-class Nigerian logistics partners (GIG Logistics, Kobo360,
+  DHL Nigeria, NIPOST) plus international options (DHL Express, FedEx).
+- Key practices: real-time tracking, insurance for high-value Edo artifacts, cold-chain option for
+  food items, last-mile delivery to Benin City, Lagos, Abuja, and Port Harcourt.
+
+## Hotels
+- EKIOBA partners with prestigious hotels in Benin City (Protea Emotan, Oti Hotels),
+  Abuja (Transcorp Hilton, Sheraton Abuja), Lagos (Eko Hotel & Suites, The George, Radisson Blu),
+  and Port Harcourt (Marriott Port Harcourt, Presidential Hotel).
+- You can assist with room enquiries, price ranges, and booking guidance.
+
+## Behavioural Rules
+1. When search/context results are provided, USE them and CITE the source (name + URL).
+2. When no context is provided, reason from your embedded knowledge above.
+3. Keep replies concise unless the user asks for detail.
+4. Never generate or guess wallet private keys, seed phrases, or security credentials.
+5. If asked about competitor platforms, stay neutral and redirect to EKIOBA's unique value.
+6. Always speak in the user's language; default to English if uncertain.
+"""
 
 app = FastAPI(title="Iyobo AI Assistant", description="AI Service for Ekioba E-commerce")
 
@@ -108,6 +166,94 @@ async def get_ai_response(message: str, raise_on_error: bool = False) -> str:
             raise e
         return "I'm having trouble connecting to my brain right now. Please try again later."
 
+
+async def generate_ai_response(user_message: str, search_results: list[dict[str, Any]]) -> str:
+    """Generate a richer response using top external/context results and explicit source citation guidance."""
+    context_snippets: list[str] = []
+    for result in search_results[:5]:
+        name = str(result.get("name") or "Unknown source")
+        snippet = str(result.get("snippet") or "")
+        url = str(result.get("url") or "N/A")
+        context_snippets.append(f"- {name}: {snippet} (Source: {url})")
+
+    context_text = "\n".join(context_snippets) if context_snippets else "No external search results provided."
+
+    system_prompt = (
+        f"{IYOBO_SYSTEM_PROMPT}\n\n"
+        "## Live Search Context (USE these results when answering — cite source name and URL):\n"
+        f"{context_text}\n\n"
+        "Instructions: Synthesise the search results above with your embedded knowledge. "
+        "Quote or paraphrase relevant snippets, always citing '(Source: <name>, <url>)'. "
+        "If results contradict each other, note the discrepancy and recommend the most authoritative source. "
+        "If results are insufficient, say so clearly and offer a follow-up question."
+    )
+
+    return await copilot_chat_completion(
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ],
+        model=COPILOT_MODEL,
+    )
+
+
+def _extract_related_topics(items: list[dict[str, Any]], output: list[dict[str, Any]], limit: int) -> None:
+    for item in items:
+        if len(output) >= limit:
+            return
+        if isinstance(item, dict) and "Topics" in item and isinstance(item["Topics"], list):
+            _extract_related_topics(item["Topics"], output, limit)
+            continue
+        if not isinstance(item, dict):
+            continue
+        text = str(item.get("Text") or "").strip()
+        url = str(item.get("FirstURL") or "").strip()
+        if not text:
+            continue
+        name = text.split(" - ", 1)[0][:80] or "Web result"
+        output.append({"name": name, "snippet": text, "url": url or "N/A"})
+
+
+async def _auto_web_search_results(query: str, limit: int = 5) -> list[dict[str, Any]]:
+    clean_query = re.sub(r"\s+", " ", (query or "")).strip()
+    if len(clean_query) < 3:
+        return []
+
+    params = {
+        "q": clean_query,
+        "format": "json",
+        "no_redirect": "1",
+        "no_html": "1",
+        "skip_disambig": "1",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get("https://api.duckduckgo.com/", params=params)
+            response.raise_for_status()
+            payload = response.json()
+    except Exception as e:
+        logger.warning(f"Auto web search failed: {e}")
+        return []
+
+    results: list[dict[str, Any]] = []
+    abstract = str(payload.get("AbstractText") or "").strip()
+    abstract_url = str(payload.get("AbstractURL") or "").strip()
+    heading = str(payload.get("Heading") or "DuckDuckGo").strip() or "DuckDuckGo"
+    if abstract:
+        results.append(
+            {
+                "name": heading,
+                "snippet": abstract,
+                "url": abstract_url or "https://duckduckgo.com/?q=" + clean_query.replace(" ", "+"),
+            }
+        )
+
+    related_topics = payload.get("RelatedTopics")
+    if isinstance(related_topics, list):
+        _extract_related_topics(related_topics, results, limit)
+
+    return results[:limit]
+
 @app.get("/", tags=["Health"])
 def root():
     """Root endpoint for basic connectivity check."""
@@ -171,7 +317,18 @@ async def chat(payload: ChatRequest):
     logger.info(f"Received message from user {payload.user_id}: {payload.message}")
 
     try:
-        reply = await get_ai_response(payload.message, raise_on_error=True)
+        ctx = payload.context if isinstance(payload.context, dict) else {}
+        search_results = ctx.get("search_results", []) if isinstance(ctx, dict) else []
+        if not isinstance(search_results, list):
+            search_results = []
+
+        if not search_results:
+            search_results = await _auto_web_search_results(payload.message)
+
+        if isinstance(search_results, list) and search_results:
+            reply = await generate_ai_response(payload.message, search_results)
+        else:
+            reply = await get_ai_response(payload.message, raise_on_error=True)
     except Exception:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="AI Service unreachable")
 

@@ -1,5 +1,4 @@
-# Root Dockerfile — builds the language_academy (Django) service for Azure DevOps / ACR.
-# Azure DevOps azure-pipelines.yml references this file directly.
+# Root Dockerfile — builds the language_academy service image.
 FROM python:3.11-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \

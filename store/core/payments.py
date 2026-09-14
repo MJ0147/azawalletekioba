@@ -7,9 +7,6 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
-SOLANA_RPC_URL = os.getenv(
-    "SOLANA_RPC_URL",
-    "https://api.mainnet-beta.solana.com")
 TON_API_BASE = os.getenv("TON_API_BASE", "https://toncenter.com/api/v2")
 TON_API_KEY = os.getenv("TON_API_KEY", "")
 
@@ -29,66 +26,6 @@ def _http_json(url: str, payload: dict[str, Any]
     except (URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise RuntimeError(
             f"Network error while calling payment provider: {exc}") from exc
-
-
-def process_solana_payment(wallet: str, amount: float,
-                           signature: str) -> dict[str, Any]:
-    if not signature:
-        raise RuntimeError("Missing Solana transaction signature.")
-
-    expected_lamports = int(Decimal(str(amount)) * Decimal("1000000000"))
-    rpc_payload = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "getTransaction",
-        "params": [
-            signature,
-            {
-                "encoding": "jsonParsed",
-                "maxSupportedTransactionVersion": 0
-            },
-        ],
-    }
-    rpc_response = _http_json(SOLANA_RPC_URL, rpc_payload)
-    tx_result = rpc_response.get("result")
-    if tx_result is None:
-        raise RuntimeError(
-            "Solana transaction not found or not finalized yet.")
-
-    message = tx_result.get("transaction", {}).get("message", {})
-    account_keys = message.get("accountKeys", [])
-    addresses: list[str] = []
-    for key in account_keys:
-        if isinstance(key, dict):
-            addresses.append(str(key.get("pubkey", "")))
-        else:
-            addresses.append(str(key))
-
-    if wallet not in addresses:
-        raise RuntimeError(
-            "Provided wallet is not part of this Solana transaction.")
-
-    payer_index = addresses.index(wallet)
-    meta = tx_result.get("meta", {})
-    pre_balances = meta.get("preBalances", [])
-    post_balances = meta.get("postBalances", [])
-    if payer_index >= len(pre_balances) or payer_index >= len(post_balances):
-        raise RuntimeError(
-            "Unable to read payer balances from Solana transaction.")
-
-    spent_lamports = int(pre_balances[payer_index]) - \
-        int(post_balances[payer_index])
-    if spent_lamports < expected_lamports:
-        raise RuntimeError("Solana payment amount is lower than expected.")
-
-    return {
-        "verified": True,
-        "network": "solana-mainnet",
-        "signature": signature,
-        "wallet": wallet,
-        "required_lamports": expected_lamports,
-        "observed_spent_lamports": spent_lamports,
-    }
 
 
 def process_ton_payment(wallet: str, amount: float,
@@ -155,33 +92,3 @@ def verify_ton_transaction(wallet_address: str, tx_hash: str) -> bool:
 
     result = response.get("result")
     return bool(result)
-
-
-def verify_solana_transaction(signature: str) -> bool:
-    if not signature:
-        return False
-
-    rpc_payload = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "getTransaction",
-        "params": [
-            signature,
-            {
-                "encoding": "jsonParsed",
-                "maxSupportedTransactionVersion": 0
-            },
-        ],
-    }
-
-    try:
-        rpc_response = _http_json(SOLANA_RPC_URL, rpc_payload)
-    except RuntimeError:
-        return False
-
-    result = rpc_response.get("result")
-    if result is None:
-        return False
-    
-    # Ensure the transaction didn't fail on-chain
-    return result.get("meta", {}).get("err") is None

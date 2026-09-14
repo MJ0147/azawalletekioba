@@ -6,3 +6,4 @@ openai
 sqlalchemy
 pydantic-settings
 pymysql
+psycopg2-binary

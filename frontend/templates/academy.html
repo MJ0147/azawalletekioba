@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}Edo Language Academy — EKIOBA{% endblock %}
+{% block description %}Learn the Edo language — vocabulary, translation, and interactive quizzes powered by EKIOBA.{% endblock %}
+
+{% block content %}
+<div class="shell">
+
+  <section class="hero" style="padding-bottom:2rem">
+    <div>
+      <p class="eyebrow">Edo Language Academy</p>
+      <h1>Learn the Edo Language</h1>
+      <p class="sub">
+        Explore vocabulary, translate phrases, and test your knowledge of the Edo language —
+        the tongue of the ancient Benin Kingdom.
+      </p>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-pill">📚 Vocabulary</span>
+      <span class="hero-pill">🔄 Translation</span>
+      <span class="hero-pill">🎯 Quiz</span>
+    </div>
+  </section>
+
+  {% if service_offline %}
+  <div class="panel" style="background:var(--color-warn,#fffbeb);border:1px solid #fbbf24;margin-bottom:1.5rem">
+    <p style="margin:0;color:#92400e">⚠️ Language Academy service is temporarily offline. Some features may be unavailable.</p>
+  </div>
+  {% endif %}
+
+  <div class="grid-two" style="margin-bottom:1.5rem">
+
+    <!-- Translator -->
+    <section class="panel"
+             x-data="{
+               text: '',
+               direction: 'en_to_edo',
+               result: '',
+               loading: false,
+               error: '',
+               async translate() {
+                 this.error = ''; this.result = '';
+                 if (!this.text.trim()) { this.error = 'Enter text to translate.'; return; }
+                 this.loading = true;
+                 try {
+                   const r = await fetch('/api/academy/translate', {
+                     method: 'POST',
+                     headers: {'Content-Type':'application/json'},
+                     body: JSON.stringify({ text: this.text, direction: this.direction })
+                   });
+                   const d = await r.json();
+                   this.result = d.translated_text || d.translation || d.error || 'No result.';
+                 } catch(e) {
+                   this.error = 'Translation service unavailable.';
+                 } finally {
+                   this.loading = false;
+                 }
+               }
+             }">
+      <div class="panel-header">
+        <h2>Translator</h2>
+        <p>English ↔ Edo</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.9rem">
+        <select x-model="direction"
+                style="padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)">
+          <option value="en_to_edo">English → Edo</option>
+          <option value="edo_to_en">Edo → English</option>
+        </select>
+        <textarea x-model="text" rows="3" placeholder="Enter text..."
+                  style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.95rem;resize:vertical;background:var(--color-surface)"></textarea>
+        <button @click="translate()" :disabled="loading" class="btn-primary">
+          <span x-text="loading ? 'Translating…' : 'Translate'"></span>
+        </button>
+        <template x-if="error"><p style="color:#ef4444;font-size:.9rem" x-text="error"></p></template>
+        <template x-if="result">
+          <div style="background:var(--color-surface-alt,#f0f9ff);border:1px solid #7dd3fc;border-radius:.75rem;padding:1rem">
+            <p style="font-size:.8rem;color:var(--color-muted);margin-bottom:.4rem">Translation</p>
+            <p style="font-size:1.05rem;font-weight:600" x-text="result"></p>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- Quiz -->
+    <section class="panel"
+             x-data="{
+               questionBank: [],
+               question: null,
+               questionIndex: 0,
+               userAnswer: '',
+               feedback: null,
+               answeredCount: 0,
+               correctCount: 0,
+               completed: false,
+               completionAward: 0,
+               locked: false,
+               loading: false,
+               category: '',
+               points: 0,
+               async loadSection() {
+                 this.feedback = null; this.userAnswer = ''; this.loading = true;
+                 this.answeredCount = 0; this.correctCount = 0; this.completed = false; this.completionAward = 0; this.locked = false;
+                 try {
+                   const url = '/api/academy/quiz/section?size=50' + (this.category ? '&category=' + encodeURIComponent(this.category) : '');
+                   const r = await fetch(url);
+                   const d = await r.json();
+                   this.questionBank = d.questions || [];
+                   this.questionIndex = 0;
+                   this.question = this.questionBank.length ? this.questionBank[0] : null;
+                 } catch(e) {
+                   this.questionBank = [];
+                   this.question = null;
+                 }
+                 this.loading = false;
+               },
+               nextQuestion() {
+                 this.feedback = null;
+                 this.userAnswer = '';
+                 this.locked = false;
+                 if (!this.questionBank.length) {
+                   this.question = null;
+                   return;
+                 }
+                 if (this.questionIndex + 1 >= this.questionBank.length) {
+                   this.completed = true;
+                   this.question = null;
+                   this.finishQuiz();
+                   return;
+                 }
+                 this.questionIndex += 1;
+                 this.question = this.questionBank[this.questionIndex];
+               },
+               async finishQuiz() {
+                 try {
+                   const r = await fetch('/api/academy/quiz/complete', {
+                     method: 'POST',
+                     headers: {'Content-Type':'application/json'},
+                     body: JSON.stringify({ answered: this.answeredCount, correct: this.correctCount })
+                   });
+                   const d = await r.json();
+                   this.completionAward = d.completion_bonus || 0;
+                   this.points += this.completionAward;
+                 } catch(e) {}
+               },
+               async submitAnswer() {
+                 if (!this.userAnswer.trim() || !this.question || this.locked) return;
+                 this.loading = true;
+                 try {
+                   const r = await fetch('/api/academy/quiz/answer', {
+                     method: 'POST',
+                     headers: {'Content-Type':'application/json'},
+                     body: JSON.stringify({ answer: this.userAnswer, expected: this.question.answer, user_id: 'guest' })
+                   });
+                   const d = await r.json();
+                   this.feedback = d;
+                   this.answeredCount += 1;
+                   if (d.correct) {
+                     this.correctCount += 1;
+                     this.points += (d.points_awarded || d.awarded_tokens || 10);
+                   }
+                   this.locked = true;
+                 } catch(e) { this.feedback = {correct: false, message: 'Service error'}; }
+                 this.loading = false;
+               }
+             }"
+             x-init="loadSection()">
+      <div class="panel-header">
+        <h2>Quiz</h2>
+        <p>
+          Points: <strong x-text="points"></strong> |
+          Score: <strong x-text="correctCount"></strong>/<strong x-text="answeredCount"></strong> |
+          Question <strong x-text="question ? (questionIndex + 1) : answeredCount"></strong>/50
+        </p>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem">
+        <select x-model="category" @change="loadSection()"
+                style="flex:1;padding:.45rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.85rem;background:var(--color-surface)">
+          <option value="">General section</option>
+          <option value="greetings">Greetings section</option>
+          <option value="numbers">Numbers section</option>
+          <option value="food">Food section</option>
+          <option value="family">Family section</option>
+          <option value="body">Body section</option>
+          <option value="nature">Nature section</option>
+        </select>
+        <button @click="loadSection()" class="btn-ghost" style="padding:.45rem .9rem;font-size:.85rem">↻ New 50</button>
+      </div>
+      <template x-if="loading && !question">
+        <p style="color:var(--color-muted)">Loading question…</p>
+      </template>
+      <template x-if="question">
+        <div style="display:flex;flex-direction:column;gap:.9rem">
+          <div style="background:var(--color-surface-alt,#faf5ff);border:1px solid #d8b4fe;border-radius:.75rem;padding:1rem">
+            <p style="font-size:.8rem;color:var(--color-muted);margin-bottom:.3rem" x-text="question.category || 'General'"></p>
+            <p style="font-weight:600;font-size:1.05rem" x-text="question.prompt"></p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.5rem">
+            <template x-for="(opt, idx) in (question.options || [])" :key="idx">
+              <label style="display:flex;align-items:center;gap:.55rem;border:1px solid var(--color-border);border-radius:.55rem;padding:.55rem .7rem;background:var(--color-surface);cursor:pointer">
+                <input type="radio" name="quiz-answer" :value="opt.text" x-model="userAnswer" />
+                <strong x-text="opt.label + '.'"></strong>
+                <span x-text="opt.text"></span>
+              </label>
+            </template>
+          </div>
+          <div style="display:flex;gap:.6rem">
+            <button @click="submitAnswer()" :disabled="loading" class="btn-primary" style="flex:1">Submit</button>
+            <button @click="nextQuestion()" class="btn-ghost" style="flex:1" x-text="(questionIndex + 1) >= questionBank.length ? 'Finish Quiz' : 'Next →'"></button>
+          </div>
+          <template x-if="feedback">
+            <div :style="'border-radius:.75rem;padding:.9rem;border:1px solid ' + (feedback.correct ? '#86efac' : '#fca5a5') + ';background:' + (feedback.correct ? '#f0fdf4' : '#fff1f2')">
+              <p style="font-weight:600" x-text="feedback.correct ? '✅ Correct!' : '❌ Incorrect'"></p>
+              <p style="font-size:.9rem;margin-top:.25rem" x-text="feedback.correct ? ('+' + (feedback.points_awarded || feedback.awarded_tokens || 10) + ' points awarded') : ('Correct answer: ' + (feedback.expected || question.answer || 'N/A'))"></p>
+            </div>
+          </template>
+        </div>
+      </template>
+      <template x-if="!question && !loading">
+        <p style="color:var(--color-muted)">Quiz unavailable. Service may be offline.</p>
+      </template>
+      <template x-if="completed">
+        <div style="margin-top:1rem;border:1px solid #86efac;background:#f0fdf4;border-radius:.75rem;padding:1rem">
+          <p style="font-weight:700;color:#166534;margin:0 0 .35rem">Quiz session completed.</p>
+          <p style="margin:0;font-size:.9rem">You answered <strong x-text="correctCount"></strong> correctly out of 50.</p>
+          <p style="margin:.35rem 0 0;font-size:.9rem" x-show="completionAward > 0">Completion bonus: <strong x-text="completionAward"></strong> points.</p>
+        </div>
+      </template>
+    </section>
+
+  </div>
+
+  <!-- Vocabulary Browser -->
+  <section class="panel"
+           x-data="{
+             items: [],
+             search: '',
+             loading: true,
+             async load() {
+               this.loading = true;
+               try {
+                 const url = this.search
+                   ? '/api/academy/vocabulary?search=' + encodeURIComponent(this.search)
+                   : '/api/academy/vocabulary?limit=20';
+                 const r = await fetch(url);
+                 const d = await r.json();
+                 this.items = d.items || d || [];
+               } catch(e) { this.items = []; }
+               this.loading = false;
+             }
+           }"
+           x-init="load()">
+    <div class="panel-header" style="flex-wrap:wrap;gap:.75rem">
+      <div>
+        <h2>Vocabulary</h2>
+        <p>Browse Edo words and phrases</p>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <input type="search" x-model="search" placeholder="Search words…"
+               @input.debounce.400ms="load()"
+               style="padding:.5rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface);min-width:200px" />
+      </div>
+    </div>
+
+    <template x-if="loading">
+      <p style="color:var(--color-muted);padding:.5rem 0">Loading vocabulary…</p>
+    </template>
+
+    <template x-if="!loading && items.length === 0">
+      <p style="color:var(--color-muted);padding:.5rem 0">No vocabulary found.</p>
+    </template>
+
+    <template x-if="!loading && items.length > 0">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:.75rem">
+        <template x-for="word in items" :key="word.edo">
+          <div style="border:1px solid var(--color-border);border-radius:.75rem;padding:1rem;background:var(--color-surface)">
+            <p style="font-size:1.15rem;font-weight:700;color:var(--color-accent)" x-text="word.edo"></p>
+            <p style="font-size:.9rem;margin:.2rem 0" x-text="word.english"></p>
+            <span style="font-size:.75rem;background:var(--color-surface-alt,#f3f4f6);padding:.15rem .5rem;border-radius:999px;color:var(--color-muted)" x-text="word.category"></span>
+          </div>
+        </template>
+      </div>
+    </template>
+  </section>
+
+  <!-- ── Daily Lesson ──────────────────────────────────────────────────── -->
+  <section class="panel" style="margin-top:1.5rem"
+           x-data="{
+             lesson: null,
+             loading: true,
+             category: '',
+             async load() {
+               this.loading = true;
+               try {
+                 const url = '/api/academy/lesson/daily?size=5' + (this.category ? '&category=' + encodeURIComponent(this.category) : '');
+                 const r = await fetch(url);
+                 this.lesson = await r.json();
+               } catch(e) { this.lesson = null; }
+               this.loading = false;
+             }
+           }"
+           x-init="load()">
+    <div class="panel-header" style="flex-wrap:wrap;gap:.75rem">
+      <div>
+        <h2>Daily Lesson</h2>
+        <p>Your curated Edo language lesson for today</p>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <select x-model="category" @change="load()"
+                style="padding:.45rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.85rem;background:var(--color-surface)">
+          <option value="">All categories</option>
+          <option value="greetings">Greetings</option>
+          <option value="numbers">Numbers</option>
+          <option value="food">Food</option>
+          <option value="family">Family</option>
+          <option value="body">Body</option>
+          <option value="nature">Nature</option>
+        </select>
+        <button @click="load()" class="btn-ghost" style="padding:.45rem .9rem;font-size:.85rem">↻ Refresh</button>
+      </div>
+    </div>
+    <template x-if="loading"><p style="color:var(--color-muted)">Loading lesson…</p></template>
+    <template x-if="!loading && lesson && ((lesson.items && lesson.items.length) || (lesson.words && lesson.words.length))">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-top:.75rem">
+        <template x-for="(w, i) in (lesson.items || lesson.words || [])" :key="i">
+          <div style="border:1px solid #d8b4fe;border-radius:.75rem;padding:1rem;background:#faf5ff">
+            <p style="font-size:1.2rem;font-weight:700;color:#7c3aed" x-text="w.edo"></p>
+            <p style="font-size:.95rem;margin:.3rem 0" x-text="w.english"></p>
+            <p x-show="w.example" style="font-size:.8rem;color:var(--color-muted);font-style:italic;margin:.2rem 0" x-text="'e.g. ' + w.example"></p>
+            <span style="font-size:.72rem;background:#ede9fe;padding:.15rem .45rem;border-radius:999px;color:#5b21b6" x-text="w.category"></span>
+          </div>
+        </template>
+      </div>
+    </template>
+    <template x-if="!loading && (!lesson || (((lesson.items || []).length + (lesson.words || []).length) === 0))">
+      <p style="color:var(--color-muted)">Daily lesson unavailable. Academy service may be offline.</p>
+    </template>
+  </section>
+
+  <!-- ── Create Lesson ─────────────────────────────────────────────────── -->
+  <section class="panel" style="margin-top:1.5rem"
+           x-data="{
+             title: '',
+             category: '',
+             size: 5,
+             result: null,
+             loading: false,
+             error: '',
+             async create() {
+               this.error = ''; this.result = null;
+               if (!this.title.trim()) { this.error = 'Enter a lesson title.'; return; }
+               this.loading = true;
+               try {
+                 const r = await fetch('/api/academy/lesson/create', {
+                   method: 'POST',
+                   headers: {'Content-Type':'application/json'},
+                   body: JSON.stringify({ title: this.title, category: this.category || null, size: this.size })
+                 });
+                 const d = await r.json();
+                 if (d.error) { this.error = d.error; } else { this.result = d; }
+               } catch(e) { this.error = 'Service unavailable.'; }
+               this.loading = false;
+             }
+           }">
+    <div class="panel-header">
+      <h2>Create Lesson</h2>
+      <p>Build a custom Edo language lesson</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.9rem;max-width:460px">
+      <input type="text" x-model="title" placeholder="Lesson title (e.g. Market Phrases)"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.95rem;background:var(--color-surface)" />
+      <div style="display:flex;gap:.6rem">
+        <select x-model="category"
+                style="flex:1;padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)">
+          <option value="">Any category</option>
+          <option value="greetings">Greetings</option>
+          <option value="numbers">Numbers</option>
+          <option value="food">Food</option>
+          <option value="family">Family</option>
+          <option value="body">Body</option>
+          <option value="nature">Nature</option>
+        </select>
+        <input type="number" x-model="size" min="3" max="20" placeholder="Size"
+               style="width:80px;padding:.55rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
+      </div>
+      <button @click="create()" :disabled="loading" class="btn-primary">
+        <span x-text="loading ? 'Creating…' : '+ Create Lesson'"></span>
+      </button>
+      <template x-if="error"><p style="color:#ef4444;font-size:.9rem" x-text="error"></p></template>
+      <template x-if="result">
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:.75rem;padding:1rem">
+          <p style="font-weight:700;color:#16a34a">✅ Lesson Created!</p>
+          <p style="font-size:.9rem;margin:.3rem 0">ID: <code x-text="result.lesson_id"></code></p>
+          <p style="font-size:.9rem" x-text="result.message || ('Title: ' + result.title)"></p>
+        </div>
+      </template>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

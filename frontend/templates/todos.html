@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Todos — EKIOBA{% endblock %}
+{% block description %}Supabase-backed todo list, rendered server-side by the EKIOBA frontend.{% endblock %}
+
+{% block content %}
+<div class="shell">
+
+  <section class="hero" style="padding-bottom:2rem">
+    <div>
+      <p class="eyebrow">Supabase</p>
+      <h1>Todos</h1>
+      <p class="sub">Rows read from the <code>todos</code> table and rendered on the server.</p>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-pill">⚡ Supabase</span>
+      <span class="hero-pill">🐍 FastAPI</span>
+    </div>
+  </section>
+
+  {% if error %}
+  <div class="panel" style="background:#fffbeb;border:1px solid #fbbf24;margin-bottom:1.5rem">
+    <p style="margin:0 0 .5rem;color:#92400e"><strong>⚠️ Could not load todos.</strong></p>
+    <p style="margin:0;color:#92400e;font-size:.9rem">{{ error }}</p>
+    {% if show_setup_hint %}
+    <p style="margin:.75rem 0 0;color:#92400e;font-size:.88rem">
+      Create the table by running
+      <code>Knowledge Base/Supabase/002_todos_table.sql</code>
+      in the Supabase SQL Editor, then reload this page.
+    </p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Your list</h2>
+      <p>{{ todos|length }} item{{ '' if todos|length == 1 else 's' }}</p>
+    </div>
+
+    {% if todos %}
+    <ul style="list-style:none;padding:0;margin:0">
+      {% for todo in todos %}
+      <li style="display:flex;align-items:center;gap:.75rem;padding:.75rem .25rem;border-bottom:1px solid #eee">
+        <span style="font-size:1.1rem">{{ '✅' if todo.get('is_complete') else '⬜' }}</span>
+        <span style="{{ 'text-decoration:line-through;color:#999' if todo.get('is_complete') else '' }}">
+          {{ todo.get('name') or todo.get('title') or '(untitled)' }}
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% elif not error %}
+    <p style="color:#666;margin:0">No todos yet. Add a row to the <code>todos</code> table in Supabase.</p>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

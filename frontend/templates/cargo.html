@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Cargo & Shipping — EKIOBA{% endblock %}
+{% block description %}Get instant shipping quotes and track your cargo with EKIOBA.{% endblock %}
+
+{% block content %}
+<div class="shell">
+
+  <section class="hero" style="padding-bottom:2rem">
+    <div>
+      <p class="eyebrow">Logistics</p>
+      <h1>Cargo &amp; Shipping</h1>
+      <p class="sub">Calculate shipping costs instantly and track your deliveries across Nigeria and beyond.</p>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-pill">🚚 Delivery</span>
+      <span class="hero-pill">📦 Real-time Tracking</span>
+    </div>
+  </section>
+
+  <div class="grid-two">
+
+    <!-- Quote Calculator -->
+    <section class="panel"
+             x-data="{
+               distance: '',
+               weight: '',
+               result: null,
+               loading: false,
+               error: '',
+               async getQuote() {
+                 this.error = '';
+                 this.result = null;
+                 if (!this.distance || !this.weight) { this.error = 'Please enter both distance and weight.'; return; }
+                 this.loading = true;
+                 try {
+                   const r = await fetch('/api/cargo/quote', {
+                     method: 'POST',
+                     headers: {'Content-Type':'application/json'},
+                     body: JSON.stringify({ distance_km: parseFloat(this.distance), weight_kg: parseFloat(this.weight) })
+                   });
+                   const d = await r.json();
+                   if (d.estimated_cost !== undefined) {
+                     this.result = d.estimated_cost;
+                   } else {
+                     this.error = d.error || 'Could not calculate quote.';
+                   }
+                 } catch(e) {
+                   this.error = 'Service unavailable. Please try again.';
+                 } finally {
+                   this.loading = false;
+                 }
+               }
+             }">
+      <div class="panel-header">
+        <h2>Shipping Quote</h2>
+        <p>Get an instant cost estimate for your shipment</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1rem;max-width:400px">
+        <label style="display:flex;flex-direction:column;gap:.35rem;font-size:.9rem;font-weight:600">
+          Distance (km)
+          <input type="number" x-model="distance" min="1" placeholder="e.g. 250"
+                 style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:1rem;background:var(--color-surface)" />
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:.35rem;font-size:.9rem;font-weight:600">
+          Weight (kg)
+          <input type="number" x-model="weight" min="0.1" step="0.1" placeholder="e.g. 5.5"
+                 style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:1rem;background:var(--color-surface)" />
+        </label>
+
+        <button @click="getQuote()" :disabled="loading" class="btn-primary" style="margin-top:.5rem">
+          <span x-text="loading ? 'Calculating…' : 'Get Quote'"></span>
+        </button>
+
+        <template x-if="error">
+          <p style="color:#ef4444;font-size:.9rem" x-text="error"></p>
+        </template>
+
+        <template x-if="result !== null">
+          <div style="background:var(--color-surface-alt,#f0fdf4);border:1px solid #86efac;border-radius:.75rem;padding:1.25rem;text-align:center">
+            <p style="font-size:.85rem;color:var(--color-muted);margin-bottom:.25rem">Estimated Shipping Cost</p>
+            <p style="font-size:2rem;font-weight:700;color:#16a34a">₦<span x-text="result.toLocaleString()"></span></p>
+            <p style="font-size:.8rem;color:var(--color-muted);margin-top:.5rem">Final price may vary based on packaging and route.</p>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- Real-time Track Shipment (SSE) -->
+    <section class="panel"
+             x-data="{
+               shipmentId: '',
+               updates: [],
+               latestStatus: null,
+               loading: false,
+               error: '',
+               evtSource: null,
+               startTracking() {
+                 this.error = '';
+                 this.updates = [];
+                 this.latestStatus = null;
+                 if (!this.shipmentId.trim()) { this.error = 'Enter a shipment ID.'; return; }
+                 if (this.evtSource) { this.evtSource.close(); this.evtSource = null; }
+                 this.loading = true;
+                 const id = encodeURIComponent(this.shipmentId.trim());
+                 const es = new EventSource('/api/cargo/track/' + id + '/stream');
+                 this.evtSource = es;
+                 es.onmessage = (e) => {
+                   try {
+                     const d = JSON.parse(e.data);
+                     if (d.done) { es.close(); this.evtSource = null; this.loading = false; return; }
+                     if (d.error) { this.error = d.error; es.close(); this.loading = false; return; }
+                     this.latestStatus = d;
+                     this.updates.unshift({ time: new Date().toLocaleTimeString(), status: d.status, location: d.current_location || '' });
+                     if (this.updates.length > 8) this.updates.pop();
+                   } catch(_) {}
+                 };
+                 es.onerror = () => {
+                   if (this.evtSource) { this.evtSource.close(); this.evtSource = null; }
+                   this.loading = false;
+                 };
+               },
+               stopTracking() {
+                 if (this.evtSource) { this.evtSource.close(); this.evtSource = null; }
+                 this.loading = false;
+               }
+             }"
+             @destroy="stopTracking()">
+      <div class="panel-header">
+        <h2>Live Tracking</h2>
+        <p>Real-time shipment status updates</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1rem;max-width:420px">
+        <label style="display:flex;flex-direction:column;gap:.35rem;font-size:.9rem;font-weight:600">
+          Shipment ID
+          <input type="text" x-model="shipmentId" placeholder="e.g. SHP-20260501-001"
+                 @keyup.enter="startTracking()"
+                 style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:1rem;background:var(--color-surface)" />
+        </label>
+
+        <div style="display:flex;gap:.6rem">
+          <button @click="startTracking()" :disabled="loading" class="btn-primary" style="flex:1">
+            <span x-text="loading ? '⟳ Live…' : '▶ Track Live'"></span>
+          </button>
+          <button x-show="loading" @click="stopTracking()" class="btn-ghost"
+                  style="padding:.6rem 1rem;font-size:.85rem">Stop</button>
+        </div>
+
+        <template x-if="error">
+          <p style="color:#ef4444;font-size:.9rem" x-text="error"></p>
+        </template>
+
+        <!-- Latest status badge -->
+        <template x-if="latestStatus">
+          <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:.75rem;padding:1rem">
+            <p style="font-size:.8rem;color:var(--color-muted)">Shipment <strong x-text="latestStatus.shipment_id"></strong></p>
+            <p style="font-size:1.1rem;font-weight:700;margin:.35rem 0;text-transform:capitalize"
+               x-text="(latestStatus.status||'').replace(/_/g,' ')"></p>
+            <p style="font-size:.88rem;color:var(--color-muted)" x-show="latestStatus.current_location"
+               x-text="'📍 ' + latestStatus.current_location"></p>
+            <p style="font-size:.85rem;color:var(--color-muted)" x-show="latestStatus.eta_hours"
+               x-text="'ETA: ' + latestStatus.eta_hours + ' hrs'"></p>
+          </div>
+        </template>
+
+        <!-- Live update log -->
+        <template x-if="updates.length > 0">
+          <div>
+            <p style="font-size:.8rem;font-weight:600;color:var(--color-muted);margin-bottom:.4rem">LIVE LOG</p>
+            <div style="display:flex;flex-direction:column;gap:.3rem;max-height:180px;overflow-y:auto">
+              <template x-for="(u, i) in updates" :key="i">
+                <div style="display:flex;gap:.75rem;align-items:center;font-size:.82rem;padding:.35rem .5rem;border-radius:.45rem;background:var(--color-surface-alt,#f8fafc)">
+                  <span style="color:var(--color-muted);min-width:55px" x-text="u.time"></span>
+                  <span :style="i===0 ? 'font-weight:700;color:#dd5b2f' : 'color:#333'"
+                        x-text="u.status.replace(/_/g,' ')"></span>
+                  <span x-show="u.location" style="color:var(--color-muted);margin-left:auto" x-text="u.location"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Book Cargo -->
+  <section class="panel" style="margin-top:1.5rem"
+           x-data="{
+             form: { sender_name: '', sender_address: '', recipient_name: '', recipient_address: '', weight_kg: '', description: '', distance_km: '' },
+             result: null,
+             loading: false,
+             error: '',
+             async book() {
+               this.error = ''; this.result = null;
+               if (!this.form.sender_name || !this.form.recipient_name || !this.form.weight_kg) {
+                 this.error = 'Fill in sender, recipient, and weight.'; return;
+               }
+               this.loading = true;
+               try {
+                 const r = await fetch('/api/cargo/book', {
+                   method: 'POST',
+                   headers: {'Content-Type':'application/json'},
+                   body: JSON.stringify({ ...this.form, weight_kg: parseFloat(this.form.weight_kg), distance_km: parseFloat(this.form.distance_km) || 0 })
+                 });
+                 const d = await r.json();
+                 if (d.shipment_id) { this.result = d; } else { this.error = d.error || 'Booking failed.'; }
+               } catch(e) { this.error = 'Service unavailable.'; }
+               this.loading = false;
+             }
+           }">
+    <div class="panel-header">
+      <h2>Book a Shipment</h2>
+      <p>Schedule cargo pickup and delivery</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;max-width:700px">
+      <input type="text" x-model="form.sender_name" placeholder="Sender name"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
+      <input type="text" x-model="form.sender_address" placeholder="Pickup address"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
+      <input type="text" x-model="form.recipient_name" placeholder="Recipient name"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
+      <input type="text" x-model="form.recipient_address" placeholder="Delivery address"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
+      <input type="number" x-model="form.weight_kg" min="0.1" step="0.1" placeholder="Weight (kg)"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
+      <input type="number" x-model="form.distance_km" min="1" placeholder="Distance km (optional)"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
+      <input type="text" x-model="form.description" placeholder="Item description (optional)"
+             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface);grid-column:1/-1" />
+    </div>
+    <div style="margin-top:1rem;max-width:700px">
+      <button @click="book()" :disabled="loading" class="btn-primary">
+        <span x-text="loading ? 'Booking…' : '📦 Book Shipment'"></span>
+      </button>
+    </div>
+    <template x-if="error"><p style="color:#ef4444;font-size:.9rem;margin-top:.75rem" x-text="error"></p></template>
+    <template x-if="result">
+      <div style="margin-top:1rem;background:#f0fdf4;border:1px solid #86efac;border-radius:.75rem;padding:1.25rem;max-width:480px">
+        <p style="font-weight:700;color:#16a34a;margin-bottom:.5rem">✅ Shipment Booked!</p>
+        <p style="font-size:.9rem">Shipment ID: <strong x-text="result.shipment_id"></strong></p>
+        <p style="font-size:.85rem;color:var(--color-muted);margin-top:.3rem">
+          Use the Shipment ID above to track your cargo in real-time.</p>
+      </div>
+    </template>
+  </section>
+
+  <section class="panel" style="margin-top:1.5rem"
+           x-data="{ items: [], loading: true, async load(){ try { const r = await fetch('/api/cargo/best-practices'); const d = await r.json(); this.items = d.standards || []; } catch(e) { this.items = []; } this.loading = false; } }"
+           x-init="load()">
+    <div class="panel-header">
+      <h2>Best Shipping Practice</h2>
+      <p>Operational standards for secure and reliable delivery</p>
+    </div>
+    <template x-if="loading"><p style="color:var(--color-muted)">Loading standards…</p></template>
+    <template x-if="!loading && items.length">
+      <ul style="display:grid;gap:.55rem;margin:0;padding-left:1rem">
+        <template x-for="(s, idx) in items" :key="idx">
+          <li style="font-size:.92rem;line-height:1.45" x-text="s"></li>
+        </template>
+      </ul>
+    </template>
+    <template x-if="!loading && !items.length"><p style="color:var(--color-muted)">Standards unavailable right now.</p></template>
+  </section>
+
+</div>
+{% endblock %}

@@ -28,6 +28,16 @@ def test_translate_en_to_edo() -> None:
     assert "translated_text" in response.json()
 
 
+def test_translate_handles_accented_and_legacy_edo_forms() -> None:
+    accented = client.post("/translate", json={"text": "owä", "direction": "edo_to_en"})
+    legacy = client.post("/translate", json={"text": "owa", "direction": "edo_to_en"})
+
+    assert accented.status_code == 200
+    assert legacy.status_code == 200
+    assert accented.json()["translated_text"] == "house"
+    assert legacy.json()["translated_text"] == "house"
+
+
 def test_vocabulary_categories_returns_counts() -> None:
     response = client.get("/vocabulary/categories")
     assert response.status_code == 200
@@ -91,7 +101,7 @@ def test_quiz_answer_awards_tokens_for_correct_answer() -> None:
     payload = response.json()
     assert payload["correct"] is True
     assert payload["awarded_tokens"] == 10
-    assert payload["awarded_by"] == "ai assistant"
+    assert payload["awarded_by"] == "Iyobo (Aza AI)"
     assert payload["token_balance"] == 10
 
 
@@ -106,7 +116,7 @@ def test_quiz_points_balance_reflects_awards() -> None:
     assert points_response.status_code == 200
     points_payload = points_response.json()
     assert points_payload["token_balance"] == 10
-    assert points_payload["awarded_by"] == "ai assistant"
+    assert points_payload["awarded_by"] == "Iyobo (Aza AI)"
 
 
 def test_quiz_answer_wrong_does_not_award_tokens() -> None:

@@ -4,15 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}EKIOBA{% endblock %}</title>
-  <meta name="description" content="{% block description %}EKIOBA — Edo cultural marketplace, AI-powered forecasts, and blockchain payments.{% endblock %}" />
+  <meta name="description" content="{% block description %}EKIOBA — Edo cultural marketplace powered by Aza Wallet and TON blockchain payments.{% endblock %}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script defer src="{{ url_for('static', path='js/app.js') }}"></script>
+  <!-- TON Connect UI for TON blockchain payments. Pinned: @latest has shipped
+       breaking majors before, and the UMD global is TON_CONNECT_UI. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.4.4/dist/tonconnect-ui.min.js"></script>
+  <script defer src="/static/js/app.js"></script>
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -21,8 +24,7 @@
   <header class="site-header">
     <nav class="site-nav" x-data="{ open: false }" aria-label="Main navigation">
       <a class="nav-logo" href="/">
-        <span class="nav-logo-mark" aria-hidden="true">⬡</span>
-        EKIOBA
+        <img src="https://olive-adorable-cephalopod-171.mypinata.cloud/ipfs/bafkreiew5q3gtnnlelynqarakyarsntgq3dc6r6nqywxytk4ag5idd5zdm" alt="EKIOBA Logo" class="logo-image" style="height:40px;width:auto;margin-right:8px;" />
       </a>
       <button class="nav-toggle"
               @click="open = !open"
@@ -32,15 +34,33 @@
         <span x-text="open ? '✕' : '☰'">☰</span>
       </button>
       <ul class="nav-links" id="site-nav-links" :class="{ 'is-open': open }" role="list">
-        <li><a href="/">Home</a></li>
-        <li><a href="/#store">Store</a></li>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/wallet-dashboard">Wallet</a></li>
-        <li><a href="/chat">AI&nbsp;Chat</a></li>
         <li>
-          <a href="/wallet-dashboard" class="cart-link" aria-label="Shopping cart">
-            🛒 <span id="cart-count" hidden aria-live="polite">0</span>
+          <a href="/" aria-label="Home">
+            <span class="nav-icon" aria-hidden="true">🏠</span>
+            <span class="nav-label">Home</span>
           </a>
+        </li>
+        <li>
+          <a href="/#services" aria-label="All Services">
+            <span class="nav-icon" aria-hidden="true">🧭</span>
+            <span class="nav-label">All Services</span>
+          </a>
+        </li>
+        <li>
+          <a href="/#store" aria-label="Store">
+            <span class="nav-icon" aria-hidden="true">🛍️</span>
+            <span class="nav-label">Store</span>
+          </a>
+        </li>
+        <li>
+          <button id="wallet-connect-btn" onclick="openWalletConnect()" aria-label="Connect Wallet" title="Connect your wallet">
+            💳 Connect Wallet
+          </button>
+        </li>
+        <li>
+          <button class="cart-link cart-link-floating" type="button" onclick="openCartDrawer()" aria-label="Open shopping cart">
+            🛒 <span id="cart-count" hidden aria-live="polite">0</span>
+          </button>
         </li>
       </ul>
     </nav>
@@ -51,24 +71,545 @@
     {% block content %}{% endblock %}
   </main>
 
+  <aside id="cart-drawer" aria-label="Shopping cart"
+         style="position:fixed;top:0;right:0;height:100%;width:min(390px,95vw);background:#fff;z-index:8900;box-shadow:-8px 0 24px rgba(0,0,0,.2);transform:translateX(100%);transition:transform .2s ease;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem;border-bottom:1px solid #eee">
+      <h3 style="margin:0;font-size:1.1rem">Your Cart</h3>
+      <button type="button" onclick="closeCartDrawer()" style="background:none;border:none;font-size:1.25rem;cursor:pointer">✕</button>
+    </div>
+    <div id="cart-items" style="padding:1rem;overflow:auto;flex:1"></div>
+    <div style="padding:1rem;border-top:1px solid #eee;display:grid;gap:.65rem">
+      <p style="margin:0;font-size:.92rem;color:#444">Total: <strong id="cart-total-ngn">₦0</strong></p>
+      <button type="button" class="btn-primary" onclick="checkoutCart()">Checkout Cart with IDIA</button>
+      <button type="button" class="btn-ghost" onclick="clearCart()">Clear Cart</button>
+    </div>
+  </aside>
+  <div id="cart-backdrop" onclick="closeCartDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:8800"></div>
+
+  <!-- ── Idia Coin Payment Modal ────────────────────────────────────────── -->
+  <div id="idia-modal"
+       role="dialog" aria-modal="true" aria-labelledby="idia-modal-title"
+       style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:1rem;padding:2rem;max-width:480px;width:95%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+      <button onclick="closeIdiaModal()" aria-label="Close payment modal"
+              style="position:absolute;top:.75rem;right:.9rem;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#666">✕</button>
+      <h2 id="idia-modal-title" style="margin:0 0 .25rem;font-size:1.2rem">Pay with Idia Coin ⬡</h2>
+      <p id="idia-modal-product" style="color:#666;font-size:.9rem;margin:0 0 1.2rem"></p>
+
+      <div style="display:flex;gap:.75rem;margin-bottom:1.5rem">
+        <div style="flex:1;text-align:center">
+          <p style="font-size:.78rem;color:#888;margin-bottom:.3rem">Reference Amount</p>
+          <p id="idia-modal-ngn" style="font-size:1.3rem;font-weight:700">—</p>
+        </div>
+        <div style="flex:1;text-align:center">
+          <p style="font-size:.78rem;color:#888;margin-bottom:.3rem">Idia Coin</p>
+          <p id="idia-modal-idia" style="font-size:1.3rem;font-weight:700;color:#dd5b2f">—</p>
+          <p id="idia-rate-source" style="font-size:.7rem;color:#999;margin-top:.2rem"></p>
+        </div>
+      </div>
+
+      <!-- Hidden chain tabs (IDIA only checkout UX) -->
+      <div style="display:flex;gap:.5rem;margin-bottom:1.25rem">
+        <button id="tab-idia" onclick="switchChain('idia')"
+                style="flex:1;padding:.55rem;border-radius:.5rem;border:2px solid #4CAF50;background:#4CAF50;color:#fff;font-weight:600;cursor:pointer;font-size:.9rem">
+          💎 IDIA Coin
+        </button>
+        <button id="tab-ton" onclick="switchChain('ton')"
+                style="display:none;flex:1;padding:.55rem;border-radius:.5rem;border:2px solid #dd5b2f;background:#fff;color:#333;font-weight:600;cursor:pointer;font-size:.9rem">
+          ⬡ TON
+        </button>
+      </div>
+
+      <div id="wallet-connect-actions" style="display:none;margin-bottom:1rem">
+        <p style="font-size:.85rem;color:#555;margin-bottom:.6rem">Connect your wallet:</p>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button type="button" id="ton-connect-action" onclick="connectTonkeeper()"
+                  style="flex:1;min-width:170px;padding:.6rem;border-radius:.5rem;border:2px solid #dd5b2f;background:#fff;color:#333;font-weight:600;cursor:pointer;font-size:.88rem">
+            ⬡ Connect TON Wallet
+          </button>
+          <button type="button" id="ton-disconnect-action" onclick="disconnectTonWallet()"
+                  style="display:none;flex:1;min-width:140px;padding:.6rem;border-radius:.5rem;border:2px solid #ddd;background:#fff;color:#666;font-weight:600;cursor:pointer;font-size:.88rem">
+            Disconnect
+          </button>
+        </div>
+        <div id="wallet-connect-status" style="margin-top:.6rem;font-size:.85rem;color:#555"></div>
+      </div>
+
+      <!-- IDIA panel (Primary) -->
+      <div id="panel-idia">
+        <p style="font-size:.85rem;color:#555;margin-bottom:1rem">Pay directly with IDIA Coin — the native and only checkout currency on EKIOBA.</p>
+        <button id="idia-pay-btn" onclick="submitIdiaPayment()"
+                style="width:100%;padding:.75rem;background:#4CAF50;color:#fff;border:none;border-radius:.6rem;font-size:1rem;font-weight:700;cursor:pointer">
+          Pay with IDIA Coin
+        </button>
+        <div id="idia-status" style="margin-top:.75rem;font-size:.88rem;color:#555"></div>
+      </div>
+
+      <!-- TON panel -->
+      <div id="panel-ton" style="display:none">
+        <p style="font-size:.85rem;color:#555;margin-bottom:1rem">Connect your TON wallet to pay with Idia Jetton on TON blockchain.</p>
+        <button id="ton-pay-btn" onclick="submitTonPayment()"
+                style="width:100%;padding:.75rem;background:#dd5b2f;color:#fff;border:none;border-radius:.6rem;font-size:1rem;font-weight:700;cursor:pointer">
+          Confirm TON Payment
+        </button>
+        <div id="ton-status" style="margin-top:.75rem;font-size:.88rem;color:#555"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Iyobo (Aza AI) Floating Chat Widget ────────────────────────────── -->
+  <div id="aza-widget"
+       x-data="{
+         open: false,
+         messages: [{role:'bot', text:'Koyo! I\'m Iyobo, your EKIOBA AI cultural guide. Vhe o ye rie? How can I help? 🏺'}],
+         input: '',
+         loading: false,
+         async send() {
+           const txt = this.input.trim();
+           if (!txt) return;
+           this.messages.push({role:'user', text: txt});
+           this.input = '';
+           this.loading = true;
+           try {
+             const r = await fetch('/api/chat/proxy', {
+               method: 'POST',
+               headers: {'Content-Type':'application/x-www-form-urlencoded'},
+               body: 'message=' + encodeURIComponent(txt)
+             });
+             const html = await r.text();
+             const tmp = document.createElement('div');
+             tmp.innerHTML = html;
+             const reply = tmp.querySelector('.chat-bubble')?.textContent || html.replace(/<[^>]*>/g,'');
+             this.messages.push({role:'bot', text: reply});
+           } catch(e) {
+             this.messages.push({role:'bot', text:'Service temporarily unavailable. Please try again.'});
+           }
+           this.loading = false;
+           this.$nextTick(() => {
+             const log = document.getElementById('aza-log');
+             if (log) log.scrollTop = log.scrollHeight;
+           });
+         }
+       }"
+       style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:8000">
+
+    <!-- Chat panel -->
+    <div x-show="open" x-transition
+         style="width:340px;background:#fff;border-radius:1rem;box-shadow:0 8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden;margin-bottom:.75rem;max-height:480px">
+      <div style="background:#1d2a33;color:#fff;padding:.85rem 1rem;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-weight:700;font-size:.95rem">⬡ Iyobo · Aza AI</span>
+        <button @click="open=false" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+      </div>
+      <div id="aza-log" style="flex:1;overflow-y:auto;padding:.85rem;display:flex;flex-direction:column;gap:.6rem;min-height:200px">
+        <template x-for="(msg, i) in messages" :key="i">
+          <div :style="'max-width:85%;padding:.55rem .85rem;border-radius:10px;font-size:.88rem;line-height:1.5;' +
+                       (msg.role==='user' ? 'background:#dd5b2f;color:#fff;align-self:flex-end;' : 'background:#f3f4f6;color:#1d2a33;align-self:flex-start;')"
+               x-text="msg.text"></div>
+        </template>
+        <template x-if="loading">
+          <div style="align-self:flex-start;background:#f3f4f6;border-radius:10px;padding:.55rem .85rem;font-size:.85rem;color:#888">Iyobo is thinking…</div>
+        </template>
+      </div>
+      <form @submit.prevent="send()" style="display:flex;border-top:1px solid #eee">
+        <input x-model="input" type="text" placeholder="Ask Iyobo…"
+               style="flex:1;padding:.65rem .85rem;border:none;outline:none;font-size:.9rem;background:#fafafa"
+               :disabled="loading" />
+        <button type="submit" :disabled="loading"
+                style="padding:.65rem 1rem;background:#dd5b2f;color:#fff;border:none;font-weight:700;cursor:pointer;font-size:.9rem">Send</button>
+      </form>
+    </div>
+
+    <!-- Toggle button -->
+    <button @click="open=!open"
+            aria-label="Toggle Iyobo AI chat"
+            style="width:56px;height:56px;border-radius:50%;background:#dd5b2f;color:#fff;border:none;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 16px rgba(221,91,47,.45);display:flex;align-items:center;justify-content:center;float:right">
+      <span x-text="open ? '✕' : '🤖'">🤖</span>
+    </button>
+  </div>
+
   <!-- ── Site Footer ────────────────────────────────────────────────────── -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <span class="nav-logo-mark" aria-hidden="true">⬡</span>
+        <img src="https://olive-adorable-cephalopod-171.mypinata.cloud/ipfs/bafkreiew5q3gtnnlelynqarakyarsntgq3dc6r6nqywxytk4ag5idd5zdm" alt="EKIOBA Logo" class="logo-image" style="height:32px;width:auto;margin-bottom:8px;" />
         <strong>EKIOBA</strong>
-        <p>Rooted in the Edo Kingdom. Powered by Azure &amp; Web3.</p>
+        <p>Rooted in the Edo Kingdom. Powered by Aza Wallet &amp; Web3.</p>
       </div>
       <nav class="footer-links" aria-label="Footer navigation">
         <a href="/">Home</a>
+        <a href="/#services">All Services</a>
         <a href="/#store">Store</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/wallet-dashboard">Wallet</a>
-        <a href="/chat">AI Chat</a>
       </nav>
       <p class="footer-copy">&copy; 2026 EKIOBA. All rights reserved.</p>
     </div>
   </footer>
+
+  <!-- ── Idia Coin Payment JS (TON Connect) ─────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    // Served dynamically by the app so the manifest `url` always matches the
+    // origin the wallet sees. A mismatch makes every wallet refuse to connect.
+    var TON_MANIFEST_URL = window.location.origin + '/tonconnect-manifest.json';
+
+    // Mirror of the pinned <script> in <head>, used only if that CDN is blocked.
+    var TON_SDK_FALLBACK = 'https://unpkg.com/@tonconnect/ui@2.4.4/dist/tonconnect-ui.min.js';
+
+    var _currentChain = 'idia';
+    var _tonConnectUI = null;
+    var _tonReady = null;
+    var _fallbackRequested = false;
+
+    function _el(id) { return document.getElementById(id); }
+
+    function _setStatus(id, text, isHtml) {
+      var node = _el(id);
+      if (!node) return;
+      if (isHtml) { node.innerHTML = text; } else { node.textContent = text; }
+    }
+
+    // The UMD bundle attaches itself to window.TON_CONNECT_UI. The older
+    // `TONConnectUI` spelling never existed and silently broke every connect.
+    function _sdkNamespace() {
+      return window.TON_CONNECT_UI || window.TONCONNECT_UI || null;
+    }
+
+    function _loadFallbackSdk() {
+      if (_fallbackRequested) return;
+      _fallbackRequested = true;
+      var tag = document.createElement('script');
+      tag.src = TON_SDK_FALLBACK;
+      tag.async = true;
+      document.head.appendChild(tag);
+    }
+
+    function _waitForSdk(timeoutMs) {
+      return new Promise(function (resolve) {
+        var ns = _sdkNamespace();
+        if (ns) { resolve(ns); return; }
+
+        var waited = 0;
+        var step = 120;
+        var timer = setInterval(function () {
+          waited += step;
+          var found = _sdkNamespace();
+          if (found) { clearInterval(timer); resolve(found); return; }
+          if (waited >= timeoutMs / 2) _loadFallbackSdk();
+          if (waited >= timeoutMs) { clearInterval(timer); resolve(null); }
+        }, step);
+      });
+    }
+
+    async function _initTonConnect() {
+      if (_tonConnectUI) return _tonConnectUI;
+
+      var ns = await _waitForSdk(10000);
+      if (!ns || typeof ns.TonConnectUI !== 'function') {
+        console.error('[EKIOBA] TON Connect UI failed to load.');
+        return null;
+      }
+
+      try {
+        // No buttonRootId: the modal is opened programmatically, so the widget
+        // never depends on a DOM node that may be hidden or absent.
+        _tonConnectUI = new ns.TonConnectUI({ manifestUrl: TON_MANIFEST_URL });
+      } catch (e) {
+        console.error('[EKIOBA] TON Connect UI init failed:', e);
+        return null;
+      }
+
+      try { _tonConnectUI.onStatusChange(function () { _renderWalletConnectState(); }); }
+      catch (e) { /* older builds expose no subscription */ }
+
+      // Re-attach to a wallet the user connected on a previous visit.
+      try { await _tonConnectUI.connectionRestored; } catch (e) { /* no-op */ }
+
+      _renderWalletConnectState();
+      return _tonConnectUI;
+    }
+
+    _tonReady = _initTonConnect();
+
+    function _tonAccount() {
+      if (!_tonConnectUI) return null;
+      var account = _tonConnectUI.account;
+      if (account && account.address) return account.address;
+      var wallet = _tonConnectUI.wallet;
+      if (wallet && wallet.account && wallet.account.address) return wallet.account.address;
+      return null;
+    }
+
+    function _tonConnected() { return !!_tonAccount(); }
+
+    function _shortAddress(address) {
+      if (!address) return '';
+      return address.length > 14
+        ? address.slice(0, 6) + '…' + address.slice(-4)
+        : address;
+    }
+
+    function _renderWalletConnectState() {
+      var address = _tonAccount();
+      var connectBtn = _el('ton-connect-action');
+      var disconnectBtn = _el('ton-disconnect-action');
+      var headerBtn = _el('wallet-connect-btn');
+
+      if (address) {
+        _setStatus('wallet-connect-status', 'TON wallet connected: ' + _shortAddress(address));
+        if (connectBtn) connectBtn.style.display = 'none';
+        if (disconnectBtn) disconnectBtn.style.display = 'block';
+        if (headerBtn) headerBtn.textContent = '💳 ' + _shortAddress(address);
+      } else {
+        _setStatus('wallet-connect-status', 'No wallet connected yet.');
+        if (connectBtn) { connectBtn.style.display = 'block'; }
+        if (disconnectBtn) disconnectBtn.style.display = 'none';
+        if (headerBtn) headerBtn.textContent = '💳 Connect Wallet';
+      }
+    }
+
+    function _buildCheckoutPayload() {
+      var ctx = window._idiaContext || {};
+      return {
+        product_id: ctx.productId,
+        product_name: ctx.productName,
+        price_ngn: Number(ctx.priceNgn || 0),
+        cart_items: Array.isArray(ctx.cartItems) ? ctx.cartItems : [],
+        cart_total_ngn: Number(ctx.cartTotalNgn || 0),
+        is_cart_checkout: Boolean(ctx.isCartCheckout),
+        // The Jetton transfer has to be addressed to *this* wallet's Jetton
+        // contract, so the backend needs the connected account.
+        sender_address: _tonAccount(),
+      };
+    }
+
+    function _notifyCheckoutSuccess(data) {
+      if (typeof window.onCheckoutSuccess === 'function') {
+        try {
+          window.onCheckoutSuccess(window._idiaContext || {}, data || {});
+        } catch (e) { /* no-op */ }
+      }
+    }
+
+    window.openWalletConnect = async function () {
+      if (!window._idiaContext) {
+        window._idiaContext = { productId: 'wallet', productName: 'EKIOBA Wallet', priceNgn: 0 };
+      }
+
+      var modal = _el('idia-modal');
+      if (modal) {
+        _setStatus('idia-modal-product', 'Connect your wallet to pay with IDIA');
+        _setStatus('idia-modal-ngn', '₦0');
+        _setStatus('idia-modal-idia', '0.0000 IDIA');
+        modal.style.display = 'flex';
+      }
+
+      var actions = _el('wallet-connect-actions');
+      if (actions) actions.style.display = 'block';
+      _setStatus('idia-status', '');
+      switchChain('idia');
+
+      _setStatus('wallet-connect-status', 'Loading TON Connect…');
+      await _tonReady;
+      _renderWalletConnectState();
+    };
+
+    window.connectTonkeeper = async function () {
+      _setStatus('wallet-connect-status', 'Loading TON Connect…');
+
+      var ui = await _tonReady;
+      if (!ui) {
+        // Let the user retry rather than dead-ending on a blocked CDN.
+        _tonReady = _initTonConnect();
+        _setStatus(
+          'wallet-connect-status',
+          'Could not load TON Connect. Check your connection, then ' +
+          '<button onclick="connectTonkeeper()" style="margin-left:.35rem;padding:2px 10px;border-radius:6px;background:#dd5b2f;color:#fff;border:none;cursor:pointer;font-size:.82rem">Retry</button>',
+          true
+        );
+        return;
+      }
+
+      if (_tonConnected()) { _renderWalletConnectState(); return; }
+
+      _setStatus('wallet-connect-status', 'Choose your TON wallet…');
+      try {
+        await ui.openModal();
+      } catch (e) {
+        _setStatus('wallet-connect-status', 'Wallet connection failed: ' + (e && e.message ? e.message : 'cancelled'));
+        return;
+      }
+      _renderWalletConnectState();
+    };
+
+    window.disconnectTonWallet = async function () {
+      var ui = await _tonReady;
+      if (!ui) return;
+      try { await ui.disconnect(); } catch (e) { /* already gone */ }
+      _renderWalletConnectState();
+    };
+
+    window.openIdiaPayment = async function (productId, productName, priceNgn, meta) {
+      var modal = _el('idia-modal');
+      _setStatus('idia-modal-product', productName);
+      _setStatus('idia-modal-ngn', '₦' + Number(priceNgn).toLocaleString());
+      _setStatus('idia-modal-idia', 'Loading…');
+      if (modal) modal.style.display = 'flex';
+
+      // Fetch idia rate and compute amount
+      try {
+        var r = await fetch('/api/pay/idia-rate');
+        var d = await r.json();
+        var rate = Number(d.ngn_per_idia);
+        _setStatus('idia-modal-idia', rate > 0 ? (priceNgn / rate).toFixed(4) + ' IDIA' : '—');
+        // Say plainly whether this is a traded price or the configured
+        // placeholder, so nobody mistakes one for the other.
+        _setStatus('idia-rate-source', d.live
+          ? 'Live DeDust rate · ₦' + Number(rate).toLocaleString(undefined, { maximumFractionDigits: 4 }) + '/IDIA'
+          : 'Indicative rate · ₦' + Number(rate).toLocaleString(undefined, { maximumFractionDigits: 4 }) + '/IDIA');
+      } catch (e) {
+        _setStatus('idia-modal-idia', '—');
+        _setStatus('idia-rate-source', '');
+      }
+
+      // Store context for later
+      var extra = meta && typeof meta === 'object' ? meta : {};
+      window._idiaContext = {
+        productId: productId,
+        productName: productName,
+        priceNgn: priceNgn,
+        isCartCheckout: Boolean(extra.isCartCheckout),
+        cartItems: Array.isArray(extra.cartItems) ? extra.cartItems : [],
+        cartTotalNgn: Number(extra.cartTotalNgn || 0),
+      };
+      var actions = _el('wallet-connect-actions');
+      if (actions) actions.style.display = 'none';
+      switchChain('idia');
+      _setStatus('idia-status', '');
+    };
+
+    window.closeIdiaModal = function () {
+      var modal = _el('idia-modal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.switchChain = function (chain) {
+      _currentChain = chain === 'ton' ? 'ton' : 'idia';
+      var isIdia = _currentChain === 'idia';
+
+      var panelIdia = _el('panel-idia');
+      var panelTon = _el('panel-ton');
+      if (panelIdia) panelIdia.style.display = isIdia ? 'block' : 'none';
+      if (panelTon) panelTon.style.display = isIdia ? 'none' : 'block';
+
+      var btnIdia = _el('tab-idia');
+      var btnTon = _el('tab-ton');
+      if (btnIdia) {
+        btnIdia.style.background = isIdia ? '#4CAF50' : '#fff';
+        btnIdia.style.color = isIdia ? '#fff' : '#333';
+        btnIdia.style.borderColor = isIdia ? '#4CAF50' : '#ddd';
+      }
+      if (btnTon) {
+        btnTon.style.background = isIdia ? '#fff' : '#dd5b2f';
+        btnTon.style.color = isIdia ? '#333' : '#fff';
+        btnTon.style.borderColor = isIdia ? '#ddd' : '#dd5b2f';
+      }
+    };
+
+    window.submitIdiaPayment = async function () {
+      var ctx = window._idiaContext;
+      if (!ctx) {
+        _setStatus('idia-status', 'Choose a product first.');
+        return;
+      }
+
+      if (Number(ctx.priceNgn || 0) <= 0) {
+        _setStatus('idia-status', 'Use Connect Wallet to link your TON wallet.');
+        await window.connectTonkeeper();
+        return;
+      }
+
+      if (!_tonConnected()) {
+        _setStatus('idia-status', 'Connect your TON wallet to pay with IDIA…');
+        var actions = _el('wallet-connect-actions');
+        if (actions) actions.style.display = 'block';
+        await window.connectTonkeeper();
+        if (!_tonConnected()) return;
+      }
+
+      _setStatus('idia-status', 'TON wallet connected. Starting IDIA payment…');
+      await window.submitTonPayment('idia-status');
+    };
+
+    window.submitTonPayment = async function (statusId) {
+      var target = statusId || 'ton-status';
+      var ctx = window._idiaContext;
+      if (!ctx) { _setStatus(target, 'Choose a product first.'); return; }
+
+      var ui = await _tonReady;
+      if (!ui) { _setStatus(target, 'TON Connect is unavailable. Please retry.'); return; }
+
+      if (!_tonConnected()) {
+        _setStatus(target, 'Connect your TON wallet first.');
+        await window.connectTonkeeper();
+        if (!_tonConnected()) return;
+      }
+
+      _setStatus(target, 'Preparing IDIA transfer…');
+
+      var data;
+      try {
+        var r = await fetch('/api/pay/ton', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(_buildCheckoutPayload()),
+        });
+        data = await r.json();
+        if (!r.ok) {
+          _setStatus(target, data.error || data.detail || 'Payment request failed.');
+          return;
+        }
+      } catch (e) {
+        _setStatus(target, 'Could not reach the payment service.');
+        return;
+      }
+
+      if (!data.ton_connect_tx) {
+        _setStatus(target, data.message || data.error || 'Payment request failed.');
+        return;
+      }
+
+      _setStatus(target, 'Confirm the transfer in your wallet…');
+      try {
+        await ui.sendTransaction(data.ton_connect_tx);
+      } catch (e) {
+        var message = (e && e.message) ? e.message : 'Transaction was rejected.';
+        _setStatus(target, 'Payment not sent: ' + message);
+        return;
+      }
+
+      _setStatus(target, '✅ Transaction submitted! Order: ' + data.order_id);
+      _notifyCheckoutSuccess(data);
+    };
+
+    // Re-check wallet state when users return from their wallet app.
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) _renderWalletConnectState();
+    });
+    window.addEventListener('focus', _renderWalletConnectState);
+    window.addEventListener('pageshow', _renderWalletConnectState);
+
+    // Close modal on backdrop click
+    var idiaModal = _el('idia-modal');
+    if (idiaModal) {
+      idiaModal.addEventListener('click', function (e) {
+        if (e.target === this) closeIdiaModal();
+      });
+    }
+
+    _renderWalletConnectState();
+  }());
+  </script>
 
 </body>
 </html>

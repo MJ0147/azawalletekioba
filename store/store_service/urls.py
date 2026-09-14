@@ -13,8 +13,6 @@ urlpatterns = [
     path("api/products", views.products, name="products_no_slash"),
     path("api/pay/ton", views.pay_ton),
     path("api/pay/ton/", views.pay_ton),
-    path("api/pay/solana", views.pay_solana),
-    path("api/pay/solana/", views.pay_solana),
     path(
         "api/admin/auth/token/",
         AdminTokenObtainPairView.as_view(),

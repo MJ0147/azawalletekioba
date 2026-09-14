@@ -9,7 +9,7 @@
   <!-- ── Wallet Header ────────────────────────────────────────────────── -->
   <section class="hero" style="padding:1rem 1.15rem;">
     <div>
-      <p class="eyebrow">Your Blockchain Wallets</p>
+      <p class="eyebrow">Your TON Wallet</p>
       <h1>💼 Wallet Dashboard</h1>
       <p class="sub">Real-time wallet information and predictive market analytics.</p>
     </div>
@@ -24,19 +24,12 @@
       <h2>Connected Wallets</h2>
       <p>Blockchain addresses linked to your account</p>
     </div>
-    <div class="grid-two" style="gap:1rem;">
-      <div>
-        <p class="wallet-hint"><strong>Solana</strong></p>
-        <p class="wallet-hint">
-          <code>{% if wallet.solana_wallet %}{{ wallet.solana_wallet[:20] }}…{% else %}Not connected{% endif %}</code>
-        </p>
-      </div>
-      <div>
-        <p class="wallet-hint"><strong>TON</strong></p>
-        <p class="wallet-hint">
-          <code>{% if wallet.ton_wallet %}{{ wallet.ton_wallet[:20] }}…{% else %}Not connected{% endif %}</code>
-        </p>
-      </div>
+    <div>
+      <p class="wallet-hint"><strong>TON</strong></p>
+      <p class="wallet-hint">
+        {% set ton = wallet.ton_wallet if wallet.ton_wallet and wallet.ton_wallet not in ("Not configured", "") else "" %}
+        <code>{% if ton %}{{ ton[:20] }}…{% else %}Not configured…{% endif %}</code>
+      </p>
     </div>
   </div>
 
@@ -73,10 +66,14 @@
       </div>
     </div>
 
-    <!-- Azure Cloud CPU -->
+    <!-- Supabase health -->
     <div class="chart-card">
-      <h3>☁️ Azure CPU Usage</h3>
-      <canvas id="cloudChart" role="img" aria-label="Azure VM CPU usage"></canvas>
+      <h3>⚡ Supabase Health</h3>
+      <canvas id="cloudChart" role="img" aria-label="Supabase round-trip latency in milliseconds"></canvas>
+      <div class="prediction-box">
+        <div class="prediction-label">Status</div>
+        <div class="prediction-value" id="cloud-status">—</div>
+      </div>
     </div>
 
   </div>
@@ -127,9 +124,9 @@
     type: 'line',
     data: {
       labels: d.cloud.labels,
-      datasets: [{ label: 'Azure CPU %', data: d.cloud.values, borderColor: ACCENT, backgroundColor: 'transparent', tension: 0.4 }],
+      datasets: [{ label: 'Supabase latency (ms)', data: d.cloud.values, borderColor: ACCENT, backgroundColor: 'transparent', tension: 0.4 }],
     },
-    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 } } },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
   });
 
   // Prediction callouts
@@ -139,6 +136,7 @@
   if (cP && cP.length) document.getElementById('crypto-prediction').textContent = '$' + cP[cP.length - 1].toFixed(2);
   const sv = d.sentiment.values;
   if (sv && sv.length) document.getElementById('sentiment-value').textContent = sv[0].toFixed(1) + ' / 100';
+  if (d.cloud.status) document.getElementById('cloud-status').textContent = d.cloud.status;
 
   // Auto-refresh every 60 s
   setTimeout(() => location.reload(), 60000);

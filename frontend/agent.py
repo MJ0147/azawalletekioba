@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import os
-from datetime import datetime, timedelta, timezone
+import re
+import time
+from collections import deque
+from datetime import datetime, timezone
 from statistics import mean
 from typing import Any
+from xml.etree import ElementTree
 
 import httpx
 import yfinance as yf
@@ -13,9 +17,6 @@ HTTP_TIMEOUT = 12.0
 SERIES_LENGTH = 10
 STOCK_SYMBOL = os.getenv("AGENT_STOCK_SYMBOL", os.getenv("DASHBOARD_STOCK_SYMBOL", "AAPL"))
 CRYPTO_SYMBOL = os.getenv("AGENT_CRYPTO_SYMBOL", os.getenv("DASHBOARD_CRYPTO_SYMBOL", "BTCUSDT"))
-AZURE_ACCESS_TOKEN = os.getenv("AZURE_ACCESS_TOKEN", "")
-AZURE_VM_RESOURCE_ID = os.getenv("AZURE_VM_RESOURCE_ID", "")
-AZURE_HEADERS = {"Authorization": f"Bearer {AZURE_ACCESS_TOKEN}"} if AZURE_ACCESS_TOKEN else {}
 
 DEFAULT_FORECAST_DATA: dict[str, dict[str, list[Any]]] = {
     "stocks": {
@@ -35,11 +36,11 @@ DEFAULT_FORECAST_DATA: dict[str, dict[str, list[Any]]] = {
 }
 
 
-def _safe_float(value: Any) -> float:
+def _safe_float(value: Any, default: float = 0.0) -> float:
     try:
         return round(float(value), 2)
     except (TypeError, ValueError):
-        return 0.0
+        return default
 
 
 def _date_label(value: Any) -> str:
@@ -107,69 +108,144 @@ async def fetch_crypto_data(symbol: str = CRYPTO_SYMBOL) -> dict[str, list[float
 
 
 def get_sosovalue_sentiment() -> dict[str, list[float] | list[str]]:
+    """Fetch crypto market sentiment from SoSoValue; tries multiple known endpoints."""
+    _SOSO_ENDPOINTS = [
+        "https://api.sosovalue.com/crypto/index",
+        "https://sosovalue.com/api/fear-and-greed",
+        "https://api.alternative.me/fng/?limit=1&format=json",  # fallback: Fear & Greed
+    ]
+    for url in _SOSO_ENDPOINTS:
+        try:
+            with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+                response = client.get(url, headers={"Accept": "application/json"})
+            response.raise_for_status()
+            payload = response.json()
+            # SoSoValue returns {"sentiment": <float>} or {"data":[{"value":"<int>"}]}
+            value = payload.get("sentiment") or payload.get("index") or payload.get("score")
+            if value is None:
+                data_list = payload.get("data", [])
+                if isinstance(data_list, list) and data_list:
+                    value = data_list[0].get("value")
+            if value is not None:
+                return {"labels": ["Sentiment"], "values": [_safe_float(value, 50.0)]}
+        except Exception:
+            continue
+    return {"labels": ["Sentiment"], "values": [50.0]}
+
+
+def get_google_finance_signal() -> float:
+    """Blended sentiment signal from Google Finance + Yahoo Finance RSS headlines."""
+    feeds = [
+        "https://news.google.com/rss/search?q=stock+market+crypto+bitcoin&hl=en-US&gl=US&ceid=US:en",
+        "https://finance.yahoo.com/news/rssindex",
+        "https://feeds.finance.yahoo.com/rss/2.0/headline?s=BTC-USD,AAPL,SPY&region=US&lang=en-US",
+    ]
+    bullish = {"surge", "gain", "rally", "beat", "growth", "high", "bull", "up", "rise", "record", "jump", "soar"}
+    bearish = {"drop", "fall", "crash", "miss", "loss", "low", "bear", "down", "plunge", "slump", "sink", "decline"}
+    all_titles: list[str] = []
+    for rss_url in feeds:
+        try:
+            with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+                response = client.get(rss_url, headers={"User-Agent": "Mozilla/5.0"})
+            if response.status_code >= 400:
+                continue
+            root = ElementTree.fromstring(response.text)
+            titles = [
+                item.findtext("title", default="")
+                for item in root.findall("./channel/item")[:15]
+            ]
+            all_titles.extend(titles)
+        except Exception:
+            continue
+
+    if not all_titles:
+        return 50.0
+
+    score = 50.0
+    for title in all_titles:
+        tokens = set(re.findall(r"[a-zA-Z]+", title.lower()))
+        if tokens & bullish:
+            score += 1.5
+        if tokens & bearish:
+            score -= 1.5
+
+    return max(0.0, min(100.0, round(score, 2)))
+
+
+def _get_yahoo_finance_price(ticker: str) -> float | None:
+    """Fetch latest close price for a ticker from Yahoo Finance quote summary."""
     try:
-        with httpx.Client(timeout=HTTP_TIMEOUT) as client:
-            response = client.get("https://api.sosovalue.com/crypto/index")
-        response.raise_for_status()
-        payload = response.json()
-        sentiment = _safe_float(payload.get("sentiment", 50))
-        return {"labels": ["Sentiment"], "values": [sentiment]}
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
+        with httpx.Client(timeout=HTTP_TIMEOUT, headers={"User-Agent": "Mozilla/5.0"}) as client:
+            r = client.get(url)
+        r.raise_for_status()
+        payload = r.json()
+        meta = payload.get("chart", {}).get("result", [{}])[0].get("meta", {})
+        price = meta.get("regularMarketPrice") or meta.get("previousClose")
+        return _safe_float(price) if price is not None else None
     except Exception:
-        return {"labels": ["Sentiment"], "values": [50.0]}
+        return None
 
 
 async def fetch_sentiment_data() -> dict[str, list[float] | list[str]]:
-    return await asyncio.to_thread(get_sosovalue_sentiment)
+    soso, google_value = await asyncio.gather(
+        asyncio.to_thread(get_sosovalue_sentiment),
+        asyncio.to_thread(get_google_finance_signal),
+    )
+    soso_value = _safe_float((soso.get("values") or [50])[0], 50.0)
+    blended = round((0.65 * soso_value) + (0.35 * google_value), 2)
+    return {
+        "labels": ["Market"],
+        "values": [blended],
+        "components": {
+            "sosovalue": soso_value,
+            "google_finance_signal": google_value,
+        },
+        "sources": [
+            "https://www.sosovalue.com/",
+            "https://www.google.com/finance",
+            "https://finance.yahoo.com/",
+        ],
+    }
 
 
-def get_azure_metrics(resource_id: str = AZURE_VM_RESOURCE_ID) -> dict[str, list[float] | list[str]]:
-    if not resource_id or not AZURE_HEADERS:
-        return _empty_series()
+# Rolling window of Supabase round-trip latencies for the dashboard's
+# "Supabase health" card: one probe per dashboard refresh, newest last.
+_supabase_latency: deque[tuple[str, float]] = deque(maxlen=SERIES_LENGTH)
 
-    now = datetime.now(timezone.utc)
-    start = now - timedelta(hours=SERIES_LENGTH)
 
+def get_supabase_health() -> dict[str, Any]:
+    """Time one round trip to the project's Auth health endpoint."""
+    try:
+        from services import supabase_client
+    except Exception:
+        return {**_empty_series(), "status": "unavailable"}
+
+    url, key = supabase_client.SUPABASE_URL, supabase_client.SUPABASE_KEY
+    if not url or not key:
+        return {**_empty_series(), "status": "not-configured"}
+
+    started = time.perf_counter()
     try:
         with httpx.Client(timeout=HTTP_TIMEOUT) as client:
-            response = client.get(
-                f"https://management.azure.com{resource_id}/providers/microsoft.insights/metrics",
-                params={
-                    "api-version": "2018-01-01",
-                    "metricnames": "Percentage CPU",
-                    "aggregation": "Average",
-                    "interval": "PT1H",
-                    "timespan": f"{start.isoformat()}/{now.isoformat()}",
-                },
-                headers=AZURE_HEADERS,
-            )
-        response.raise_for_status()
-        payload = response.json()
-        values = payload.get("value", [])
-        if not values:
-            return _empty_series()
+            response = client.get(f"{url}/auth/v1/health", headers={"apikey": key})
+        latency_ms = _safe_float((time.perf_counter() - started) * 1000)
+        status = "healthy" if response.status_code < 400 else f"http-{response.status_code}"
+        _supabase_latency.append(
+            (datetime.now(timezone.utc).strftime("%b %d %H:%M:%S"), latency_ms)
+        )
+    except httpx.HTTPError:
+        status = "unreachable"
 
-        points = values[0].get("timeseries", [])
-        if not points:
-            return _empty_series()
-
-        data_points = points[0].get("data", [])[-SERIES_LENGTH:]
-        labels = [
-            datetime.fromisoformat(item["timeStamp"].replace("Z", "+00:00")).strftime("%b %d %H:%M")
-            for item in data_points
-            if item.get("timeStamp")
-        ]
-        cpu_usage = [_safe_float(item.get("average", 0.0)) for item in data_points]
-        return {"labels": labels, "values": cpu_usage}
-    except Exception:
-        return _empty_series()
+    return {
+        "labels": [label for label, _ in _supabase_latency],
+        "values": [value for _, value in _supabase_latency],
+        "status": status,
+    }
 
 
-async def fetch_azure_data(resource_id: str = AZURE_VM_RESOURCE_ID) -> dict[str, list[float] | list[str]]:
-    return await asyncio.to_thread(get_azure_metrics, resource_id)
-
-
-async def fetch_cloud_data() -> dict[str, list[float] | list[str]]:
-    return await fetch_azure_data()
+async def fetch_cloud_data() -> dict[str, Any]:
+    return await asyncio.to_thread(get_supabase_health)
 
 
 async def build_dashboard_forecast() -> dict[str, Any]:
@@ -180,11 +256,31 @@ async def build_dashboard_forecast() -> dict[str, Any]:
         fetch_cloud_data(),
     )
 
+    # Verify / enrich stock data with a live Yahoo Finance spot price
+    yf_price = await asyncio.to_thread(_get_yahoo_finance_price, STOCK_SYMBOL)
+    if yf_price and stocks.get("actual"):
+        # Append the live spot as the final actual data point if it differs
+        last_actual = stocks["actual"][-1] if stocks["actual"] else 0
+        if abs(yf_price - last_actual) / max(last_actual, 1) > 0.001:  # >0.1% drift
+            stocks["actual"].append(yf_price)
+            stocks["labels"].append("Live")
+            stocks["predicted"] = _predict_next(stocks["actual"])
+
     return {
         "stocks": stocks,
         "crypto": crypto,
         "sentiment": sentiment,
         "cloud": cloud,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_urls": {
+            "stocks": ["https://finance.yahoo.com/", "https://query1.finance.yahoo.com/"],
+            "crypto": ["https://api.binance.com/", "https://www.sosovalue.com/", "https://finance.yahoo.com/"],
+            "sentiment": sentiment.get("sources", [
+                "https://www.sosovalue.com/",
+                "https://www.google.com/finance",
+                "https://finance.yahoo.com/",
+            ]),
+        },
     }
 
 

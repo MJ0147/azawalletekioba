@@ -1,14 +1,15 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key())
+# Supabase Postgres connection string (Supabase -> Connect). Anything that is
+# not a postgres:// URI falls back to SQLite for tests and local dev.
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db.sqlite3")
-DJANGO_DB_ENGINE = os.getenv("DJANGO_DB_ENGINE", "sqlite")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # In production set ALLOWED_HOSTS to your actual domain(s), e.g. "ekioba.com,*.run.app"
@@ -61,57 +62,29 @@ ASGI_APPLICATION = "store_service.asgi.application"
 
 
 def _database_config_from_env() -> dict[str, object]:
-    db_engine = DJANGO_DB_ENGINE
+    parsed = urlparse(DATABASE_URL)
+
+    # Supabase Postgres
+    if parsed.scheme in ("postgres", "postgresql"):
+        query = parse_qs(parsed.query)
+        return {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": parsed.path.lstrip("/") or "postgres",
+            "USER": unquote(parsed.username or "postgres"),
+            "PASSWORD": unquote(parsed.password or ""),
+            "HOST": parsed.hostname or "",
+            "PORT": parsed.port or 5432,
+            # Supabase only accepts TLS connections.
+            "OPTIONS": {"sslmode": query.get("sslmode", ["require"])[0]},
+        }
 
     # SQLite — tests and local dev only
-    if db_engine == "sqlite":
-        sqlite_name = DATABASE_URL.replace("sqlite:///", "", 1)
-        if not os.path.isabs(sqlite_name):
-            sqlite_name = str(BASE_DIR / sqlite_name)
-        return {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.getenv("SQLITE_DB_PATH", sqlite_name),
-        }
-
-    # Azure SQL Managed Instance / Azure SQL Database
-    if db_engine == "mssql":
-        return {
-            "ENGINE": "mssql",
-            "NAME": os.getenv("AZURE_SQL_STORE_DB", "ekioba_store"),
-            "USER": os.getenv("AZURE_SQL_USER", ""),
-            "PASSWORD": os.getenv("AZURE_SQL_PASSWORD", ""),
-            "HOST": os.getenv("AZURE_SQL_HOST", ""),
-            "PORT": os.getenv("AZURE_SQL_PORT", "1433"),
-            "OPTIONS": {
-                "driver": "ODBC Driver 18 for SQL Server",
-                "extra_params": "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30",
-            },
-        }
-
-    # PostgreSQL — legacy / non-Azure fallback
-    database_url = DATABASE_URL
-    if not database_url:
-        return {
-            "ENGINE": db_engine,
-            "NAME": "ekioba_store",
-            "USER": os.getenv("DB_USER", "postgres"),
-            "PASSWORD": "",
-            "HOST": os.getenv("DB_HOST", "localhost"),
-            "PORT": int(os.getenv("DB_PORT", "5432")),
-            "OPTIONS": {"sslmode": os.getenv("DB_SSLMODE", "disable")},
-        }
-
-    parsed = urlparse(database_url)
-    query = parse_qs(parsed.query)
-    sslmode = query.get("sslmode", ["require"])[0]
+    sqlite_name = DATABASE_URL.replace("sqlite:///", "", 1)
+    if not os.path.isabs(sqlite_name):
+        sqlite_name = str(BASE_DIR / sqlite_name)
     return {
-        "ENGINE": db_engine,
-        "NAME": parsed.path.lstrip("/") or "ekioba_store",
-        "USER": parsed.username or "postgres",
-        "PASSWORD": parsed.password or "",
-        "HOST": parsed.hostname or "localhost",
-        "PORT": parsed.port or 5432,
-        "OPTIONS": {"sslmode": sslmode},
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.getenv("SQLITE_DB_PATH", sqlite_name),
     }
 
 
@@ -167,6 +140,21 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+# DRF must be told to accept the JWTs issued by /api/admin/auth/token/.
+# Without this block DRF falls back to Session/Basic auth only, silently
+# ignores the Authorization: Bearer header, and every admin endpoint returns
+# 403 even for a valid token.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # Kept so the Django admin site and session-based tests keep working.
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+}
 
 # JWT Configuration
 SIMPLE_JWT = {

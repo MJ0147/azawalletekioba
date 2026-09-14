@@ -36,6 +36,5 @@ jobs:
         DATABASE_URL: "sqlite:///:memory:"
         DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
         TON_API_KEY: ${{ secrets.TON_API_KEY }}
-        SOLANA_API_KEY: ${{ secrets.SOLANA_API_KEY }}
       run: |
         python manage.py test --settings=store_service.settings_test

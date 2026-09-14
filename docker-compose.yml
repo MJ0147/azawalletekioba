@@ -7,11 +7,10 @@ services:
     environment:
       PORT: "8001"
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-dev-secret-key}
-      DJANGO_DB_ENGINE: ${DJANGO_DB_ENGINE:-sqlite}
+      # Supabase Postgres connection string; SQLite when unset.
       DATABASE_URL: ${STORE_DATABASE_URL:-sqlite:///db.sqlite3}
       SQLITE_DB_PATH: ${STORE_SQLITE_DB_PATH:-/app/db.sqlite3}
       TON_API_KEY: ${TON_API_KEY:-}
-      SOLANA_API_KEY: ${SOLANA_API_KEY:-}
     ports:
       - "8001:8001"
 
@@ -32,6 +31,8 @@ services:
     environment:
       PORT: "8003"
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-dev-secret-key}
+      # Supabase Postgres connection string; SQLite when unset.
+      DATABASE_URL: ${HOTELS_DATABASE_URL:-}
       SQLITE_DB_PATH: ${HOTELS_SQLITE_DB_PATH:-/app/db.sqlite3}
     ports:
       - "8003:8003"
@@ -69,7 +70,18 @@ services:
       STORE_PAYMENTS_URL: ${STORE_PAYMENTS_URL:-http://store:8001/payments/process/}
       AI_ASSISTANT_URL: ${AI_ASSISTANT_URL:-http://ai_assistant:8005}
       FRONTEND_IYOBO_URL: ${FRONTEND_IYOBO_URL:-/chat}
-      SOLANA_MERCHANT_WALLET: ${SOLANA_MERCHANT_WALLET:-}
       TON_MERCHANT_WALLET: ${TON_MERCHANT_WALLET:-}
+      IDIA_TON_JETTON_ADDRESS: ${IDIA_TON_JETTON_ADDRESS:-}
+      DEDUST_FACTORY_ADDRESS: ${DEDUST_FACTORY_ADDRESS:-}
+      USDT_NGN_RATE: ${USDT_NGN_RATE:-}
+      FLW_SECRET_KEY: ${FLW_SECRET_KEY:-}
+      FLW_API_BASE: ${FLW_API_BASE:-}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_KEY: ${SUPABASE_KEY:-}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:-}
+      SUPABASE_ORDERS_TABLE: ${SUPABASE_ORDERS_TABLE:-orders}
+      ORDERS_ADMIN_TOKEN: ${ORDERS_ADMIN_TOKEN:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
     ports:
       - "3000:3000"

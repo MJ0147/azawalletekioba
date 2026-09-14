@@ -9,7 +9,7 @@ from app.trainer import train_model
 app = FastAPI(title="Language Academy Service")
 model = EdoLanguageModel(Path(__file__).resolve().parent / "data" / "edo_vocab.json")
 QUIZ_TOKEN_REWARD = 10
-QUIZ_REWARD_ISSUER = "ai assistant"
+QUIZ_REWARD_ISSUER = "Iyobo (Aza AI)"
 USER_TOKEN_POINTS: dict[str, int] = {}
 
 EDO_GRAMMAR_REFERENCE = {
@@ -17,8 +17,8 @@ EDO_GRAMMAR_REFERENCE = {
         "pitch_rule": "Declarative statements can become polar questions when sentence pitch is raised.",
         "yi_particle": "The particle 'yi' can appear sentence-finally as a question marker.",
         "example": {
-            "declarative": "Osaro gha rre.",
-            "question": "Osaro gha rre yi?",
+            "declarative": "Ösaro ghä rre.",
+            "question": "Osaro ghä rre yi?",
             "translation": "Will Osaro come?",
         },
     },
@@ -26,7 +26,7 @@ EDO_GRAMMAR_REFERENCE = {
         "marker": "ra",
         "description": "The conjunction/question marker 'ra' links alternatives and yields a question reading.",
         "example": {
-            "edo": "Osaro bo owa ra Osaro rhie?",
+            "edo": "Ösaro bo owä ra Ösärorhie bkhub?",
             "translation": "Did Osaro build a house or marry a woman?",
         },
     },
@@ -145,6 +145,11 @@ def quiz_question(category: str | None = None) -> dict[str, str | list[str]]:
     return model.quiz_question(category=category)
 
 
+@app.get("/quiz/section")
+def quiz_section(size: int = 50, category: str | None = None) -> dict[str, object]:
+    return model.quiz_section(size=size, category=category)
+
+
 @app.post("/quiz/answer")
 def quiz_answer(payload: QuizAnswerRequest) -> dict[str, object]:
     is_correct = payload.answer.strip().lower() == payload.expected.strip().lower()
@@ -186,3 +191,22 @@ def lesson_daily(size: int = 3, category: str | None = None) -> dict[str, object
     if size < 1:
         raise HTTPException(status_code=400, detail="Size must be at least 1")
     return model.daily_lesson(size=size, category=category)
+
+
+class CreateLessonRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    category: str | None = None
+    size: int = Field(default=5, ge=1, le=20)
+
+
+@app.post("/lesson/create")
+def lesson_create(payload: CreateLessonRequest) -> dict[str, object]:
+    import uuid as _uuid
+    lesson_data = model.daily_lesson(size=payload.size, category=payload.category)
+    lesson_id = f"lesson-{_uuid.uuid4().hex[:8]}"
+    return {
+        "lesson_id": lesson_id,
+        "title": payload.title,
+        "message": f"Lesson '{payload.title}' created with {len(lesson_data.get('words', []))} words.",
+        **lesson_data,
+    }

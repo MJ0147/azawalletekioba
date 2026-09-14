@@ -1,0 +1,4 @@
+﻿WARNING: Initiating deployment
+WARNING: Deploying from local path: C:\Users\Bliss\EKIOBA\frontend_deploy_live.zip
+WARNING: Warming up Kudu before deployment.
+WARNING: Warmed up Kudu instance successfully.

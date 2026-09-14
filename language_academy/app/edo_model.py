@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,8 +29,14 @@ class EdoLanguageModel:
         self.data_path = data_path
         self.words = self._load_words()
         self.context_items = self._load_context_items()
-        self.english_to_edo = {item.english.lower(): item.edo for item in self.words}
-        self.edo_to_english = {item.edo.lower(): item.english for item in self.words}
+        self.english_to_edo = {
+            self._normalize_text(item.english): item.edo
+            for item in self.words
+        }
+        self.edo_to_english = {
+            self._normalize_text(item.edo): item.english
+            for item in self.words
+        }
 
     def _load_words(self) -> list[EdoWord]:
         with self.data_path.open("r", encoding="utf-8") as file:
@@ -40,14 +47,14 @@ class EdoLanguageModel:
         return [
             EdoContextItem(
                 pattern="noun_phrase",
-                edo="owa",
+                edo="owä",
                 translation="house",
                 note="A simple noun example from Edo vocabulary context.",
                 tags=["vocabulary", "noun", "context-a"],
             ),
             EdoContextItem(
                 pattern="question_with_yi",
-                edo="Osaro gha rre yi?",
+                edo="Osaro ghä rre yi?",
                 translation="Will Osaro come?",
                 note="Sentence-final yi marks a polar question in this context.",
                 tags=["grammar", "yi", "polar-question"],
@@ -75,21 +82,21 @@ class EdoLanguageModel:
             ),
             EdoContextItem(
                 pattern="alternative_question_ra",
-                edo="Osaro bo owa ra Osaro rhie okhuo?",
+                edo="Ösaro bo owä ra Ösärorhie bkhub?",
                 translation="Did Osaro build a house or marry a woman?",
                 note="ra coordinates alternatives and marks the resulting question.",
                 tags=["grammar", "ra", "alternative-question"],
             ),
             EdoContextItem(
                 pattern="ra_short_polar",
-                edo="Osaro bo owa ra?",
+                edo="Osaro bo owä ra?",
                 translation="Did Osaro build a house?",
                 note="Sentence-final ra can function as a question marker in reduced alternatives.",
                 tags=["grammar", "ra", "polar-question"],
             ),
             EdoContextItem(
                 pattern="de_np_question",
-                edo="De ehe ne Osaro tie yi?",
+                edo="De ehe ne Ösäro tie (yi)?",
                 translation="Which book is Osaro reading?",
                 note="de introduces non-polar questions about a noun phrase.",
                 tags=["grammar", "de", "non-polar", "question-word"],
@@ -104,13 +111,52 @@ class EdoLanguageModel:
             "categories": len(categories),
         }
 
-    def translate(self, phrase: str, direction: str) -> str:
-        tokens = phrase.lower().split()
-        if direction == "en_to_edo":
-            translated = [self.english_to_edo.get(token, f"[{token}]") for token in tokens]
-        else:
-            translated = [self.edo_to_english.get(token, f"[{token}]") for token in tokens]
+    @staticmethod
+    def _strip_diacritics(value: str) -> str:
+        normalized = unicodedata.normalize("NFKD", value)
+        return "".join(ch for ch in normalized if not unicodedata.combining(ch))
+
+    @classmethod
+    def _normalize_text(cls, value: str) -> str:
+        lowered = value.strip().lower()
+        lowered = cls._strip_diacritics(lowered)
+        lowered = " ".join(lowered.split())
+        legacy_map = {
+            "owa": "owa",
+            "gha": "gha",
+            "okhuo": "okhuo",
+        }
+        tokens = [legacy_map.get(token, token) for token in lowered.split()]
+        return " ".join(tokens)
+
+    def _translate_phrase(self, phrase: str, mapping: dict[str, str]) -> str:
+        tokens = phrase.split()
+        if not tokens:
+            return ""
+
+        translated: list[str] = []
+        i = 0
+        max_window = 4
+        while i < len(tokens):
+            matched = False
+            for window in range(min(max_window, len(tokens) - i), 0, -1):
+                segment = " ".join(tokens[i : i + window])
+                key = self._normalize_text(segment)
+                if key in mapping:
+                    translated.append(mapping[key])
+                    i += window
+                    matched = True
+                    break
+            if not matched:
+                translated.append(f"[{tokens[i]}]")
+                i += 1
+
         return " ".join(translated)
+
+    def translate(self, phrase: str, direction: str) -> str:
+        if direction == "en_to_edo":
+            return self._translate_phrase(phrase, self.english_to_edo)
+        return self._translate_phrase(phrase, self.edo_to_english)
 
     def vocabulary(self, category: str | None = None, limit: int = 10) -> list[dict[str, str]]:
         pool = self.words
@@ -139,15 +185,15 @@ class EdoLanguageModel:
     def vocabulary_context(self, query: str | None = None, limit: int = 10) -> list[dict[str, str | list[str]]]:
         items = self.context_items
         if query:
-            normalized = query.strip().lower()
+            normalized = self._normalize_text(query)
             items = [
                 item
                 for item in items
-                if normalized in item.pattern.lower()
-                or normalized in item.edo.lower()
-                or normalized in item.translation.lower()
-                or normalized in item.note.lower()
-                or any(normalized in tag.lower() for tag in item.tags)
+                if normalized in self._normalize_text(item.pattern)
+                or normalized in self._normalize_text(item.edo)
+                or normalized in self._normalize_text(item.translation)
+                or normalized in self._normalize_text(item.note)
+                or any(normalized in self._normalize_text(tag) for tag in item.tags)
             ]
 
         return [
@@ -162,7 +208,7 @@ class EdoLanguageModel:
         ]
 
     def particle_functions(self, particle: str) -> dict[str, object]:
-        normalized = particle.strip().lower()
+        normalized = self._normalize_text(particle)
         particle_map: dict[str, dict[str, object]] = {
             "yi": {
                 "particle": "yi",
@@ -200,17 +246,17 @@ class EdoLanguageModel:
         return base
 
     def search(self, query: str, field: str = "any", limit: int = 10) -> list[dict[str, str]]:
-        normalized_query = query.strip().lower()
+        normalized_query = self._normalize_text(query)
         if not normalized_query:
             return []
 
         results: list[EdoWord] = []
         for item in self.words:
             targets = {
-                "edo": item.edo.lower(),
-                "english": item.english.lower(),
-                "example": item.example.lower(),
-                "category": item.category.lower(),
+                "edo": self._normalize_text(item.edo),
+                "english": self._normalize_text(item.english),
+                "example": self._normalize_text(item.example),
+                "category": self._normalize_text(item.category),
             }
 
             if field == "any":
@@ -260,10 +306,26 @@ class EdoLanguageModel:
         answer = random.choice(pool)
         distractors = [word.english for word in self.words if word.english != answer.english]
         random.shuffle(distractors)
-        options = [answer.english, *distractors[:3]]
+        options = [answer.english, *distractors[:2]]
         random.shuffle(options)
+        labels = ["A", "B", "C"]
+        labeled_options = [
+            {"label": labels[i], "text": option}
+            for i, option in enumerate(options)
+        ]
+        answer_label = next((opt["label"] for opt in labeled_options if opt["text"] == answer.english), "A")
         return {
             "prompt": f"What is the meaning of '{answer.edo}'?",
             "answer": answer.english,
-            "options": options,
+            "answer_label": answer_label,
+            "options": labeled_options,
+        }
+
+    def quiz_section(self, size: int = 50, category: str | None = None) -> dict[str, object]:
+        question_count = max(1, min(size, 50))
+        questions = [self.quiz_question(category=category) for _ in range(question_count)]
+        return {
+            "category": category or "general",
+            "count": len(questions),
+            "questions": questions,
         }

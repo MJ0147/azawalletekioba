@@ -1,9 +1,10 @@
 {% if using_fallback %}
-<p class="status-note">Store API is unavailable. Showing catalog fallback.</p>
+<p class="status-note">Store API is temporarily unavailable. Showing catalog fallback; Idia Coin wallet checkout is still available.</p>
 {% endif %}
 <div class="product-grid">
   {% for product in products %}
-  <article class="product-card">
+  <article class="product-card"
+           {% if product.image %}onclick="window.open('{{ product.image }}', '_blank', 'noopener,noreferrer')" style="cursor:zoom-in"{% endif %}>
     {% if product.image %}
     <img class="product-image" src="{{ product.image }}" alt="{{ product.name }}" loading="lazy" />
     {% else %}
@@ -13,8 +14,24 @@
       <h3>{{ product.name }}</h3>
       <p>{{ product.description or ('Premium ' ~ product.name ~ ' from the Ekioba marketplace.') }}</p>
       <div class="product-meta">
-        <span>Idia {{ '%.2f'|format((product.price or 0)|float) }}</span>
-        <button type="button" x-on:click='addToCart("{{ product.id }}")'>Add to cart</button>
+        {% set ngn_price = (product.price or 0)|float %}
+        {% set idia_price = (ngn_price / (idia_ngn_rate or 30.0)) %}
+        <span>
+          ⬡ {{ '%.4f'|format(idia_price) }} IDIA
+          <small style="display:block;color:#6a6f75;font-weight:500">Aza Wallet checkout enabled</small>
+        </span>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap">
+        <button type="button"
+          onclick="event.stopPropagation();addToCart('{{ product.id }}')"
+                style="flex:1;padding:.45rem .7rem;border:1.5px solid var(--color-accent,#dd5b2f);border-radius:.45rem;background:transparent;color:var(--color-accent,#dd5b2f);font-weight:600;cursor:pointer;font-size:.82rem;white-space:nowrap">
+          🛒 Add to cart
+        </button>
+        <button type="button"
+          onclick="event.stopPropagation();openIdiaPayment('{{ product.id }}', '{{ product.name | replace("'", "\\'") }}', {{ (product.price or 0)|float }})"
+                style="flex:1;padding:.45rem .7rem;border:none;border-radius:.45rem;background:#dd5b2f;color:#fff;font-weight:700;cursor:pointer;font-size:.82rem;white-space:nowrap">
+          ⬡ Buy · Idia Coin
+        </button>
       </div>
     </div>
   </article>

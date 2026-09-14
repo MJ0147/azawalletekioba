@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Iyobo AI (Aza AI) — EKIOBA{% endblock %}
+{% block description %}Chat with Iyobo (Aza AI), your EKIOBA cultural guide for Edo culture, products, and marketplace help.{% endblock %}
+
+{% block content %}
+<div class="shell">
+
+  <!-- ── Chat Header ─────────────────────────────────────────────────── -->
+  <section class="hero" style="padding:1rem 1.15rem;">
+    <div>
+      <p class="eyebrow">Powered by Aza Wallet</p>
+      <h1>⬡ Iyobo · Aza AI</h1>
+      <p class="sub">Ask about Edo culture, products, payments, or anything EKIOBA.</p>
+    </div>
+  </section>
+
+  <!-- ── Chat Window ─────────────────────────────────────────────────── -->
+  <div class="panel" style="max-width:720px;margin:0 auto 2rem;">
+    <div
+      id="chat-log"
+      role="log"
+      aria-live="polite"
+      aria-label="Chat conversation"
+      style="min-height:320px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:.5rem 0;"
+    >
+      <div class="chat-bubble bot">
+        Koyo! I'm <strong>Iyobo</strong>, your EKIOBA assistant. Ask me about Edo artifacts, blockchain payments, or our marketplace. 🏺
+      </div>
+    </div>
+
+    <!-- ── Input Form ──────────────────────────────────────────────────── -->
+    <form
+      id="chat-form"
+      hx-post="/api/chat/proxy"
+      hx-target="#chat-log"
+      hx-swap="beforeend"
+      hx-on::after-request="this.reset(); document.getElementById('chat-log').scrollTop = 9999;"
+      style="display:flex;gap:.5rem;margin-top:1rem;"
+    >
+      <input
+        type="text"
+        name="message"
+        id="chat-input"
+        placeholder="Ask Iyobo anything…"
+        autocomplete="off"
+        required
+        aria-label="Chat message"
+        style="
+          flex:1;
+          padding:.65rem 1rem;
+          border:1.5px solid var(--border);
+          border-radius:8px;
+          font-family:inherit;
+          font-size:.95rem;
+          background:var(--bg-1);
+          color:var(--ink);
+        "
+      />
+      <button
+        type="submit"
+        class="btn"
+        aria-label="Send message"
+        style="white-space:nowrap;"
+      >Send ✦</button>
+    </form>
+
+    <!-- htmx loading indicator -->
+    <div
+      id="chat-loading"
+      class="htmx-indicator"
+      style="font-size:.85rem;color:var(--muted);margin-top:.5rem;display:none;"
+      aria-hidden="true"
+    >Iyobo is thinking…</div>
+  </div>
+
+</div>
+
+<style>
+  .chat-bubble {
+    max-width: 80%;
+    padding: .65rem 1rem;
+    border-radius: 12px;
+    line-height: 1.55;
+    font-size: .93rem;
+  }
+  .chat-bubble.bot {
+    background: var(--bg-2);
+    color: var(--ink);
+    align-self: flex-start;
+    border-bottom-left-radius: 3px;
+  }
+  .chat-bubble.user {
+    background: var(--accent);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 3px;
+    margin-left: auto;
+  }
+  /* Show loading indicator while htmx request is in flight */
+  .htmx-request #chat-loading { display:block !important; }
+</style>
+
+<script>
+  /* Append the user's own message to the log before htmx fetches the reply */
+  document.getElementById('chat-form').addEventListener('htmx:beforeRequest', function () {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble user';
+    bubble.textContent = text;
+    document.getElementById('chat-log').appendChild(bubble);
+    document.getElementById('chat-log').scrollTop = 9999;
+  });
+</script>
+{% endblock %}

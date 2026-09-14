@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
 {% block title %}Market Dashboard — EKIOBA{% endblock %}
-{% block description %}Live stock, crypto, sentiment, and Azure cloud metrics for EKIOBA.{% endblock %}
+{% block description %}Live stock, crypto, sentiment, and Supabase health metrics for EKIOBA.{% endblock %}
 
 {% block content %}
 <div class="shell"
-     data-reader-text="Dashboard loaded. Stock, crypto, sentiment, and Azure cloud metrics are now live.">
+     data-reader-text="Dashboard loaded. Stock, crypto, sentiment, and Supabase health metrics are now live.">
 
   <section class="hero" style="padding:1rem 1.15rem;">
     <div>
       <p class="eyebrow">Live Market Intelligence</p>
       <h1>Forecast Dashboard</h1>
-      <p class="sub">Real-time stock, crypto, sentiment, and Azure cloud metrics.</p>
+      <p class="sub">Real-time stock, crypto, sentiment, and Supabase health metrics.</p>
     </div>
     <div style="align-self:center;display:flex;gap:.5rem;">
       <button class="btn-ghost" onclick="startReader()" aria-label="Start screen reader">🔊 Read</button>
@@ -47,10 +47,14 @@
       <canvas id="sentimentChart" role="img" aria-label="Market sentiment score"></canvas>
     </div>
 
-    <!-- Azure Cloud CPU -->
+    <!-- Supabase health -->
     <div class="chart-card">
-      <h3>☁️ Azure CPU Usage</h3>
-      <canvas id="cloudChart" role="img" aria-label="Azure VM CPU usage over time"></canvas>
+      <h3>⚡ Supabase Health</h3>
+      <canvas id="cloudChart" role="img" aria-label="Supabase round-trip latency in milliseconds"></canvas>
+      <div class="prediction-box">
+        <div class="prediction-label">Status</div>
+        <div class="prediction-value" id="cloud-status">—</div>
+      </div>
     </div>
 
   </div>
@@ -95,9 +99,9 @@
     type: 'line',
     data: {
       labels: d.cloud.labels,
-      datasets: [{ label: 'Azure CPU %', data: d.cloud.values, borderColor: ACCENT, backgroundColor: 'transparent', tension: 0.3 }],
+      datasets: [{ label: 'Supabase latency (ms)', data: d.cloud.values, borderColor: ACCENT, backgroundColor: 'transparent', tension: 0.3 }],
     },
-    options: { responsive: true, plugins: { legend: { display: false } } },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
   });
 
   // Show next predicted values
@@ -105,6 +109,7 @@
   if (sNext && sNext.length) document.getElementById('stock-next').textContent = '$' + sNext[sNext.length - 1].toFixed(2);
   const cNext = d.crypto.predicted;
   if (cNext && cNext.length) document.getElementById('crypto-next').textContent = '$' + cNext[cNext.length - 1].toFixed(2);
+  if (d.cloud.status) document.getElementById('cloud-status').textContent = d.cloud.status;
 }());
 </script>
 {% endblock %}

@@ -19,12 +19,11 @@ Write-Host "Service Account: $SERVICE_ACCOUNT"
 Write-Host "------------------------------------------------"
 
 $SECRETS = @(
-    "TON_API_KEY", 
-    "SOLANA_RPC_URL", 
+    "TON_API_KEY",
+    "FLW_SECRET_KEY",
+    "ADMIN_PASSWORD",
     "DJANGO_SECRET_KEY", 
-    "AZURE_SQL_HOST",
-    "AZURE_SQL_USER",
-    "AZURE_SQL_PASSWORD"
+    "DATABASE_URL"
 )
 
 $allPassed = $true

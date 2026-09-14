@@ -9,9 +9,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from .payments import (
-    process_solana_payment,
     process_ton_payment,
-    verify_solana_transaction,
     verify_ton_transaction,
 )
 from .idia_contract_service import IdiaContractService
@@ -101,9 +99,10 @@ def _process_chain_payment(request, chain: str):
         return JsonResponse({"error": "Invalid JSON payload."}, status=400)
 
     chain = str(chain).lower()
-    if chain not in ["ton", "solana"]:
+    if chain != "ton":
         return JsonResponse(
-            {"error": "Unsupported chain. Use 'solana' or 'ton'."}, status=400)
+            {"error": "Unsupported chain. EKIOBA settles IDIA on TON only."},
+            status=400)
 
     wallet = payload.get("wallet")
     amount = payload.get("amount")
@@ -141,35 +140,24 @@ def _process_chain_payment(request, chain: str):
             status=400,
         )
 
-    chain_label = "TON" if chain == "ton" else "Solana"
-    if chain == "solana":
-        tx_hash_value = str(proof.get("signature", ""))
-        if not tx_hash_value:
-            return JsonResponse(
-                {"error": "proof.signature is required for Solana payments."},
-                status=400,
-            )
-    else:
-        tx_hash_value = str(proof.get("tx_hash", ""))
-        if not tx_hash_value:
-            return JsonResponse(
-                {"error": "proof.tx_hash is required for TON payments."}, status=400
-            )
+    tx_hash_value = str(proof.get("tx_hash", ""))
+    if not tx_hash_value:
+        return JsonResponse(
+            {"error": "proof.tx_hash is required for TON payments."}, status=400
+        )
 
     payment = Payment.objects.create(
         product=product,
         tx_hash=tx_hash_value,
-        blockchain=chain_label,
+        blockchain="TON",
         status="pending",
     )
 
     try:
-        if chain == "solana":
-            tx = process_solana_payment(wallet, amount, tx_hash_value)
-        else:
-            tx = process_ton_payment(wallet, amount, tx_hash_value)
-        payment.tx_hash = tx_hash_value
+        tx = process_ton_payment(wallet, amount, tx_hash_value)
     except Exception as exc:
+        # Record the failure rather than leaving the row stuck on "pending".
+        payment.status = "failed"
         payment.save(update_fields=["tx_hash", "status"])
         return JsonResponse({"error": str(exc)}, status=502)
 
@@ -191,9 +179,10 @@ def process_payment(request):
         except (json.JSONDecodeError, UnicodeDecodeError):
             chain = ""
 
-    if chain not in ["ton", "solana"]:
+    if chain != "ton":
         return JsonResponse(
-            {"error": "Unsupported chain. Use 'solana' or 'ton'."}, status=400)
+            {"error": "Unsupported chain. EKIOBA settles IDIA on TON only."},
+            status=400)
 
     return _process_chain_payment(request, chain)
 
@@ -201,11 +190,6 @@ def process_payment(request):
 @csrf_exempt
 def pay_ton(request):
     return _process_chain_payment(request, "ton")
-
-
-@csrf_exempt
-def pay_solana(request):
-    return _process_chain_payment(request, "solana")
 
 @csrf_exempt
 def token_info(request):
