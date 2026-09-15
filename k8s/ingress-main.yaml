@@ -4,8 +4,8 @@
 # Handles: / (frontend), /chat (ai-assistant), /telegram/ (ai-assistant)
 # These paths are forwarded as-is to the backend container.
 #
-# Requires: NGINX Ingress Controller + cert-manager (DigitalOcean Starter Kit
-# or: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/do/deploy.yaml)
+# Requires: NGINX Ingress Controller + cert-manager
+# (install guide for your cluster provider: https://kubernetes.github.io/ingress-nginx/deploy/)
 # ─────────────────────────────────────────────────────────────────────────────
 apiVersion: networking.k8s.io/v1
 kind: Ingress

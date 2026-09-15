@@ -1,0 +1,83 @@
+{
+  "source": {
+    "title": "Edo question formation: polar, alternative and non-polar questions",
+    "note": "Transcribed from OCR text of a linguistics paper on Edo (Bini). Title, author, year and bibliography were not in the text.",
+    "language": "Edo (Bini), Niger-Congo; main language of the ancient Kingdom of Benin",
+    "works_cited": ["Welmers 1973:305-6"],
+    "missing_from_text": [
+      "Title, author, year, bibliography, section 1 and the start of section 2",
+      "Numbers and glosses of examples (1)-(3); section 2.1 on raised pitch",
+      "Heading of section 2.2",
+      "Footnotes 2 and 3",
+      "Methods 2-5 of section 3 and everything after example (17)"
+    ],
+    "transcription_caveats": [
+      "ä, ö and ü are OCR corruptions of tone-marked vowels, not Edo orthography. edo_as_printed keeps them; edo_reading drops them. Tone marks are not reconstructed.",
+      "edo_reading corrects Edo forms only where the gloss or another example makes the word clear (e.g. bkhub -> okhuo, ehe -> ebe, ghd -> gha).",
+      "The verb and noun negators are garbled in the prose; ma and i are inferred from examples (5), (7) and (10).",
+      "The source glosses rre as 'come' in (4), (9) and (13), and ne as 'come' in (14). Examples are recorded as printed, but the project owner confirms the Edo word for 'come' is lare, which is what academy_vocabulary uses.",
+      "A duplicate copy of the opening text was supplied and has been left out."
+    ]
+  },
+
+  "examples": [
+    { "number": "1-3 (fragment)", "edo_as_printed": "owä",               "edo_reading": "owa",               "gloss": null, "translation": "'a house?' / 'a house'", "note": "Same word with question vs statement pitch; pitch marks lost." },
+    { "number": "1-3 (fragment)", "edo_as_printed": "ne i tota?",        "edo_reading": "ne i tota?",        "gloss": null, "translation": "'may I sit down?'" },
+    { "number": "1-3 (fragment)", "edo_as_printed": "ne i tota...",      "edo_reading": "ne i tota...",      "gloss": null, "translation": "'that are sitting down'" },
+    { "number": "1-3 (fragment)", "edo_as_printed": "Osaro m evbare?",   "edo_reading": "Osaro rri evbare?", "gloss": null, "translation": "'is Osaro eating?'" },
+    { "number": "1-3 (fragment)", "edo_as_printed": "Osaro rri evbare.", "edo_reading": "Osaro rri evbare.", "gloss": null, "translation": "'Osaro is eating'" },
+
+    { "number": "4a",  "edo_as_printed": "Ösaro ghä rre.",                   "edo_reading": "Osaro gha rre.",                     "gloss": "Osaro AUX come",                          "translation": "'Osaro will come.'" },
+    { "number": "4b",  "edo_as_printed": "Osaro ghd rre yi?",                "edo_reading": "Osaro gha rre yi?",                  "gloss": "Osaro AUX come Q",                        "translation": "'Will Osaro come?'" },
+    { "number": "5",   "edo_as_printed": "Ü ma rhie okhüö yi",               "edo_reading": "U ma rhie okhuo yi",                 "gloss": null,                                      "translation": "'[You] have never married (a woman) before'", "note": "First word of translation cut off." },
+    { "number": "6",   "edo_as_printed": "Evbareere Ösarore yi?",            "edo_reading": "Evbare ere Osaro re yi?",            "gloss": "food it-be Osaro eat Q-EMPH",             "translation": "'Is it food that Osaro is eating?'" },
+    { "number": "7",   "edo_as_printed": "Eire evbare Ösaro re yi",          "edo_reading": "Eire evbare Osaro re yi",            "gloss": "it-NEG-be food Osaro eat EMPH",           "translation": "'It is not food that Osaro is eating either'." },
+    { "number": "8",   "edo_as_printed": "Ösaro bo owä ra Ösärorhie bkhub?", "edo_reading": "Osaro bo owa ra Osaro rhie okhuo?",  "gloss": "Osaro build house or-Q Osaro take woman", "translation": "'Did Osaro build a house or Osaro married a woman?'" },
+    { "number": "9",   "edo_as_printed": "Osaro ra Osagie'gha rre.",         "edo_reading": "Osaro ra Osagie gha rre.",           "gloss": "Osaro or Osagie AUX come",                "translation": "'Osaro or Osagie will come.'" },
+    { "number": "10a", "edo_as_printed": "Een, o bo owä",                    "edo_reading": "Een, o bo owa.",                     "gloss": null,                                      "translation": "'Yes, he built a house.'" },
+    { "number": "10b", "edo_as_printed": "Een, o rhie okhüo.",               "edo_reading": "Een, o rhie okhuo.",                 "gloss": null,                                      "translation": "'Yes, he married a woman.'" },
+    { "number": "10c", "edo_as_printed": "Eo, o mäbo owä.",                  "edo_reading": "Eo, o ma bo owa.",                   "gloss": null,                                      "translation": "'No, he did not build a house.'" },
+    { "number": "10d", "edo_as_printed": "Eo, o md rhie bkhub.",             "edo_reading": "Eo, o ma rhie okhuo.",               "gloss": null,                                      "translation": "'No, he did not marry a woman.'" },
+    { "number": "11",  "edo_as_printed": "Osaro bo owä ra?",                 "edo_reading": "Osaro bo owa ra?",                   "gloss": "Osaro build house Q",                     "translation": "'Did Osaro build a house?'" },
+    { "number": "12",  "edo_as_printed": "Ovbokhän nie qnä khin ra otuen?",  "edo_reading": null,                                 "gloss": "wife your this-one be or-Q relation-your", "translation": "'Is this your wife or your relation?'", "note": "Gloss-to-word alignment scrambled in the scan; qnä is probably ọna." },
+    { "number": "13",  "edo_as_printed": "Öorä Ösagie gha rre ra?",          "edo_reading": "Osaro ra Osagie gha rre ra?",        "gloss": "Osaro or Osagie AUX come Q",              "translation": "'Will Osaro or Osagie come?'" },
+    { "number": "14",  "edo_as_printed": "O no omwe adeghe u ghä ne.",       "edo_reading": "O no omwe adeghe u gha ne.",         "gloss": "he ask me whether you AUX come",          "translation": "'He asked me whether you will come.'", "note": "ra cannot be added here: embedded question." },
+    { "number": "15a", "edo_as_printed": "De ehe ne Ösäro tie (yi)?",        "edo_reading": "De ebe ne Osaro tie (yi)?",          "gloss": "what/which book REL Osaro read Q",        "translation": "'What/which book is Osaro reading?'" },
+    { "number": "15b", "edo_as_printed": "De Osaro ne o tie ehe (yi)?",      "edo_reading": "De Osaro ne o tie ebe (yi)?",        "gloss": "which Osaro REL PRO read book Q",         "translation": "'Which Osaro is reading a book?'" },
+    { "number": "16",  "edo_as_printed": "Osaro tie ebe.",                   "edo_reading": "Osaro tie ebe.",                     "gloss": "Osaro read book",                         "translation": "'Osaro is reading a book.'" },
+    { "number": "17a", "edo_as_printed": "De ebe Ösaro tie ehe (yi)",        "edo_reading": "De ebe S[Osaro tie ebe] (yi)",       "gloss": "what/which book [Osaro read book]",       "translation": null },
+    { "number": "17b", "edo_as_printed": "De Osaro s[Ösaro tie ehe ] (yi)",  "edo_reading": "De Osaro S[Osaro tie ebe] (yi)",     "gloss": "which Osaro [Osaro read book]",           "translation": null }
+  ],
+
+  "particles": [
+    { "edo": "yi",  "functions": ["question marker (Q)", "'before' in negative sentences", "emphasis in focus constructions"], "examples": ["4b", "5", "6", "7", "15"] },
+    { "edo": "ra",  "functions": ["'or' between sentences or nouns", "question marker (Q) at sentence end"], "examples": ["8", "9", "11", "13"], "note": "Cannot occur in embedded questions (14)." },
+    { "edo": "de",  "functions": ["'what/which', before the questioned noun phrase"], "examples": ["15", "17"] },
+    { "edo": "ere", "functions": ["'it-be', focus particle"], "examples": ["6"] },
+    { "edo": "ma",  "functions": ["verb negation (inferred)"], "examples": ["5", "10c", "10d"] },
+    { "edo": "i",   "functions": ["noun/pronoun negation, enclitic (inferred)"], "examples": ["7"] },
+    { "edo": "een", "functions": ["'yes'"], "examples": ["10a", "10b"] },
+    { "edo": "eo",  "functions": ["'no'"], "examples": ["10c", "10d"] },
+    { "edo": "ne",  "functions": ["relative marker (REL)"], "examples": ["15"] }
+  ],
+
+  "academy_vocabulary": [
+    { "edo": "yi",    "english": "question marker / before / emphatic", "category": "particle", "example": "Osaro gha rre yi? — Will Osaro come?" },
+    { "edo": "ra",    "english": "or / question marker",                "category": "particle", "example": "Osaro bo owa ra? — Did Osaro build a house?" },
+    { "edo": "de",    "english": "what / which",                        "category": "particle", "example": "De ebe ne Osaro tie (yi)? — What book is Osaro reading?" },
+    { "edo": "ere",   "english": "it is (focus)",                       "category": "particle", "example": "Evbare ere Osaro re yi? — Is it food that Osaro is eating?" },
+    { "edo": "ma",    "english": "not (verbs)",                         "category": "particle", "example": "Eo, o ma bo owa — No, he did not build a house." },
+    { "edo": "een",   "english": "yes",                                 "category": "response", "example": "Een, o bo owa — Yes, he built a house." },
+    { "edo": "eo",    "english": "no",                                  "category": "response", "example": "Eo, o ma rhie okhuo — No, he did not marry a woman." },
+    { "edo": "omwe",  "english": "me",                                  "category": "particle", "example": "O no omwe adeghe u gha ne — He asked me whether you will come." },
+    { "edo": "u",     "english": "you",                                 "category": "particle", "example": "O no omwe adeghe u gha ne — He asked me whether you will come." },
+    { "edo": "bo",    "english": "build",                               "category": "verb",     "example": "Een, o bo owa — Yes, he built a house." },
+    { "edo": "tie",   "english": "read",                                "category": "verb",     "example": "Osaro tie ebe — Osaro is reading a book." },
+    { "edo": "rri",   "english": "eat",                                 "category": "verb",     "example": "Osaro rri evbare — Osaro is eating." },
+    { "edo": "lare",  "english": "come",                                "category": "verb",     "example": "lare — come" },
+    { "edo": "no",    "english": "ask",                                 "category": "verb",     "example": "O no omwe adeghe u gha ne — He asked me whether you will come." },
+    { "edo": "owa",   "english": "house",                               "category": "noun",     "example": "Osaro bo owa — Osaro built a house." },
+    { "edo": "ebe",   "english": "book / leaf / paper",                 "category": "noun",     "example": "De ebe ne Osaro tie? — What book is Osaro reading?" },
+    { "edo": "otuen", "english": "relation (your relation)",            "category": "noun",     "example": "... ra otuen? — ... or your relation?" }
+  ]
+}

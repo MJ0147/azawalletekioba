@@ -56,3 +56,11 @@ jobs:
         run: |
           python -c "import sys; sys.path.insert(0, 'frontend'); import fastapi, uvicorn, jinja2; print('Frontend imports OK')"
 
+      - name: Check the frontend's Knowledge Base copy is up to date
+        run: python scripts/sync_knowledge_base.py --check
+
+      - name: Run frontend tests
+        run: |
+          pip install pytest
+          python -m pytest frontend/tests -q
+

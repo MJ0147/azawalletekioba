@@ -31,6 +31,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Primary entrypoint: inline sh -c so env-var expansion works on every
 # platform without requiring an executable shell script on disk.
-# Platforms (DigitalOcean, Cloud Run, etc.) that clear custom run commands
+# Platforms (e.g. Cloud Run) that clear custom run commands
 # will fall through to this CMD automatically.
 CMD ["sh", "-c", "exec gunicorn -b 0.0.0.0:${PORT:-8080} -w ${GUNICORN_WORKERS:-4} -k uvicorn.workers.UvicornWorker --timeout ${GUNICORN_TIMEOUT:-120} --config /app/gunicorn.conf.py app.main:app"]

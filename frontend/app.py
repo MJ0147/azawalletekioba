@@ -4,6 +4,7 @@ import json
 import os
 import random
 import re
+import secrets
 import sys
 import importlib.util
 from datetime import datetime, timezone
@@ -42,6 +43,8 @@ if str(_APP_FEATURE_DIR) not in sys.path:
 
 from agent import get_dashboard_forecast
 from services.ton import TonServiceError
+from services.museum import MUSEUM_PORTRAITS, museum_catalogue
+from services import kb_fallback
 
 BASE_DIR = Path(__file__).resolve().parent
 PUBLIC_DIR = BASE_DIR / "public"
@@ -399,171 +402,9 @@ PRESTIGIOUS_HOTELS: list[dict[str, Any]] = [
     },
 ]
 
-ACADEMY_WORD_BANK: list[dict[str, str]] = [
-    # ── Greetings ──────────────────────────────────────────────────────────
-    {"edo": "Koyo", "english": "Hello", "category": "greetings"},
-    {"edo": "Otabor", "english": "Good morning", "category": "greetings"},
-    {"edo": "Vbe ighe", "english": "Good afternoon", "category": "greetings"},
-    {"edo": "Vbe oyi", "english": "Good evening", "category": "greetings"},
-    {"edo": "Obo", "english": "Thank you", "category": "greetings"},
-    {"edo": "Vbe", "english": "Come", "category": "greetings"},
-    {"edo": "Laro", "english": "Goodbye", "category": "greetings"},
-    {"edo": "Ege", "english": "Please", "category": "greetings"},
-    {"edo": "Mwen", "english": "I / Me", "category": "greetings"},
-    {"edo": "Iro", "english": "You", "category": "greetings"},
-    {"edo": "Iran", "english": "They / Them", "category": "greetings"},
-    {"edo": "Imina", "english": "My name is", "category": "greetings"},
-    {"edo": "Rẹn", "english": "He / She / It", "category": "greetings"},
-    # ── Numbers ────────────────────────────────────────────────────────────
-    {"edo": "Ovbokhan", "english": "One", "category": "numbers"},
-    {"edo": "Eva", "english": "Two", "category": "numbers"},
-    {"edo": "Eha", "english": "Three", "category": "numbers"},
-    {"edo": "Ene", "english": "Four", "category": "numbers"},
-    {"edo": "Isen", "english": "Five", "category": "numbers"},
-    {"edo": "Eissen", "english": "Six", "category": "numbers"},
-    {"edo": "Ihien", "english": "Seven", "category": "numbers"},
-    {"edo": "Eren", "english": "Eight", "category": "numbers"},
-    {"edo": "Ehen", "english": "Nine", "category": "numbers"},
-    {"edo": "Igbe", "english": "Ten", "category": "numbers"},
-    {"edo": "Igbe ne eva", "english": "Twenty", "category": "numbers"},
-    {"edo": "Igbe ne eha", "english": "Thirty", "category": "numbers"},
-    {"edo": "Iguegbe", "english": "Hundred", "category": "numbers"},
-    {"edo": "Egbe", "english": "Time", "category": "numbers"},
-    # ── Food & Drink ───────────────────────────────────────────────────────
-    {"edo": "Evbare", "english": "Food", "category": "food"},
-    {"edo": "Emwin", "english": "Water", "category": "food"},
-    {"edo": "Obe", "english": "Soup", "category": "food"},
-    {"edo": "Oka", "english": "Maize / Corn", "category": "food"},
-    {"edo": "Eme", "english": "Meat", "category": "food"},
-    {"edo": "Okpo", "english": "Fish", "category": "food"},
-    {"edo": "Ose", "english": "Pepper", "category": "food"},
-    {"edo": "Ogede", "english": "Banana", "category": "food"},
-    {"edo": "Oran", "english": "Palm oil", "category": "food"},
-    {"edo": "Ukodo", "english": "Yam pepper soup", "category": "food"},
-    {"edo": "Ehiyo", "english": "Salt", "category": "food"},
-    {"edo": "Akhere", "english": "Bowl / Plate", "category": "food"},
-    {"edo": "Ema", "english": "Pounded yam", "category": "food"},
-    {"edo": "Ọkpọ ẹdo", "english": "Smoked fish", "category": "food"},
-    # ── Family ─────────────────────────────────────────────────────────────
-    {"edo": "Erha", "english": "Father", "category": "family"},
-    {"edo": "Iye", "english": "Mother", "category": "family"},
-    {"edo": "Omomo", "english": "Child", "category": "family"},
-    {"edo": "Ozo", "english": "Husband", "category": "family"},
-    {"edo": "Okhuo", "english": "Wife / Woman", "category": "family"},
-    {"edo": "Odion", "english": "First born / Elder", "category": "family"},
-    {"edo": "Omuogun", "english": "Brother", "category": "family"},
-    {"edo": "Eno", "english": "Sister", "category": "family"},
-    {"edo": "Isen erha", "english": "Grandfather", "category": "family"},
-    {"edo": "Isen iye", "english": "Grandmother", "category": "family"},
-    {"edo": "Ọmọ ozo", "english": "Son", "category": "family"},
-    {"edo": "Ọmọ okhuo", "english": "Daughter", "category": "family"},
-    # ── Nature ─────────────────────────────────────────────────────────────
-    {"edo": "Uwa", "english": "World", "category": "nature"},
-    {"edo": "Iwin", "english": "Sun", "category": "nature"},
-    {"edo": "Ukpoba", "english": "River", "category": "nature"},
-    {"edo": "Ude", "english": "Road / Path", "category": "nature"},
-    {"edo": "Ekpen", "english": "Leopard", "category": "nature"},
-    {"edo": "Okpan", "english": "Bird", "category": "nature"},
-    {"edo": "Erhen", "english": "Tree", "category": "nature"},
-    {"edo": "Ikpe", "english": "Rain", "category": "nature"},
-    {"edo": "Ede", "english": "Day", "category": "nature"},
-    {"edo": "Evbi", "english": "Night", "category": "nature"},
-    {"edo": "Oto", "english": "Earth / Ground", "category": "nature"},
-    {"edo": "Azagba", "english": "Forest / Bush", "category": "nature"},
-    {"edo": "Aro", "english": "Eye / Face", "category": "nature"},
-    {"edo": "Odẹ", "english": "Farm / Field", "category": "nature"},
-    # ── Culture & History ──────────────────────────────────────────────────
-    {"edo": "Osa", "english": "God", "category": "culture"},
-    {"edo": "Osanobua", "english": "Almighty God", "category": "culture"},
-    {"edo": "Oghene", "english": "King", "category": "culture"},
-    {"edo": "Oba", "english": "Paramount Ruler", "category": "culture"},
-    {"edo": "Idia", "english": "First Queen Mother", "category": "culture"},
-    {"edo": "Igue", "english": "Royal Festival", "category": "culture"},
-    {"edo": "Ivie", "english": "Coral beads", "category": "culture"},
-    {"edo": "Ekhoe", "english": "Ceremonial gong", "category": "culture"},
-    {"edo": "Ẹdo", "english": "Benin Kingdom", "category": "culture"},
-    {"edo": "Igun", "english": "Bronze casting guild", "category": "culture"},
-    {"edo": "Iyoba", "english": "Queen Mother", "category": "culture"},
-    {"edo": "Ewuare", "english": "Great reformer Oba", "category": "culture"},
-    {"edo": "Ozolua", "english": "The Conqueror Oba", "category": "culture"},
-    {"edo": "Esigie", "english": "Oba who fought the Igala", "category": "culture"},
-    # ── Body ───────────────────────────────────────────────────────────────
-    {"edo": "Okpa", "english": "Leg / Foot", "category": "body"},
-    {"edo": "Uwu", "english": "Arm / Hand", "category": "body"},
-    {"edo": "Uhunmwun", "english": "Head", "category": "body"},
-    {"edo": "Unu", "english": "Mouth", "category": "body"},
-    {"edo": "Ihe", "english": "Ear", "category": "body"},
-    {"edo": "Egbe", "english": "Body", "category": "body"},
-    {"edo": "Ehe", "english": "Nose", "category": "body"},
-    {"edo": "Oha", "english": "Back", "category": "body"},
-    {"edo": "Ọkọ", "english": "Heart / Chest", "category": "body"},
-    # ── Home & Objects ─────────────────────────────────────────────────────
-    {"edo": "Owie", "english": "House", "category": "home"},
-    {"edo": "Eke", "english": "Chair / Seat", "category": "home"},
-    {"edo": "Oton", "english": "Bed", "category": "home"},
-    {"edo": "Akhe", "english": "Pot / Vessel", "category": "home"},
-    {"edo": "Ikhue", "english": "Door", "category": "home"},
-    {"edo": "Aro owie", "english": "Window", "category": "home"},
-    {"edo": "Urho", "english": "Gate / Entrance", "category": "home"},
-]
-
-
-def _load_updated_academy_word_bank() -> list[dict[str, str]]:
-    category_aliases = {
-        "greeting": "greetings",
-        "gratitude": "greetings",
-        "verb": "verbs",
-        "verb_phrase": "verbs",
-        "auxiliary": "verbs",
-        "negation": "grammar",
-        "particle": "grammar",
-        "question": "grammar",
-        "noun": "general",
-    }
-    candidates = [
-        BASE_DIR / "public" / "edo_vocab.json",
-        BASE_DIR / "data" / "edo_vocab.json",
-        BASE_DIR / "app" / "data" / "edo_vocab.json",
-        BASE_DIR.parent / "language_academy" / "app" / "data" / "edo_vocab.json",
-    ]
-    for path in candidates:
-        try:
-            if not path.exists():
-                continue
-            with path.open("r", encoding="utf-8") as handle:
-                raw = json.load(handle)
-            if not isinstance(raw, list):
-                continue
-
-            words: list[dict[str, str]] = []
-            for item in raw:
-                if not isinstance(item, dict):
-                    continue
-                edo = str(item.get("edo", "")).strip()
-                english = str(item.get("english", "")).strip()
-                if not edo or not english:
-                    continue
-                words.append(
-                    {
-                        "edo": edo,
-                        "english": english,
-                        "category": category_aliases.get(
-                            str(item.get("category", "general")).strip().lower(),
-                            str(item.get("category", "general")).strip().lower() or "general",
-                        ),
-                    }
-                )
-
-            if words:
-                return words
-        except Exception:
-            continue
-    return []
-
-
-_UPDATED_ACADEMY_WORD_BANK = _load_updated_academy_word_bank()
-if _UPDATED_ACADEMY_WORD_BANK:
-    ACADEMY_WORD_BANK = _UPDATED_ACADEMY_WORD_BANK
+# The Academy's offline word list comes from the Knowledge Base copy in knowledge_base/
+# (see services/kb_fallback.py), so it matches what Iyobo teaches.
+ACADEMY_WORD_BANK: list[dict[str, str]] = kb_fallback.academy_words()
 
 
 def _academy_vocab_filtered(search: str = "", category: str = "") -> list[dict[str, str]]:
@@ -1215,161 +1056,50 @@ async def chat_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("chat.html", {"request": request})
 
 
-_IYOBO_KNOWLEDGE: list[tuple[list[str], str]] = [
-    (
-        ["hello", "hi", "hey", "koyo", "obowie", "greet", "welcome", "start", "begin"],
-        "Koyo! Welcome to EKIOBA — your gateway to authentic Edo and Benin Kingdom culture. I'm Iyobo, your AI cultural guide. Ask me about products, IDIA Coin payments, Edo history, the Language Academy, hotels, cargo, or anything EKIOBA. How can I help?",
-    ),
-    (
-        ["who are you", "what are you", "iyobo", "about you", "your name", "introduce yourself"],
-        "I'm Iyobo — EKIOBA's AI cultural assistant. I combine deep knowledge of the Benin Kingdom, IDIA Coin blockchain payments, and real-time market data to give you accurate, helpful answers. I can help you shop, pay, learn Edo language, book hotels, ship cargo, and understand the heritage behind every EKIOBA product.",
-    ),
-    (
-        ["ekioba", "about ekioba", "what is ekioba", "platform", "mission", "who runs"],
-        "EKIOBA is a cultural e-commerce marketplace celebrating the art, heritage, and traditions of the Benin Kingdom (Edo State, Nigeria). We connect artisans and culture-bearers with buyers worldwide — powered by IDIA Coin blockchain payments, with services spanning hospitality, logistics, and Edo language education.",
-    ),
-    (
-        ["product", "shop", "store", "buy", "sell", "item", "bronze", "coral", "mask", "ivory", "plaque", "bead", "catalog", "collection", "art"],
-        "EKIOBA's store features handcrafted Benin Kingdom treasures: gold-plated bronze heads, Idia ivory mask pendants, royal coral bead necklaces, vintage bronze plaques, Benin bronze castings, and royal fashion attire. Each item carries authentic cultural provenance. Browse the Store on the homepage — click any product to add it to your cart.",
-    ),
-    (
-        ["cart", "add to cart", "basket", "order", "purchase", "buy now", "checkout cart"],
-        "To shop on EKIOBA: browse the Store section and add items to cart. The basket icon at the top-right shows your live item count and sits just below Connect Wallet. Open it to review items, then checkout with IDIA Coin.",
-    ),
-    (
-        ["pay", "payment", "price", "naira", "idia", "idia coin", "checkout", "cost", "currency", "ngn"],
-        "EKIOBA uses IDIA Coin as the native and only checkout currency. Prices are shown in NGN for reference and converted to IDIA at checkout. Connect Tonkeeper (or any TON Connect wallet) from the Connect Wallet action, then complete payment with IDIA Coin.",
-    ),
-    (
-        ["idia coin", "what is idia", "idia token", "idia blockchain", "idia usdt", "idia rate"],
-        "IDIA Coin is EKIOBA's native cultural token, honouring Queen Idia — the first Queen Mother of the Benin Kingdom. It runs on the TON network as a Jetton. 1 IDIA ≈ 30 NGN / ~0.018 USDT at current rates. You can earn IDIA by completing Edo Language Academy quizzes and spending it on any EKIOBA product.",
-    ),
-    (
-        ["ton", "ton connect", "tonconnect", "toncoin", "ton wallet", "tonkeeper", "mytonwallet"],
-        "Tonkeeper connection is available from the Connect Wallet action in the payment modal. After your wallet connects, IDIA checkout routes through your connected wallet automatically.",
-    ),
-    (
-        ["wallet", "dashboard", "balance", "forecast", "chart", "home page", "home dashboard"],
-        "The EKIOBA homepage is your all-in-one dashboard — live product listings, market forecast charts (stocks, crypto, sentiment score), TON wallet status, and your shopping cart. Use the fixed top navigation to jump to Store, Hotels, Cargo, Academy, or Iyobo AI at any time.",
-    ),
-    (
-        ["edo", "benin", "benin kingdom", "benin history", "kingdom", "bini", "edo state", "edo people"],
-        "The Benin Kingdom (Edo Kingdom) is one of Africa's oldest and most powerful monarchies, founded ~900 AD in present-day Edo State, Nigeria. It reached its golden age under Oba Ewuare the Great (~1440–1473 AD). The kingdom is world-famous for its extraordinary bronze castings, ivory carvings, oral traditions, and the Oba divine kingship system still active today.",
-    ),
-    (
-        ["oba", "oba of benin", "ewuare", "ovonramwen", "erediauwa", "eweka", "ozolua", "esigie", "ewuare ii"],
-        "Notable Obas of Benin: Ewuare I (the Great) unified and expanded the kingdom ~1440 AD; Ozolua the Conqueror (1483–1504) extended the empire through military campaigns; Esigie (1504–1550) established the Iyoba (Queen Mother) title; Ovonramwen Nogbaisi reigned until the 1897 British Punitive Expedition. Ewuare II was crowned in 2016 and is the current Oba.",
-    ),
-    (
-        ["queen idia", "idia queen", "queen mother", "iyoba", "idia mask", "idia pendant", "idia coin history"],
-        "Queen Idia was the first Iyoba (Queen Mother) of Benin, mother of Oba Esigie (~1504 AD). She led warriors in battle to defend the kingdom and is celebrated as a symbol of female power and royal courage. The Idia Ivory Mask is a masterpiece of Benin art — held partly in the British Museum — and inspired EKIOBA's IDIA Coin and our Idia Ivory Mask Pendant product.",
-    ),
-    (
-        ["bronze", "bronze casting", "bronze head", "benin bronze", "brass", "casting", "lost wax", "igun"],
-        "Benin bronze casting dates to the 13th century, mastered by the hereditary Igun Eronmwon guild using the lost-wax (cire perdue) technique. Artists created commemorative heads of Obas and Iyobas, courtly plaques, and ritual objects of extraordinary artistry. Many bronzes were seized in the 1897 British Punitive Expedition — their repatriation remains an ongoing global conversation. EKIOBA's bronze replicas honour this living tradition.",
-    ),
-    (
-        ["igue festival", "igue", "ugie", "ugie erha oba", "festival", "ceremony", "benin celebration", "royal festival"],
-        "The Igue Festival is the most sacred annual ceremony of the Benin Kingdom, held each December. The Oba performs royal renewal rites, honours royal ancestors, and reinforces his divine powers. The Ugie Erha Oba ceremony specifically honours the spirit of the Oba's father. Both festivals feature elaborate royal regalia, court dances, music, and religious offerings.",
-    ),
-    (
-        ["coral", "coral bead", "ivie", "bead jewelry", "royal coral", "coral necklace"],
-        "Coral beads (Ivie in Edo) are sacred symbols of royalty and spiritual protection in the Benin Kingdom. Only the Oba, chiefs, and senior title holders may wear specific coral configurations — wearing them without rank is a punishable cultural offence. Red coral was historically imported from the Mediterranean. EKIOBA's Royal Coral Bead Necklace is crafted in authentic Benin style.",
-    ),
-    (
-        ["academy", "learn edo", "edo language", "language academy", "lesson", "quiz", "translate", "vocabulary", "study"],
-        "The Edo Language Academy lets you learn the Edo (Bini) language interactively. Features: live Edo↔English translator, 50-question vocabulary quiz with IDIA point rewards, a vocabulary browser by category (greetings, numbers, food, family, nature, culture, body, home), and daily lessons. Visit the Academy via the top navigation bar.",
-    ),
-    (
-        ["edo language greetings", "how to say hello", "good morning edo", "greet in edo", "basic edo"],
-        "Basic Edo phrases: 'Koyo' = Hello | 'Otabor' = Good morning | 'Vbe ighe' = Good afternoon | 'Vbe oyi' = Good evening | 'Obo' = Thank you | 'Laro' = Goodbye | 'Ege' = Please | 'Mwen' = I/Me. Edo is a tonal language — pitch changes meaning. Explore all categories in the Edo Language Academy.",
-    ),
-    (
-        ["number", "count", "edo numbers", "how to count", "counting in edo"],
-        "Counting in Edo: Ovbokhan (1), Eva (2), Eha (3), Ene (4), Isen (5), Eissen (6), Ihien (7), Eren (8), Ehen (9), Igbe (10), Igbe ne eva (20), Igbe ne eha (30), Iguegbe (100). Practise numbers and more in the Edo Language Academy quiz on EKIOBA.",
-    ),
-    (
-        ["hotel", "accommodation", "stay", "lodging", "book hotel", "benin city hotel", "lagos hotel", "abuja hotel", "port harcourt hotel"],
-        "EKIOBA lists prestigious hotels across 4 Nigerian cities: Benin City (Protea Hotel Emotan, Oti Hotels, Avbiama Hotel); Abuja (Transcorp Hilton, Sheraton Abuja, Bolton White); Lagos (Eko Hotel & Suites, Lagos Marriott Ikeja, Federal Palace Hotel); Port Harcourt (Novotel PH, Hawthorn Suites, Presidential Hotel PH). Visit the Hotels page for full listings and booking details.",
-    ),
-    (
-        ["cargo", "shipping", "ship", "freight", "logistics", "courier", "deliver package", "send goods"],
-        "EKIOBA Cargo offers reliable shipping across Nigeria and internationally. Get an instant quote online (enter distance and weight), book a pickup, and track your shipment in real time via SSE stream. We use tamper-evident packaging, milestone scan checkpoints, insurance on high-value cargo, and SLA-bound delivery windows. Visit the Cargo page to get a quote.",
-    ),
-    (
-        ["deliver", "where do you ship", "international shipping", "worldwide", "abroad", "send abroad"],
-        "We deliver within Nigeria (Benin City, Lagos, Abuja, Port Harcourt, and all states) and internationally. International orders use partner couriers with full customs documentation. For high-value artworks and cultural items, contact support for a custom international shipping quote.",
-    ),
-    (
-        ["forecast", "market", "stock market", "crypto market", "bitcoin", "ethereum", "price prediction", "sentiment"],
-        "The EKIOBA forecast dashboard aggregates live market data from Yahoo Finance, Google Finance, and SoSoValue. It tracks crypto price trends, stock index movements, and a Fear & Greed sentiment index. Find it on the homepage — scroll to the Forecast section or visit /api/dashboard/forecast for raw JSON data.",
-    ),
-    (
-        ["return", "refund", "exchange", "policy", "dispute", "cancel order"],
-        "Returns are accepted within 14 days of delivery for items in original, undamaged condition with original packaging. Blockchain (IDIA Coin) payments are non-reversible once confirmed on-chain per blockchain protocol. For disputes, contact EKIOBA support with your order ID and photo evidence of condition. We mediate all cases fairly.",
-    ),
-    (
-        ["contact", "support", "help", "email", "customer service", "reach ekioba", "phone number"],
-        "EKIOBA support is available via the contact form on the homepage. Reference your order ID for faster resolution. Our team handles product inquiries, payment issues (include your blockchain tx hash), shipping updates, and Edo cultural questions. Business-day response time is typically within 24 hours.",
-    ),
-]
+def _chat_bubble(reply: str) -> HTMLResponse:
+    # Replies can quote web pages, so render them as text rather than trusting their markup.
+    body = escape(reply).replace("\n", "<br>")
+    return HTMLResponse(f'<div class="chat-bubble bot">{body}</div>')
 
 
-async def _ddg_search(query: str) -> str | None:
-    """DuckDuckGo Instant Answer lookup — no API key required. Returns a brief snippet or None."""
-    try:
-        async with httpx.AsyncClient(timeout=6.0, follow_redirects=True) as client:
-            r = await client.get(
-                "https://api.duckduckgo.com/",
-                params={"q": query, "format": "json", "no_html": "1", "skip_disambig": "1"},
-                headers={"User-Agent": "EKIOBA-Iyobo/1.0"},
-            )
-            d = r.json()
-        abstract = (d.get("AbstractText") or "").strip()
-        if abstract:
-            source = d.get("AbstractSource") or ""
-            return abstract[:420] + (f" — via {source}" if source else "")
-        for topic in d.get("RelatedTopics") or []:
-            if isinstance(topic, dict) and topic.get("Text"):
-                return str(topic["Text"])[:320]
-    except Exception:
-        pass
-    return None
-
-
-def _iyobo_local_reply(text: str) -> str:
-    lower = text.lower()
-    for keywords, reply in _IYOBO_KNOWLEDGE:
-        if any(kw in lower for kw in keywords):
-            return reply
-    return (
-        "I'm Iyobo, EKIOBA's cultural guide. I can help with products, payments, "
-        "the Benin Kingdom heritage, shipping, or the home dashboard. What would you like to know?"
-    )
+VISITOR_COOKIE = "iyobo_visitor"
+_VISITOR_ID = re.compile(r"[a-f0-9]{32}")
 
 
 @app.post("/api/chat/proxy", response_class=HTMLResponse)
-async def chat_proxy(message: str = Form(default="")) -> HTMLResponse:
-    text = message.strip()
+async def chat_proxy(request: Request, message: str = Form(default="")) -> HTMLResponse:
+    # A random id kept in a cookie lets Iyobo remember this visitor between conversations.
+    visitor_id = request.cookies.get(VISITOR_COOKIE, "")
+    if not _VISITOR_ID.fullmatch(visitor_id):
+        visitor_id = secrets.token_hex(16)
+    response = await _chat_proxy_reply(message.strip(), visitor_id)
+    response.set_cookie(
+        VISITOR_COOKIE,
+        visitor_id,
+        max_age=365 * 24 * 3600,
+        httponly=True,
+        samesite="lax",
+        secure=_site_origin(request).startswith("https://"),
+    )
+    return response
+
+
+async def _chat_proxy_reply(text: str, visitor_id: str) -> HTMLResponse:
     if not text:
         return HTMLResponse('<div class="chat-bubble bot">Ask Iyobo anything about EKIOBA.</div>')
 
     search_results = await _extract_link_search_results(text)
-    web_answer = await _ddg_search(text)
 
-    # Try external AI service: NEXT_PUBLIC_IYOBO_API_URL takes precedence, then AI_ASSISTANT_URL
+    # Iyobo (xAI Grok) answers from the Knowledge Base and runs its own web searches.
+    # NEXT_PUBLIC_IYOBO_API_URL takes precedence, then AI_ASSISTANT_URL.
     backend_url = _resolve_chat_url()
     if backend_url and "localhost" not in backend_url:
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        # Answers that need a web search take longer than a plain completion.
+        async with httpx.AsyncClient(timeout=90.0) as client:
             try:
-                payload: dict[str, Any] = {"message": text}
-                context: dict[str, Any] = {}
+                payload: dict[str, Any] = {"message": text, "user_id": visitor_id}
                 if search_results:
-                    context["search_results"] = search_results
-                if web_answer:
-                    context["web_lookup"] = web_answer
-                if context:
-                    payload["context"] = context
+                    payload["context"] = {"search_results": search_results}
                 response = await client.post(
                     backend_url,
                     json=payload,
@@ -1379,9 +1109,9 @@ async def chat_proxy(message: str = Form(default="")) -> HTMLResponse:
                 data = response.json()
                 reply = data.get("reply") or data.get("response") or data.get("answer") or ""
                 if reply:
-                    return HTMLResponse(f'<div class="chat-bubble bot">{reply}</div>')
+                    return _chat_bubble(reply)
             except Exception:
-                pass  # Fall through to local knowledge base
+                pass  # Fall through to the Knowledge Base
 
     lower = text.lower()
     if any(k in lower for k in ["forecast", "market", "price", "bitcoin", "stock", "crypto"]):
@@ -1397,19 +1127,9 @@ async def chat_proxy(message: str = Form(default="")) -> HTMLResponse:
             f"sentiment score {sent_tip}. Sources: Yahoo Finance, Google Finance, SoSoValue, and exchange feeds."
         )
     else:
-        reply = _iyobo_local_reply(text)
-        _generic_fallback = "I'm Iyobo, EKIOBA's cultural guide" in reply
-        _question_like = any(
-            token in lower
-            for token in [
-                "what", "who", "when", "where", "why", "how",
-                "latest", "current", "history", "price", "news",
-                "tell me", "explain", "describe",
-            ]
-        )
-        if web_answer and (_generic_fallback or _question_like):
-            reply = f"{reply}\n\nWeb lookup: {web_answer}"
-    return HTMLResponse(f'<div class="chat-bubble bot">{reply}</div>')
+        # Offline: quote the best-matching Knowledge Base entries.
+        reply = kb_fallback.answer(text)
+    return _chat_bubble(reply)
 
 
 @app.get("/health")
@@ -1595,6 +1315,16 @@ async def cargo_book(request: Request) -> JSONResponse:
         "eta_hours": 24,
         "message": "Your shipment has been booked. Track it using the shipment ID.",
     })
+
+
+# ── Benin Royal Museum page ────────────────────────────────────────────────
+
+@app.get("/museum", response_class=HTMLResponse)
+async def museum_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "museum.html",
+        {"request": request, "eras": museum_catalogue(), "portraits": MUSEUM_PORTRAITS},
+    )
 
 
 # ── Language Academy page ──────────────────────────────────────────────────

@@ -16,6 +16,12 @@
        breaking majors before, and the UMD global is TON_CONNECT_UI. -->
   <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.4.4/dist/tonconnect-ui.min.js"></script>
   <script defer src="/static/js/app.js"></script>
+  <!-- Vercel Web Analytics. Vercel serves this script once Analytics is enabled for the
+       project; elsewhere (local, Docker) the request 404s harmlessly. -->
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -50,6 +56,12 @@
           <a href="/#store" aria-label="Store">
             <span class="nav-icon" aria-hidden="true">🛍️</span>
             <span class="nav-label">Store</span>
+          </a>
+        </li>
+        <li>
+          <a href="/museum" aria-label="Benin Royal Museum">
+            <span class="nav-icon" aria-hidden="true">🏛️</span>
+            <span class="nav-label">Museum</span>
           </a>
         </li>
         <li>
@@ -239,6 +251,7 @@
         <a href="/">Home</a>
         <a href="/#services">All Services</a>
         <a href="/#store">Store</a>
+        <a href="/museum">Benin Royal Museum</a>
       </nav>
       <p class="footer-copy">&copy; 2026 EKIOBA. All rights reserved.</p>
     </div>
@@ -541,6 +554,71 @@
       await window.submitTonPayment('idia-status');
     };
 
+    // After the wallet sends a payment, look for it on-chain. A Jetton transfer passes through
+    // three contracts, so it usually lands within half a minute.
+    var CONFIRM_POLL_MS = 5000;
+    var CONFIRM_TIMEOUT_MS = 180000;
+    var _ORDER_ID_RE = /^[A-Za-z0-9-]+$/;
+
+    function _sleep(ms) {
+      return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    }
+
+    async function _checkPaymentOnce(orderId) {
+      try {
+        var r = await fetch('/api/pay/ton/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: orderId }),
+        });
+        var d = {};
+        try { d = await r.json(); } catch (e) { /* non-JSON error page */ }
+        if (r.ok && d.verified) return 'confirmed';
+        if (r.ok && d.status === 'underpaid') return 'underpaid';
+        // 404: the order was never stored. 503: order storage is not configured.
+        if (r.status === 404 || r.status === 503) return 'unavailable';
+        return 'pending';  // not on-chain yet, or the TON API had a hiccup
+      } catch (e) {
+        return 'pending';
+      }
+    }
+
+    async function _awaitConfirmation(orderId, target) {
+      var deadline = Date.now() + CONFIRM_TIMEOUT_MS;
+      while (true) {
+        var state = await _checkPaymentOnce(orderId);
+        if (state === 'confirmed') {
+          _setStatus(target, '✅ Payment confirmed on TON. Order: ' + orderId);
+          return;
+        }
+        if (state === 'underpaid') {
+          _setStatus(target, '⚠️ Payment received, but it is less than the order total. Contact support with order ' + orderId + '.');
+          return;
+        }
+        if (state === 'unavailable') {
+          _setStatus(target, 'Payment sent. Automatic confirmation is unavailable right now, so keep your order ID: ' + orderId + '.');
+          return;
+        }
+        if (Date.now() >= deadline) {
+          _setStatus(
+            target,
+            '⏳ Payment sent but not confirmed on TON yet; it can take a few minutes. Order: ' + orderId +
+            '<button type="button" onclick="checkIdiaPayment(\'' + orderId + '\', \'' + target + '\')" style="margin-left:.35rem;padding:2px 10px;border-radius:6px;background:#dd5b2f;color:#fff;border:none;cursor:pointer;font-size:.82rem">Check again</button>',
+            true
+          );
+          return;
+        }
+        await _sleep(CONFIRM_POLL_MS);
+      }
+    }
+
+    window.checkIdiaPayment = async function (orderId, statusId) {
+      var target = statusId || 'idia-status';
+      if (!_ORDER_ID_RE.test(String(orderId || ''))) return;
+      _setStatus(target, 'Checking TON for order ' + orderId + '…');
+      await _awaitConfirmation(orderId, target);
+    };
+
     window.submitTonPayment = async function (statusId) {
       var target = statusId || 'ton-status';
       var ctx = window._idiaContext;
@@ -588,8 +666,19 @@
         return;
       }
 
-      _setStatus(target, '✅ Transaction submitted! Order: ' + data.order_id);
+      // The shopper has paid: clear the cart now so no one pays twice while confirmation runs.
       _notifyCheckoutSuccess(data);
+
+      if (!_ORDER_ID_RE.test(String(data.order_id || ''))) {
+        _setStatus(target, 'Payment sent.');
+        return;
+      }
+      if (data.recorded === false) {
+        _setStatus(target, 'Payment sent. This order could not be saved, so it cannot be confirmed automatically. Keep your order ID: ' + data.order_id + '.');
+        return;
+      }
+      _setStatus(target, 'Payment sent. Waiting for confirmation on TON… Order: ' + data.order_id);
+      await _awaitConfirmation(data.order_id, target);
     };
 
     // Re-check wallet state when users return from their wallet app.

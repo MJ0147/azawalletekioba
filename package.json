@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@supabase/server": "^1.6.0"
+    "@supabase/server": "^1.6.0",
+    "@vercel/analytics": "^2.0.1"
   }
 }

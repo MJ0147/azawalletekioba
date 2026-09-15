@@ -1,0 +1,82 @@
+{
+  "source": {
+    "title": "Edo alphabet",
+    "note": "Transcribed from photos of an Edo alphabet chart (two pages) supplied by the project owner. Edo words keep the chart's spelling; academy_vocabulary lowercases them. The numbers are in edo-numbers-dataset.json.",
+    "language": "Edo (Bini), Niger-Congo; main language of the ancient Kingdom of Benin",
+    "transcription_caveats": [
+      "The O and Ọ rows are not in the photos.",
+      "The letter column of the second page (P to Z) is cut off; letters are inferred from the highlighted sounds, and Ȳ / Ỹ from the Edo words.",
+      "The chart gives no Edo word for J; its example Ojukwu is an Igbo name.",
+      "'to chose' in the Z row is corrected to 'to choose'.",
+      "Few words carry tone marks."
+    ],
+    "already_in_academy_vocabulary": [
+      { "supplied": "Ebe",  "existing": "ebe",  "file": "edo-questions-dataset.json", "note": "English updated to 'book / leaf / paper'." },
+      { "supplied": "Ẹghẹ", "existing": "eghe", "file": "edo-everyday-dataset.json" },
+      { "supplied": "tota", "existing": "tótà", "file": "edo-adjectives-dataset.json" },
+      { "supplied": "Ẹỹẹn", "existing": "ẹyẹn", "file": "edo-animals-dataset.json", "note": "Animal list spells it with a plain y." }
+    ]
+  },
+
+  "alphabet": [
+    { "letter": "A", "sounds_like": "Apple",                  "edo": ["Amẹ", "Ama"],             "english": ["water", "sign or mark"] },
+    { "letter": "B", "sounds_like": "Bee",                    "edo": ["bolo"],                   "english": ["to peel"] },
+    { "letter": "D", "sounds_like": "Day",                    "edo": ["dẹh"],                    "english": ["to buy"] },
+    { "letter": "E", "sounds_like": "Amen / Ape",             "edo": ["Ebe"],                    "english": ["leaf / book / paper"] },
+    { "letter": "Ẹ", "sounds_like": "Elefant",                "edo": ["Ẹdẹ", "Ẹghẹ"],            "english": ["day", "time"] },
+    { "letter": "F", "sounds_like": "Fish",                   "edo": ["fanọ"],                   "english": ["to unravel"] },
+    { "letter": "G", "sounds_like": "Great",                  "edo": ["goh"],                    "english": ["to scream / to shout"] },
+    { "letter": "H", "sounds_like": "Hose",                   "edo": ["Ẹhoho"],                  "english": ["air / breeze"] },
+    { "letter": "I", "sounds_like": "Inuit",                  "edo": ["Isaṅrẹn", "Igue"],        "english": ["key", "village"] },
+    { "letter": "J", "sounds_like": "Jogging",                "edo": [],                         "english": [], "note": "No Edo example; the chart's example Ojukwu is an Igbo name." },
+    { "letter": "K", "sounds_like": "Call",                   "edo": ["kọlọ"],                   "english": ["to pluck"] },
+    { "letter": "L", "sounds_like": "Love",                   "edo": ["lalọ"],                   "english": ["to lick"] },
+    { "letter": "M", "sounds_like": "Mother",                 "edo": ["mudia"],                  "english": ["to stand"] },
+    { "letter": "N", "sounds_like": "Name",                   "edo": ["nọnọ"],                   "english": ["to drip (liquid)"] },
+    { "letter": "Ṅ", "sounds_like": "Answer",                 "edo": ["Ikaṅruṅ", "Igaṅ"],        "english": ["cooking potash", "feather"] },
+    { "letter": "P", "sounds_like": "Page",                   "edo": ["piẹṅ"],                   "english": ["to press"] },
+    { "letter": "R", "sounds_like": null,                     "edo": ["Aro"],                    "english": ["eye"], "note": "The r is silent." },
+    { "letter": "S", "sounds_like": "See",                    "edo": ["saṅ", "sọlọ"],            "english": ["to jump", "to tear"] },
+    { "letter": "T", "sounds_like": "Time",                   "edo": ["tota"],                   "english": ["to sit"] },
+    { "letter": "U", "sounds_like": "Ubuntu",                 "edo": ["Unu"],                    "english": ["mouth"] },
+    { "letter": "V", "sounds_like": "Van",                    "edo": ["Avaṅ"],                   "english": ["afternoon"] },
+    { "letter": "W", "sounds_like": "Water",                  "edo": ["Ẹwu"],                    "english": ["shirt"] },
+    { "letter": "Y", "sounds_like": "Yoghurt",                "edo": ["Iyobọ", "Iyeke"],         "english": ["help", "back"] },
+    { "letter": "Ȳ", "sounds_like": "garage / Djibouti",      "edo": ["Iȳe", "Uȳi", "Oȳi"],      "english": ["mother or mummy", "honour or dignity", "thief"] },
+    { "letter": "Ỹ", "sounds_like": "El Niño (Spanish)",      "edo": ["Iỹan", "Ẹỹẹn"],           "english": ["yam", "snake"] },
+    { "letter": "Z", "sounds_like": "Zebra",                  "edo": ["zẹ"],                     "english": ["to choose"] }
+  ],
+
+  "academy_vocabulary": [
+    { "edo": "amẹ",      "english": "water",               "category": "noun",   "example": "amẹ — water (alphabet: A)" },
+    { "edo": "ama",      "english": "sign / mark",         "category": "noun",   "example": "ama — sign or mark (alphabet: A)" },
+    { "edo": "bolo",     "english": "to peel",             "category": "verb",   "example": "bolo — to peel (alphabet: B)" },
+    { "edo": "dẹh",      "english": "to buy",              "category": "verb",   "example": "dẹh — to buy (alphabet: D)" },
+    { "edo": "ẹdẹ",      "english": "day",                 "category": "noun",   "example": "ẹdẹ — day (alphabet: Ẹ)" },
+    { "edo": "fanọ",     "english": "to unravel",          "category": "verb",   "example": "fanọ — to unravel (alphabet: F)" },
+    { "edo": "goh",      "english": "to scream / to shout", "category": "verb",  "example": "goh — to scream or shout (alphabet: G; compare gó 'shout')" },
+    { "edo": "ẹhoho",    "english": "air / breeze",        "category": "nature", "example": "ẹhoho — air, breeze (alphabet: H)" },
+    { "edo": "isaṅrẹn",  "english": "key",                 "category": "noun",   "example": "isaṅrẹn — key (alphabet: I)" },
+    { "edo": "igue",     "english": "village",             "category": "place",  "example": "igue — village (alphabet: I)" },
+    { "edo": "kọlọ",     "english": "to pluck",            "category": "verb",   "example": "kọlọ — to pluck (alphabet: K)" },
+    { "edo": "lalọ",     "english": "to lick",             "category": "verb",   "example": "lalọ — to lick (alphabet: L)" },
+    { "edo": "mudia",    "english": "to stand",            "category": "verb",   "example": "mudia — to stand (alphabet: M)" },
+    { "edo": "nọnọ",     "english": "to drip (liquid)",    "category": "verb",   "example": "nọnọ — to drip (alphabet: N)" },
+    { "edo": "ikaṅruṅ",  "english": "cooking potash",      "category": "food",   "example": "ikaṅruṅ — cooking potash (alphabet: Ṅ)" },
+    { "edo": "igaṅ",     "english": "feather",             "category": "noun",   "example": "igaṅ — feather (alphabet: Ṅ)" },
+    { "edo": "piẹṅ",     "english": "to press",            "category": "verb",   "example": "piẹṅ — to press (alphabet: P)" },
+    { "edo": "aro",      "english": "eye",                 "category": "body",   "example": "aro — eye; the r is silent (alphabet: R)" },
+    { "edo": "saṅ",      "english": "to jump",             "category": "verb",   "example": "saṅ — to jump (alphabet: S)" },
+    { "edo": "sọlọ",     "english": "to tear",             "category": "verb",   "example": "sọlọ — to tear (alphabet: S)" },
+    { "edo": "unu",      "english": "mouth",               "category": "body",   "example": "unu — mouth (alphabet: U)" },
+    { "edo": "avaṅ",     "english": "afternoon",           "category": "noun",   "example": "avaṅ — afternoon (alphabet: V)" },
+    { "edo": "ẹwu",      "english": "shirt",               "category": "noun",   "example": "ẹwu — shirt (alphabet: W)" },
+    { "edo": "iyobọ",    "english": "help",                "category": "noun",   "example": "iyobọ — help (alphabet: Y)" },
+    { "edo": "iyeke",    "english": "back",                "category": "noun",   "example": "iyeke — back (alphabet: Y)" },
+    { "edo": "iȳe",      "english": "mother / mummy",      "category": "family", "example": "iȳe — mother (alphabet: Ȳ, as in 'garage')" },
+    { "edo": "uȳi",      "english": "honour / dignity",    "category": "noun",   "example": "uȳi — honour, dignity (alphabet: Ȳ)" },
+    { "edo": "oȳi",      "english": "thief",               "category": "noun",   "example": "oȳi — thief (alphabet: Ȳ)" },
+    { "edo": "iỹan",     "english": "yam",                 "category": "food",   "example": "iỹan — yam (alphabet: Ỹ, as in Spanish 'niño')" },
+    { "edo": "zẹ",       "english": "to choose",           "category": "verb",   "example": "zẹ — to choose (alphabet: Z)" }
+  ]
+}

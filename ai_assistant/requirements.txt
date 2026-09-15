@@ -8,12 +8,15 @@ pymysql
 psycopg2-binary
 python-multipart
 httpx
+# Iyobo's agent: Google ADK 2 on Grok (via LiteLLM), with memory and the review queue in the database
+google-adk[db]>=2.9,<3
+litellm
+asyncpg
+aiosqlite
 loguru
 python-jose[cryptography]
 passlib[bcrypt]
-openai
 pytest
 pytest-asyncio
 ruff
 black
-duckduckgo-search

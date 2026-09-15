@@ -20,7 +20,7 @@ worker_class = "uvicorn.workers.UvicornWorker"
 # Timeout — long enough for cold-start DB connections
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", "120"))
 
-# Logging — write to stdout so Cloud Run / DO Logs capture it
+# Logging — write to stdout so the container platform's log collector captures it
 accesslog = "-"
 errorlog = "-"
 loglevel = os.environ.get("LOG_LEVEL", "info")

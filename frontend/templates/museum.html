@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Benin Royal Museum — EKIOBA{% endblock %}
+{% block description %}Portrait gallery of the Obas of Benin, from Oba Eweka I to Oba Ewuare II, with the reign and legacy of each king.{% endblock %}
+
+{% block head %}
+<style>
+  [x-cloak] { display: none !important; }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  .museum-hall {
+    --gold: #c9a45c;
+    --gold-soft: #e7d3a4;
+    --bronze-line: #3b2f1b;
+    --bronze-edge: #5a4727;
+    --muted: #a89371;
+    background: radial-gradient(ellipse at top, #1d160c 0%, #0b0906 65%);
+    color: #e9dcc0;
+    border: 1px solid var(--bronze-line);
+    border-radius: 20px;
+    padding: clamp(1rem, 3vw, 1.75rem);
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  .museum-toolbar { display: grid; gap: 0.85rem; }
+  .museum-toolbar h2 { margin: 0; color: var(--gold-soft); font-size: 1.35rem; }
+
+  .museum-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .museum-chip {
+    background: transparent; color: var(--gold-soft);
+    border: 1px solid var(--bronze-edge); border-radius: 999px;
+    padding: 0.4rem 0.85rem; font-size: 0.84rem;
+  }
+  .museum-chip[aria-pressed="true"] {
+    background: var(--gold); border-color: var(--gold); color: #16110a; font-weight: 600;
+  }
+
+  .museum-search input {
+    width: 100%; background: #15110b; color: #f3e9d2; border: 1px solid var(--bronze-edge);
+  }
+  .museum-search input::placeholder { color: #9d8b69; }
+
+  .museum-era-header {
+    display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap;
+    gap: 0.25rem 1rem; border-bottom: 1px solid var(--bronze-line);
+    padding-bottom: 0.5rem; margin-bottom: 1rem;
+  }
+  .museum-era-header h3 { margin: 0; color: var(--gold); font-size: 1.1rem; }
+  .museum-era-header p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+  .museum-grid {
+    list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+  }
+
+  .museum-card {
+    display: flex; flex-direction: column; width: 100%; height: 100%; padding: 0;
+    text-align: left; background: #120e09; color: inherit;
+    border: 1px solid #33291a; border-radius: 14px; overflow: hidden;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .museum-card:hover,
+  .museum-card:focus-visible {
+    transform: translateY(-3px); border-color: var(--gold);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55); outline: none;
+  }
+  .museum-card img {
+    display: block; width: 100%; height: auto; aspect-ratio: 724 / 1086;
+    object-fit: cover; background: #000;
+  }
+  .museum-card-body { display: grid; gap: 0.25rem; padding: 0.8rem 0.9rem 1rem; }
+
+  .museum-number {
+    margin: 0; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: #9d8b69;
+  }
+  .museum-name { color: var(--gold-soft); font-weight: 700; font-size: 1rem; }
+  .museum-reign { margin: 0; color: var(--gold); font-size: 0.85rem; }
+  .museum-desc { margin: 0; color: #d8c9a8; font-size: 0.86rem; line-height: 1.45; }
+
+  .museum-empty,
+  .museum-note { margin: 0; color: var(--muted); font-size: 0.85rem; }
+
+  .museum-lightbox {
+    position: fixed; inset: 0; z-index: 8500; padding: 1rem;
+    background: rgba(5, 4, 2, 0.88);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .museum-lightbox-inner {
+    position: relative; margin: 0; width: min(920px, 100%); max-height: calc(100vh - 2rem);
+    overflow: auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem; align-items: center; padding: 1.25rem;
+    background: #0f0b07; border: 1px solid var(--bronze-edge); border-radius: 18px;
+  }
+  .museum-lightbox-inner img {
+    width: 100%; height: auto; max-height: calc(100vh - 5rem); object-fit: contain; border-radius: 10px;
+  }
+  .museum-lightbox-inner h3 { margin: 0.2rem 0 0.35rem; color: var(--gold-soft); font-size: 1.5rem; }
+  .museum-lightbox-inner .museum-reign { font-size: 1rem; }
+  .museum-lightbox-inner .museum-desc { margin-top: 0.75rem; font-size: 1rem; line-height: 1.6; }
+  .museum-lightbox-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+  .museum-lightbox-nav button {
+    background: transparent; color: var(--gold-soft); border-color: var(--bronze-edge);
+  }
+  .museum-close {
+    position: absolute; top: 0.6rem; right: 0.6rem; padding: 0.3rem 0.65rem;
+    background: rgba(0, 0, 0, 0.65); color: #fff; border-color: var(--bronze-edge);
+  }
+
+  @media (max-width: 700px) {
+    .museum-lightbox-inner { grid-template-columns: 1fr; }
+    .museum-lightbox-inner img { max-height: 55vh; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .museum-card { transition: none; }
+    .museum-card:hover, .museum-card:focus-visible { transform: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shell">
+
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Benin Royal Museum</p>
+      <h1>The Obas of Benin</h1>
+      <p class="sub">
+        A portrait gallery of the kings of Benin, from Oba Eweka I, founder of the dynasty around
+        1200, to Oba Ewuare II today. Each plaque records the king's reign and legacy. Select a
+        portrait to see it in full.
+      </p>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-pill">👑 {{ portraits | length }} Obas</span>
+      <span class="hero-pill">🏺 {{ eras | length }} eras</span>
+    </div>
+  </section>
+
+  <section class="museum-hall" x-data="beninMuseum()" aria-labelledby="museum-catalogue-title">
+
+    <div class="museum-toolbar">
+      <h2 id="museum-catalogue-title">Catalogue</h2>
+      <div class="museum-filters" role="group" aria-label="Filter by era">
+        <button type="button" class="museum-chip" aria-pressed="true"
+                :aria-pressed="(era === 'all').toString()" @click="era = 'all'">All eras</button>
+        {% for e in eras %}
+        <button type="button" class="museum-chip" aria-pressed="false"
+                :aria-pressed="(era === '{{ e.id }}').toString()" @click="era = '{{ e.id }}'">{{ e.title }}</button>
+        {% endfor %}
+      </div>
+      <label class="museum-search">
+        <span class="visually-hidden">Search the catalogue</span>
+        <input type="search" x-model="query" placeholder="Search by name, date or event…" />
+      </label>
+    </div>
+
+    {% for e in eras %}
+    <section class="museum-era" x-show="eraVisible('{{ e.id }}')" aria-labelledby="era-{{ e.id }}">
+      <header class="museum-era-header">
+        <h3 id="era-{{ e.id }}">{{ e.title }}</h3>
+        <p>{{ e.period }}</p>
+      </header>
+      <ol class="museum-grid">
+        {% for p in e.portraits %}
+        <li x-show="matches({{ p.number }})">
+          <button type="button" class="museum-card" aria-haspopup="dialog" @click="open({{ p.number }})">
+            <img src="{{ p.image }}" alt="Bronze-style portrait head of {{ p.name }}"
+                 width="724" height="1086" loading="lazy" decoding="async" />
+            <span class="museum-card-body">
+              <span class="museum-number">No. {{ "%02d" | format(p.number) }}</span>
+              <span class="museum-name">{{ p.name }}</span>
+              <span class="museum-reign">{{ p.reign }}</span>
+              <span class="museum-desc">{{ p.description }}</span>
+            </span>
+          </button>
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% endfor %}
+
+    <p class="museum-empty" x-show="noResults()" x-cloak>
+      No portraits match “<span x-text="query"></span>”.
+    </p>
+
+    <p class="museum-note">
+      Portraits are contemporary artistic renderings in the Benin bronze style, not historical
+      artefacts. Names, reign dates and descriptions are taken from each portrait's plaque;
+      “c.” (circa) marks an approximate date.
+    </p>
+
+    <div class="museum-lightbox" x-show="current" x-cloak x-transition.opacity
+         role="dialog" aria-modal="true" :aria-label="current ? current.name : ''"
+         @click.self="close()"
+         @keydown.escape.window="current && close()"
+         @keydown.arrow-left.window="current && step(-1)"
+         @keydown.arrow-right.window="current && step(1)">
+      <template x-if="current">
+        <figure class="museum-lightbox-inner">
+          <img :src="current.image" :alt="'Bronze-style portrait head of ' + current.name" />
+          <figcaption>
+            <p class="museum-number" x-text="'No. ' + String(current.number).padStart(2, '0')"></p>
+            <h3 x-text="current.name"></h3>
+            <p class="museum-reign" x-text="current.reign"></p>
+            <p class="museum-desc" x-text="current.description"></p>
+            <div class="museum-lightbox-nav">
+              <button type="button" @click="step(-1)" :disabled="current.number === 1">← Previous Oba</button>
+              <button type="button" @click="step(1)" :disabled="current.number === portraits.length">Next Oba →</button>
+            </div>
+          </figcaption>
+          <button type="button" class="museum-close" @click="close()" aria-label="Close portrait">✕</button>
+        </figure>
+      </template>
+    </div>
+
+  </section>
+</div>
+
+{# Server-rendered JSON; tojson escapes <, > and & so it cannot break out of the tag. #}
+<script type="application/json" id="museum-data">{{ portraits | tojson }}</script>
+<script>
+  function beninMuseum() {
+    const portraits = JSON.parse(document.getElementById('museum-data').textContent);
+    return {
+      portraits,
+      era: 'all',
+      query: '',
+      current: null,
+      lastTrigger: null,
+      matches(number) {
+        const q = this.query.trim().toLowerCase();
+        if (!q) return true;
+        const p = this.portraits[number - 1];
+        return (p.name + ' ' + p.reign + ' ' + p.description).toLowerCase().includes(q);
+      },
+      eraVisible(id) {
+        return (this.era === 'all' || this.era === id)
+          && this.portraits.some((p) => p.era === id && this.matches(p.number));
+      },
+      noResults() {
+        return !this.portraits.some((p) => (this.era === 'all' || this.era === p.era) && this.matches(p.number));
+      },
+      open(number) {
+        this.lastTrigger = document.activeElement;
+        this.current = this.portraits[number - 1];
+        this.$nextTick(() => {
+          const closeButton = document.querySelector('.museum-close');
+          if (closeButton) closeButton.focus();
+        });
+      },
+      step(delta) {
+        const index = this.current.number - 1 + delta;
+        if (index >= 0 && index < this.portraits.length) this.current = this.portraits[index];
+      },
+      close() {
+        this.current = null;
+        if (this.lastTrigger) this.lastTrigger.focus();
+      },
+    };
+  }
+</script>
+{% endblock %}

@@ -53,6 +53,21 @@ services:
     container_name: ekioba-ai-assistant
     environment:
       PORT: "8005"
+      XAI_API_KEY: ${XAI_API_KEY:-}
+      XAI_MODEL: ${XAI_MODEL:-grok-4.6}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      SUPABASE_DB_URL: ${SUPABASE_DB_URL:-}
+      IYOBO_MEMORY_DB_URL: ${IYOBO_MEMORY_DB_URL:-}
+      IYOBO_ADMIN_TOKEN: ${IYOBO_ADMIN_TOKEN:-}
+      IYOBO_USER_ID_SALT: ${IYOBO_USER_ID_SALT:-}
+      KNOWLEDGE_BASE_DIR: /app/knowledge_base
+    volumes:
+      # Iyobo's main source; read-only so the assistant can't change it.
+      - type: bind
+        source: ./Knowledge Base
+        target: /app/knowledge_base
+        read_only: true
     ports:
       - "8005:8005"
 

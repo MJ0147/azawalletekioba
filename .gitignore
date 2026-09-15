@@ -72,3 +72,8 @@ None
 
 # Next.js build artifacts
 frontend/.next/
+
+# Python bytecode and test caches
+__pycache__/
+*.pyc
+.pytest_cache/

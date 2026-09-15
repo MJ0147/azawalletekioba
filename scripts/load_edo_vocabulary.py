@@ -1,8 +1,8 @@
 """
 Load Edo Language Academy vocabulary into the Supabase public."EDO" table.
 
-Source of truth is the extracted dataset in the Knowledge Base, so this is
-idempotent: it upserts on the `edo` headword, meaning a re-run updates existing
+Source of truth is every `*-dataset.json` file in "Knowledge Base/Language
+Academy" (each one's `academy_vocabulary` array). This is idempotent: it upserts on the `edo` headword, meaning a re-run updates existing
 rows rather than duplicating them.
 
 Requires SUPABASE_URL and a service-role key (SUPABASE_SECRET_KEY /
@@ -33,12 +33,8 @@ except ImportError:
 
 from services import supabase_client  # noqa: E402
 
-DATASET = (
-    REPO_ROOT
-    / "Knowledge Base"
-    / "Language Academy"
-    / "edo-adjectives-dataset.json"
-)
+DATASET_DIR = REPO_ROOT / "Knowledge Base" / "Language Academy"
+DATASET_GLOB = "*-dataset.json"
 ACADEMY_VOCAB = REPO_ROOT / "language_academy" / "app" / "data" / "edo_vocab.json"
 
 TABLE = "EDO"  # quoted uppercase in Postgres; PostgREST path is /rest/v1/EDO
@@ -50,8 +46,12 @@ def load_rows(source: str) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
 
     if source in ("knowledge-base", "both"):
-        data = json.loads(DATASET.read_text(encoding="utf-8"))
-        rows.extend(data.get("academy_vocabulary", []))
+        # Sorted so the load order (and which duplicate headword wins) is stable.
+        for dataset in sorted(DATASET_DIR.glob(DATASET_GLOB)):
+            data = json.loads(dataset.read_text(encoding="utf-8"))
+            vocabulary = data.get("academy_vocabulary", [])
+            print(f"  {dataset.name}: {len(vocabulary)} entries")
+            rows.extend(vocabulary)
 
     if source in ("language_academy", "both"):
         if ACADEMY_VOCAB.exists():

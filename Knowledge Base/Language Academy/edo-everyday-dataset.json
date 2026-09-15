@@ -1,0 +1,102 @@
+{
+  "source": {
+    "title": "Edo everyday vocabulary",
+    "note": "Word list supplied by the project owner. Spelling recorded as supplied; casing normalised to lowercase in academy_vocabulary.",
+    "language": "Edo (Bini), Niger-Congo; main language of the ancient Kingdom of Benin",
+    "transcription_caveats": [
+      "No tone marks were supplied; add them before teaching pronunciation.",
+      "Grandfather and grandmother were supplied as 'erha – nokhua' and 'iye-nokhua' and are stored as the phrases 'erha nokhua' and 'iye nokhua'.",
+      "D'emwin 'what is this' may contain de 'what/which' (see edo-questions-grammar.md); verify with a native speaker."
+    ],
+    "already_in_academy_vocabulary": [
+      { "supplied": "eguae",  "existing": "ègùàè",  "file": "edo-adjectives-dataset.json" },
+      { "supplied": "vbe",    "existing": "vbè",    "file": "edo-adjectives-dataset.json" },
+      { "supplied": "evbare", "existing": "èvbàré", "file": "edo-adjectives-dataset.json" },
+      { "supplied": "kevbe",  "existing": "kèvbè",  "file": "edo-adjectives-dataset.json" },
+      { "supplied": "okpia",  "existing": "òkpìá",  "file": "edo-adjectives-dataset.json" },
+      { "supplied": "ikhuo",  "existing": "ìkhùò",  "file": "edo-adjectives-dataset.json" },
+      { "supplied": "okhuo",  "existing": "òkhùò",  "file": "edo-adjectives-dataset.json" },
+      { "supplied": "ebe",    "existing": "ebe",    "file": "edo-questions-dataset.json", "note": "English updated from 'book' to 'book / leaf'." }
+    ]
+  },
+
+  "groups": {
+    "family_people": [
+      { "edo": "egbee",       "english": "family" },
+      { "edo": "erha nokhua", "english": "grandfather" },
+      { "edo": "iye nokhua",  "english": "grandmother" },
+      { "edo": "okpia",       "english": "man" },
+      { "edo": "Ikpia",       "english": "men" },
+      { "edo": "Okhuo",       "english": "woman" },
+      { "edo": "ikhuo",       "english": "women" },
+      { "edo": "omomwamwin",  "english": "teacher" },
+      { "edo": "odueki",      "english": "trader" }
+    ],
+    "home_school_objects": [
+      { "edo": "Eguae",   "english": "palace" },
+      { "edo": "owa ebe", "english": "school" },
+      { "edo": "ebe",     "english": "book / leaf" },
+      { "edo": "ukeke",   "english": "pen" },
+      { "edo": "okpan",   "english": "plates" },
+      { "edo": "ekuye",   "english": "spoon" },
+      { "edo": "egogo",   "english": "clock" },
+      { "edo": "egbeken", "english": "wall" },
+      { "edo": "Igho",    "english": "money" }
+    ],
+    "food": [
+      { "edo": "evbare", "english": "food" },
+      { "edo": "ogbede", "english": "plantain" }
+    ],
+    "sky_time": [
+      { "edo": "Iso",  "english": "sky" },
+      { "edo": "uki",  "english": "moon" },
+      { "edo": "owen", "english": "star" },
+      { "edo": "eghe", "english": "time" }
+    ],
+    "language_learning": [
+      { "edo": "ebo",   "english": "English" },
+      { "edo": "inota", "english": "question" }
+    ],
+    "phrases_small_words": [
+      { "edo": "Vba tie", "english": "what is this called" },
+      { "edo": "D'emwin", "english": "what is this" },
+      { "edo": "uruese",  "english": "thank you" },
+      { "edo": "kakabo",  "english": "very" },
+      { "edo": "vbe",     "english": "in" },
+      { "edo": "kevbe",   "english": "and" }
+    ],
+    "oba_to_shine": [
+      { "edo": "oba",             "english": "to shine" },
+      { "edo": "Omo N'Oba N'Edo", "english": "a child that shines for Edo" }
+    ]
+  },
+
+  "academy_vocabulary": [
+    { "edo": "egbee",       "english": "family",               "category": "family", "example": "egbee — family" },
+    { "edo": "erha nokhua", "english": "grandfather",          "category": "family", "example": "erha nokhua — grandfather" },
+    { "edo": "iye nokhua",  "english": "grandmother",          "category": "family", "example": "iye nokhua — grandmother" },
+    { "edo": "ikpia",       "english": "men",                  "category": "noun",   "example": "ikpia — men (singular: òkpìá 'man')" },
+    { "edo": "omomwamwin",  "english": "teacher",              "category": "noun",   "example": "omomwamwin — teacher" },
+    { "edo": "odueki",      "english": "trader",               "category": "noun",   "example": "odueki — trader" },
+    { "edo": "owa ebe",     "english": "school",               "category": "place",  "example": "owa ebe — school (literally house + book)" },
+    { "edo": "ukeke",       "english": "pen",                  "category": "noun",   "example": "ukeke — pen" },
+    { "edo": "okpan",       "english": "plates",               "category": "noun",   "example": "okpan — plates" },
+    { "edo": "ekuye",       "english": "spoon",                "category": "noun",   "example": "ekuye — spoon" },
+    { "edo": "egogo",       "english": "clock",                "category": "noun",   "example": "egogo — clock" },
+    { "edo": "egbeken",     "english": "wall",                 "category": "noun",   "example": "egbeken — wall" },
+    { "edo": "igho",        "english": "money",                "category": "noun",   "example": "igho — money" },
+    { "edo": "ogbede",      "english": "plantain",             "category": "food",   "example": "ogbede — plantain" },
+    { "edo": "iso",         "english": "sky",                  "category": "nature", "example": "iso — sky" },
+    { "edo": "uki",         "english": "moon",                 "category": "nature", "example": "uki — moon" },
+    { "edo": "owen",        "english": "star",                 "category": "nature", "example": "owen — star" },
+    { "edo": "eghe",        "english": "time",                 "category": "noun",   "example": "eghe — time" },
+    { "edo": "ebo",         "english": "English",              "category": "noun",   "example": "ebo — English" },
+    { "edo": "inota",       "english": "question",             "category": "noun",   "example": "inota — question" },
+    { "edo": "vba tie",     "english": "what is this called?", "category": "phrase", "example": "Vba tie? — What is this called?" },
+    { "edo": "d'emwin",     "english": "what is this?",        "category": "phrase", "example": "D'emwin? — What is this?" },
+    { "edo": "uruese",      "english": "thank you",            "category": "phrase", "example": "uruese — thank you" },
+    { "edo": "kakabo",      "english": "very",                 "category": "adverb", "example": "kakabo — very" },
+    { "edo": "oba",         "english": "to shine",             "category": "verb",   "example": "Omo N'Oba N'Edo — a child that shines for Edo" },
+    { "edo": "omo n'oba n'edo", "english": "a child that shines for Edo", "category": "phrase", "example": "Omo N'Oba N'Edo — part of the traditional title of the Oba of Benin" }
+  ]
+}

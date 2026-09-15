@@ -277,6 +277,11 @@
             <p style="font-size:1.15rem;font-weight:700;color:var(--color-accent)" x-text="word.edo"></p>
             <p style="font-size:.9rem;margin:.2rem 0" x-text="word.english"></p>
             <span style="font-size:.75rem;background:var(--color-surface-alt,#f3f4f6);padding:.15rem .5rem;border-radius:999px;color:var(--color-muted)" x-text="word.category"></span>
+            <template x-if="word.audio">
+              <button type="button" class="btn-ghost" @click="playEdoAudio(word.audio)"
+                      :aria-label="'Listen to ' + word.edo"
+                      style="display:block;margin-top:.55rem;padding:.25rem .7rem;font-size:.8rem">🔊 Listen</button>
+            </template>
           </div>
         </template>
       </div>
@@ -328,6 +333,11 @@
             <p style="font-size:.95rem;margin:.3rem 0" x-text="w.english"></p>
             <p x-show="w.example" style="font-size:.8rem;color:var(--color-muted);font-style:italic;margin:.2rem 0" x-text="'e.g. ' + w.example"></p>
             <span style="font-size:.72rem;background:#ede9fe;padding:.15rem .45rem;border-radius:999px;color:#5b21b6" x-text="w.category"></span>
+            <template x-if="w.audio">
+              <button type="button" class="btn-ghost" @click="playEdoAudio(w.audio)"
+                      :aria-label="'Listen to ' + w.edo"
+                      style="display:block;margin-top:.55rem;padding:.25rem .7rem;font-size:.8rem">🔊 Listen</button>
+            </template>
           </div>
         </template>
       </div>
@@ -398,4 +408,17 @@
   </section>
 
 </div>
+
+<script>
+  // One shared player, so starting a pronunciation stops the one before it.
+  (function () {
+    var player = null;
+    window.playEdoAudio = function (url) {
+      if (typeof url !== 'string' || url.indexOf('/static/audio/academy/') !== 0) return;
+      if (player) player.pause();
+      player = new Audio(url);
+      player.play().catch(function () { /* autoplay blocked or file missing */ });
+    };
+  }());
+</script>
 {% endblock %}
