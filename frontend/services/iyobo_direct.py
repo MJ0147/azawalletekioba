@@ -32,7 +32,7 @@ def settings() -> SimpleNamespace:
     return SimpleNamespace(
         XAI_API_KEY=os.getenv("XAI_API_KEY", "").strip(),
         XAI_BASE_URL=os.getenv("XAI_BASE_URL", "https://api.x.ai/v1"),
-        XAI_MODEL=os.getenv("XAI_MODEL", "grok-4.6"),
+        XAI_MODEL=os.getenv("XAI_MODEL", "grok-4.5"),
         XAI_TIMEOUT_SECONDS=float(os.getenv("XAI_TIMEOUT_SECONDS", "60")),
         XAI_WEB_SEARCH=_env_bool("XAI_WEB_SEARCH", True),
         WEB_REQUIRE_KB_CONFIRMATION=_env_bool("WEB_REQUIRE_KB_CONFIRMATION", False),

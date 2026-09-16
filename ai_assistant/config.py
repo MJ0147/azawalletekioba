@@ -28,7 +28,10 @@ class Settings(BaseSettings):
     # and uses its web search tool to fill gaps.
     XAI_API_KEY: str = ""
     XAI_BASE_URL: str = "https://api.x.ai/v1"
-    XAI_MODEL: str = "grok-4.6"
+    # Must be a model this xAI team can actually reach. A name the account has no access to
+    # fails every chat with a 404, which surfaces only as "AI Service unreachable".
+    # Check with: curl https://api.x.ai/v1/models -H "Authorization: Bearer $XAI_API_KEY"
+    XAI_MODEL: str = "grok-4.5"
     XAI_WEB_SEARCH: bool = True
     XAI_TIMEOUT_SECONDS: float = 60.0
     # Everything found on the web is checked against the Knowledge Base before it is used
