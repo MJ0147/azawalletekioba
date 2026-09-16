@@ -244,4 +244,4 @@ def test_academy_page_runs_exams_full_page_and_offers_wallet_sign_in(client):
     assert "academyRunner()" in page and "position:fixed;inset:0" in page
     assert "temporarily offline" not in page
     assert "window.ekiobaTonReady" in page
-    assert "academyAdmin()" in client.get("/academy/admin").text
+    assert client.get("/academy/admin", follow_redirects=False).headers["location"] == "/admin#conversions"

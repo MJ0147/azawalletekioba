@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import List
 
-from pydantic import field_validator, model_validator
+from pydantic import ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -117,7 +117,28 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()  # pyright: ignore[reportCallIssue]
+    """Build the settings, naming any missing ones.
+
+    Settings are read at import time, so a missing required value crashes the process before it can
+    serve or log anything useful. On a platform that only reports "function invocation failed" that
+    is very hard to diagnose, so spell out exactly which variables to set.
+    """
+    try:
+        return Settings()  # pyright: ignore[reportCallIssue]
+    except ValidationError as exc:
+        missing = sorted({
+            str(error["loc"][0])
+            for error in exc.errors()
+            if error.get("type") == "missing" and error.get("loc")
+        })
+        if not missing:
+            raise
+        raise RuntimeError(
+            "Iyobo's assistant can't start: required setting(s) not set: "
+            + ", ".join(missing)
+            + ". Set them in the environment (on Vercel: the iyobo service's Environment Variables; "
+            "locally: ai_assistant/.env). SECRET_KEY must be a strong secret of at least 32 characters."
+        ) from exc
 
 
 settings = get_settings()

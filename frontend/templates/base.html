@@ -86,6 +86,12 @@
           </a>
         </li>
         <li>
+          <a href="/login" id="account-link" aria-label="Log in with Telegram">
+            <span class="nav-icon" aria-hidden="true">👤</span>
+            <span class="nav-label" id="account-label">Log in</span>
+          </a>
+        </li>
+        <li>
           <button id="wallet-connect-btn" onclick="openWalletConnect()" aria-label="Connect Wallet" title="Connect your wallet">
             💳 Connect Wallet
           </button>
@@ -98,6 +104,22 @@
       </ul>
     </nav>
   </header>
+
+  <script>
+    // Show who's logged in with Telegram; EKIOBA admins get a shortcut to the admin area.
+    (function () {
+      fetch('/api/telegram/me', { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (me) {
+          if (!me || !me.signed_in) return;
+          var link = document.getElementById('account-link');
+          var label = document.getElementById('account-label');
+          if (label) label.textContent = me.username ? '@' + me.username : 'Account';
+          if (link) link.href = me.is_admin ? '/admin' : '/login';
+        })
+        .catch(function () { /* offline: keep the Log in link */ });
+    }());
+  </script>
 
   <!-- ── Main Content ───────────────────────────────────────────────────── -->
   <main id="main-content">

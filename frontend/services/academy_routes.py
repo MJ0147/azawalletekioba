@@ -4,21 +4,18 @@ from __future__ import annotations
 
 import logging
 import os
-from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse, RedirectResponse
 
-from services import academy_auth, academy_institute, ton_proof
+from services import academy_auth, academy_institute, telegram_login, ton_proof
 from services.academy_institute import AcademyError
 from services.academy_store import AcademyStore
 
 logger = logging.getLogger("ekioba.academy")
 router = APIRouter()
-templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 
 _store: Optional[AcademyStore] = None
 _store_url = ""
@@ -73,7 +70,8 @@ def _wallet(request: Request) -> str:
 
 
 def _require_admin(request: Request) -> None:
-    if not academy_auth.is_admin(request.headers.get("authorization")):
+    """EKIOBA admins logged in with Telegram, or a `Bearer <ACADEMY_ADMIN_TOKEN>` header."""
+    if not (academy_auth.is_admin(request.headers.get("authorization")) or telegram_login.request_is_admin(request)):
         raise AcademyError(401, "Unauthorized")
 
 
@@ -200,6 +198,7 @@ async def academy_admin_reject(conversion_id: int, request: Request) -> JSONResp
     return await _respond(action)
 
 
-@router.get("/academy/admin", response_class=HTMLResponse)
-async def academy_admin_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(request, "academy_admin.html", {})
+@router.get("/academy/admin")
+async def academy_admin_page() -> RedirectResponse:
+    """Conversions are reviewed in the site admin area, alongside orders and Iyobo's knowledge queue."""
+    return RedirectResponse("/admin#conversions", status_code=307)

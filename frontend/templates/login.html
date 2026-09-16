@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Log in — EKIOBA{% endblock %}
+{% block description %}Log in to EKIOBA with your Telegram account.{% endblock %}
+
+{% block content %}
+<div class="shell">
+  <section class="panel" style="max-width:520px;margin:2rem auto;text-align:center;display:grid;gap:1rem;justify-items:center">
+    <h1 style="margin:0;font-size:1.6rem">Log in to EKIOBA</h1>
+
+    {% if error %}
+      <p role="alert" style="margin:0;color:#b91c1c">Login failed: {{ error }}.</p>
+    {% endif %}
+
+    {% if account.signed_in %}
+      <p style="margin:0">
+        You're logged in with Telegram as
+        <strong>{% if account.username %}@{{ account.username }}{% else %}Telegram user {{ account.id }}{% endif %}</strong>.
+      </p>
+      {% if account.is_admin %}
+        <a class="btn-primary" href="/admin">Open the admin area</a>
+      {% endif %}
+      <button type="button" class="btn-ghost" id="telegram-logout">Log out</button>
+      <script>
+        document.getElementById('telegram-logout').addEventListener('click', function () {
+          fetch('/api/telegram/logout', { method: 'POST' }).finally(function () { window.location.href = '/login'; });
+        });
+      </script>
+    {% elif configured %}
+      <p style="margin:0;color:var(--color-muted)">Log in with your Telegram account through our bot, @{{ bot_username }}.</p>
+      <script async src="https://telegram.org/js/telegram-widget.js?22"
+              data-telegram-login="{{ bot_username }}"
+              data-size="large"
+              data-radius="10"
+              data-auth-url="{{ auth_url }}"
+              data-request-access="write"></script>
+      <p style="margin:0;font-size:.85rem;color:var(--color-muted)">
+        Telegram shares your name, username and profile photo with EKIOBA, never your phone number.
+        If you allow it, @{{ bot_username }} can also send you messages.
+      </p>
+    {% else %}
+      <p style="margin:0;color:#92400e">Telegram login isn't set up on this site yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

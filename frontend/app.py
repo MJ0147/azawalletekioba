@@ -49,6 +49,8 @@ from services import kb_fallback
 from services import iyobo_direct
 from services import academy_routes
 from services import academy_translate as academy_translator
+from services import admin_routes
+from services import telegram_login
 from services.grok_client import GrokError
 
 logger = logging.getLogger("ekioba-frontend")
@@ -70,6 +72,8 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static"), check_dir=False), name="static")
 # Edo Language Academy institute: wallet sign-in, grade exams, points and IDIA conversions.
 app.include_router(academy_routes.router)
+# Log in with Telegram (@IdiacoinBot) and the admin area for the Telegram accounts listed as admins.
+app.include_router(admin_routes.router)
 
 # public/ (PWA manifest, token metadata) is served at root URLs by
 # `public_root_files` below, and directly by Vercel's CDN. It must not also be
@@ -126,6 +130,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     if _is_api_request(request):
         return JSONResponse({"error": "Invalid request data.", "details": exc.errors()}, status_code=422)
     return templates.TemplateResponse(
+        request,
         "error.html",
         {
             "request": request,
@@ -149,6 +154,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         message = "You are not allowed to access this page."
 
     return templates.TemplateResponse(
+        request,
         "error.html",
         {
             "request": request,
@@ -164,6 +170,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     if _is_api_request(request):
         return JSONResponse({"error": "Service temporarily unavailable."}, status_code=500)
     return templates.TemplateResponse(
+        request,
         "error.html",
         {
             "request": request,
@@ -669,7 +676,7 @@ async def home(request: Request) -> HTMLResponse:
         "iyobo_url": FRONTEND_IYOBO_URL,
         "ton_wallet": TON_MERCHANT_WALLET,
     }
-    return templates.TemplateResponse("index.html", context)
+    return templates.TemplateResponse(request, "index.html", context)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
@@ -715,6 +722,7 @@ async def products_partial(request: Request) -> HTMLResponse:
     products, using_fallback = await load_products()
     idia_ngn_rate = IDIA_NGN_RATE if IDIA_NGN_RATE > 0 else 30.0
     return templates.TemplateResponse(
+        request,
         "partials/products_grid.html",
         {
             "request": request,
@@ -1000,7 +1008,7 @@ async def list_orders(request: Request, limit: int = 20) -> JSONResponse:
     """
     from services import orders
 
-    if not orders.is_admin(request.headers.get("authorization")):
+    if not (orders.is_admin(request.headers.get("authorization")) or telegram_login.request_is_admin(request)):
         return JSONResponse(_ORDERS_UNAUTHORIZED, status_code=401)
 
     rows = await orders.recent(limit)
@@ -1014,7 +1022,7 @@ async def get_order(order_id: str, request: Request) -> JSONResponse:
     """A single order. Admin-only, for the same reason as `list_orders`."""
     from services import orders
 
-    if not orders.is_admin(request.headers.get("authorization")):
+    if not (orders.is_admin(request.headers.get("authorization")) or telegram_login.request_is_admin(request)):
         return JSONResponse(_ORDERS_UNAUTHORIZED, status_code=401)
 
     row = await orders.get(order_id)
@@ -1110,7 +1118,7 @@ async def generate_layout(request: Request) -> JSONResponse:
 
 @app.get("/chat", response_class=HTMLResponse)
 async def chat_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("chat.html", {"request": request})
+    return templates.TemplateResponse(request, "chat.html", {})
 
 
 def _chat_bubble(reply: str) -> HTMLResponse:
@@ -1226,8 +1234,7 @@ async def hotels_page(request: Request) -> HTMLResponse:
     if not listings:
         listings = PRESTIGIOUS_HOTELS
 
-    return templates.TemplateResponse("hotels.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "hotels.html", {
         "listings": listings,
         "service_offline": service_offline,
     })
@@ -1237,7 +1244,7 @@ async def hotels_page(request: Request) -> HTMLResponse:
 
 @app.get("/cargo", response_class=HTMLResponse)
 async def cargo_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("cargo.html", {"request": request})
+    return templates.TemplateResponse(request, "cargo.html", {})
 
 
 @app.post("/api/cargo/quote")
@@ -1388,8 +1395,9 @@ async def cargo_book(request: Request) -> JSONResponse:
 @app.get("/museum", response_class=HTMLResponse)
 async def museum_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
+        request,
         "museum.html",
-        {"request": request, "eras": museum_catalogue(), "portraits": MUSEUM_PORTRAITS},
+        {"eras": museum_catalogue(), "portraits": MUSEUM_PORTRAITS},
     )
 
 
@@ -1399,7 +1407,7 @@ async def museum_page(request: Request) -> HTMLResponse:
 async def academy_page(request: Request) -> HTMLResponse:
     # Grades, points, the translator and practice all run in this app (services/academy_*.py), so the
     # page doesn't depend on the separate language_academy service.
-    return templates.TemplateResponse("academy.html", {"request": request})
+    return templates.TemplateResponse(request, "academy.html", {})
 
 
 @app.post("/api/academy/translate")

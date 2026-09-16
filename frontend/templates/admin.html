@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Admin — EKIOBA{% endblock %}
+{% block description %}EKIOBA's admin area.{% endblock %}
+
+{% block content %}
+<div class="shell">
+{% if not account.is_admin %}
+  <section class="panel" style="max-width:560px;margin:2rem auto;text-align:center;display:grid;gap:.9rem;justify-items:center">
+    <h1 style="margin:0;font-size:1.6rem">EKIOBA admin</h1>
+    {% if account.signed_in %}
+      <p style="margin:0">
+        {% if account.username %}@{{ account.username }}{% else %}This Telegram account{% endif %} isn't an EKIOBA admin.
+      </p>
+      <p style="margin:0;font-size:.88rem;color:var(--color-muted)">Telegram id: {{ account.id }}</p>
+    {% else %}
+      <p style="margin:0">Log in with an admin Telegram account to continue.</p>
+      <a class="btn-primary" href="/login?next=/admin">Log in with Telegram</a>
+    {% endif %}
+  </section>
+{% else %}
+  <section class="panel" style="margin-top:1.5rem" x-data="adminHub()" x-init="init()">
+    <div class="panel-header" style="flex-wrap:wrap;gap:.75rem">
+      <div>
+        <h2>EKIOBA admin</h2>
+        <p>
+          Logged in as {% if account.username %}@{{ account.username }}{% else %}Telegram user{% endif %}
+          (Telegram id {{ account.id }}). Adding this id to TELEGRAM_ADMIN_IDS keeps your access even if your username changes.
+        </p>
+      </div>
+    </div>
+
+    <div role="tablist" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
+      <button type="button" role="tab" :aria-selected="tab === 'conversions'" :class="tab === 'conversions' ? 'btn-primary' : 'btn-ghost'" @click="show('conversions')">IDIA conversions</button>
+      <button type="button" role="tab" :aria-selected="tab === 'orders'" :class="tab === 'orders' ? 'btn-primary' : 'btn-ghost'" @click="show('orders')">Orders</button>
+      <button type="button" role="tab" :aria-selected="tab === 'knowledge'" :class="tab === 'knowledge' ? 'btn-primary' : 'btn-ghost'" @click="show('knowledge')">Iyobo knowledge</button>
+    </div>
+
+    <template x-if="error"><p role="alert" style="color:#b91c1c" x-text="error"></p></template>
+    <template x-if="loading"><p style="color:var(--color-muted)">Loading…</p></template>
+
+    <!-- IDIA conversions from the Language Academy -->
+    <div x-show="tab === 'conversions'">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem">
+        <p style="margin:0;flex:1;min-width:240px;color:var(--color-muted);font-size:.9rem">Send the IDIA from your wallet to the learner's address, then mark the request sent with the transfer's hash.</p>
+        <select x-model="conversionStatus" @change="load()" aria-label="Conversion status"
+                style="padding:.45rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;background:var(--color-surface)">
+          <option value="pending">Waiting for review</option>
+          <option value="paid">Sent</option>
+          <option value="rejected">Declined</option>
+          <option value="all">All</option>
+        </select>
+        <button type="button" class="btn-ghost" @click="load()">↻ Refresh</button>
+      </div>
+      <template x-if="!loading && !conversions.length"><p style="color:var(--color-muted)">No requests here.</p></template>
+      <template x-if="conversions.length">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:.9rem">
+            <thead>
+              <tr style="text-align:left;color:var(--color-muted)">
+                <th style="padding:.5rem">#</th><th style="padding:.5rem">Wallet</th><th style="padding:.5rem">Points</th>
+                <th style="padding:.5rem">IDIA</th><th style="padding:.5rem">Requested</th><th style="padding:.5rem">Status</th><th style="padding:.5rem"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="item in conversions" :key="item.id">
+                <tr style="border-top:1px solid var(--color-border);vertical-align:top">
+                  <td style="padding:.5rem" x-text="item.id"></td>
+                  <td style="padding:.5rem;font-family:monospace;word-break:break-all">
+                    <span x-text="item.wallet_display"></span>
+                    <button type="button" class="btn-ghost" style="margin-left:.35rem;padding:.1rem .5rem;font-size:.75rem" @click="copy(item.wallet_display)">Copy</button>
+                  </td>
+                  <td style="padding:.5rem" x-text="item.points"></td>
+                  <td style="padding:.5rem;font-weight:700" x-text="item.idia_amount"></td>
+                  <td style="padding:.5rem" x-text="date(item.created_at)"></td>
+                  <td style="padding:.5rem">
+                    <span x-text="item.status"></span>
+                    <template x-if="item.tx_hash">
+                      <a :href="'https://tonviewer.com/transaction/' + encodeURIComponent(item.tx_hash)" target="_blank" rel="noopener" style="display:block;font-size:.8rem">View transfer</a>
+                    </template>
+                    <template x-if="item.reviewer_note"><span style="display:block;font-size:.8rem;color:var(--color-muted)" x-text="item.reviewer_note"></span></template>
+                  </td>
+                  <td style="padding:.5rem;white-space:nowrap">
+                    <template x-if="item.status === 'pending'">
+                      <div style="display:flex;gap:.35rem">
+                        <button type="button" class="btn-primary" style="padding:.3rem .7rem;font-size:.82rem" @click="markSent(item)">Mark sent</button>
+                        <button type="button" class="btn-ghost" style="padding:.3rem .7rem;font-size:.82rem" @click="declineConversion(item)">Decline</button>
+                      </div>
+                    </template>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </template>
+    </div>
+
+    <!-- Store orders paid in IDIA -->
+    <div x-show="tab === 'orders'">
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-bottom:.75rem">
+        <button type="button" class="btn-ghost" @click="load()">↻ Refresh</button>
+      </div>
+      <template x-if="!loading && !ordersEnabled"><p style="color:#92400e">Order recording isn't set up (it needs the Supabase service key).</p></template>
+      <template x-if="!loading && ordersEnabled && !orders.length"><p style="color:var(--color-muted)">No orders yet.</p></template>
+      <template x-if="orders.length">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:.9rem">
+            <thead>
+              <tr style="text-align:left;color:var(--color-muted)">
+                <th style="padding:.5rem">Order</th><th style="padding:.5rem">Item</th><th style="padding:.5rem">₦</th>
+                <th style="padding:.5rem">IDIA</th><th style="padding:.5rem">Status</th><th style="padding:.5rem">Buyer wallet</th><th style="padding:.5rem">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="order in orders" :key="order.order_id || order.id">
+                <tr style="border-top:1px solid var(--color-border);vertical-align:top">
+                  <td style="padding:.5rem;font-family:monospace" x-text="order.order_id"></td>
+                  <td style="padding:.5rem" x-text="order.product_name"></td>
+                  <td style="padding:.5rem" x-text="order.amount_ngn"></td>
+                  <td style="padding:.5rem" x-text="order.amount_idia"></td>
+                  <td style="padding:.5rem">
+                    <span x-text="order.status"></span>
+                    <template x-if="order.tx_hash">
+                      <a :href="'https://tonviewer.com/transaction/' + encodeURIComponent(order.tx_hash)" target="_blank" rel="noopener" style="display:block;font-size:.8rem">View transfer</a>
+                    </template>
+                  </td>
+                  <td style="padding:.5rem;font-family:monospace;word-break:break-all" x-text="order.sender_address || ''"></td>
+                  <td style="padding:.5rem" x-text="date(order.created_at)"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </template>
+    </div>
+
+    <!-- What people taught Iyobo, waiting for approval -->
+    <div x-show="tab === 'knowledge'">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem">
+        <p style="margin:0;flex:1;min-width:240px;color:var(--color-muted);font-size:.9rem">Approved suggestions become part of what Iyobo knows straight away.</p>
+        <select x-model="knowledgeStatus" @change="load()" aria-label="Suggestion status"
+                style="padding:.45rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;background:var(--color-surface)">
+          <option value="pending">Waiting for review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button type="button" class="btn-ghost" @click="load()">↻ Refresh</button>
+      </div>
+      <template x-if="!loading && !suggestions.length"><p style="color:var(--color-muted)">No suggestions here.</p></template>
+      <div style="display:grid;gap:.75rem">
+        <template x-for="item in suggestions" :key="item.id">
+          <article style="border:1px solid var(--color-border);border-radius:.8rem;padding:.9rem 1rem;background:var(--color-surface);display:grid;gap:.35rem">
+            <p style="margin:0;font-weight:700" x-show="item.edo || item.english" x-text="(item.edo || '…') + ' — ' + (item.english || '…') + (item.category ? ' (' + item.category + ')' : '')"></p>
+            <p style="margin:0" x-text="item.note"></p>
+            <p style="margin:0;font-style:italic;color:var(--color-muted)" x-show="item.example" x-text="'e.g. ' + item.example"></p>
+            <p style="margin:0;font-size:.8rem;color:var(--color-muted)" x-text="'#' + item.id + ' · from ' + (item.source_channel || 'web') + ' · ' + date(item.created_at) + (item.reviewer_note ? ' · ' + item.reviewer_note : '')"></p>
+            <template x-if="item.status === 'pending'">
+              <div style="display:flex;gap:.4rem;margin-top:.25rem">
+                <button type="button" class="btn-primary" style="padding:.3rem .8rem;font-size:.85rem" @click="reviewSuggestion(item, 'approve')">Approve</button>
+                <button type="button" class="btn-ghost" style="padding:.3rem .8rem;font-size:.85rem" @click="reviewSuggestion(item, 'reject')">Reject</button>
+              </div>
+            </template>
+          </article>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    function adminHub() {
+      return {
+        tab: 'conversions',
+        loading: false,
+        error: '',
+        conversionStatus: 'pending',
+        conversions: [],
+        orders: [],
+        ordersEnabled: true,
+        knowledgeStatus: 'pending',
+        suggestions: [],
+
+        init() { this.show(window.location.hash.replace('#', '') || 'conversions'); },
+
+        show(tab) {
+          this.tab = ['conversions', 'orders', 'knowledge'].indexOf(tab) === -1 ? 'conversions' : tab;
+          try { history.replaceState(null, '', '#' + this.tab); } catch (e) { /* sandboxed */ }
+          this.load();
+        },
+
+        async call(url, options) {
+          const r = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, options || {}));
+          let d = {};
+          try { d = await r.json(); } catch (e) { d = {}; }
+          if (r.status === 401) {
+            window.location.href = '/login?next=/admin';
+            throw new Error('Your admin login has ended. Log in again.');
+          }
+          if (!r.ok) throw new Error(d.error || d.detail || 'The request failed.');
+          return d;
+        },
+
+        async load() {
+          this.error = ''; this.loading = true;
+          try {
+            if (this.tab === 'conversions') {
+              const d = await this.call('/api/academy/admin/conversions?status=' + encodeURIComponent(this.conversionStatus));
+              this.conversions = d.conversions || [];
+            } else if (this.tab === 'orders') {
+              const d = await this.call('/api/orders?limit=50');
+              this.orders = d.orders || [];
+              this.ordersEnabled = d.enabled !== false;
+            } else {
+              const d = await this.call('/api/admin/knowledge-suggestions?status=' + encodeURIComponent(this.knowledgeStatus));
+              this.suggestions = d.suggestions || [];
+            }
+          } catch (e) {
+            this.error = e.message;
+          }
+          this.loading = false;
+        },
+
+        async markSent(item) {
+          const tx = window.prompt('After sending ' + item.idia_amount + ' IDIA to ' + item.wallet_display + ', paste the transfer\'s transaction hash:');
+          if (!tx || !tx.trim()) return;
+          try {
+            await this.call('/api/academy/admin/conversions/' + item.id + '/paid', { method: 'POST', body: JSON.stringify({ tx_hash: tx.trim() }) });
+            await this.load();
+          } catch (e) { this.error = e.message; }
+        },
+
+        async declineConversion(item) {
+          const note = window.prompt('Why is this request declined? The learner sees this, and gets their ' + item.points + ' points back.');
+          if (note === null) return;
+          try {
+            await this.call('/api/academy/admin/conversions/' + item.id + '/reject', { method: 'POST', body: JSON.stringify({ note: note }) });
+            await this.load();
+          } catch (e) { this.error = e.message; }
+        },
+
+        async reviewSuggestion(item, action) {
+          const note = window.prompt(action === 'approve' ? 'Approve this suggestion. Add a note (optional):' : 'Why is it rejected? (optional)', '');
+          if (note === null) return;
+          try {
+            await this.call('/api/admin/knowledge-suggestions/' + item.id + '/' + action, { method: 'POST', body: JSON.stringify({ note: note }) });
+            await this.load();
+          } catch (e) { this.error = e.message; }
+        },
+
+        async copy(text) {
+          try { await navigator.clipboard.writeText(text); } catch (e) { window.prompt('Copy:', text); }
+        },
+
+        date(value) { return value ? new Date(value).toLocaleString() : ''; },
+      };
+    }
+  </script>
+{% endif %}
+</div>
+{% endblock %}
