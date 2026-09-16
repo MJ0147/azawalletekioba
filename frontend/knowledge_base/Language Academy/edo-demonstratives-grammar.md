@@ -16,9 +16,9 @@ EKIOBA Edo Language Academy.
 - **Tone marks.** The slide marks only the underdot vowels (ọ, ẹ), ṅ in *evbaṅ / evbaṅna*,
   and ỹ in *ỹọ*. Tone is not written anywhere on it. Add tone before teaching pronunciation.
 - **A second supplied file.** `Downloads/Edo words(there,here,this,these` was given alongside
-  the photo. It is an **MP4 video, not the slide**, and has not been transcribed — no tool
-  here can read it. If it carries more of this lesson, that material is **not** in the
-  Knowledge Base yet.
+  the photo. It is an **audio recording, 5m09s long** — not the slide. No speech-to-text was
+  available, so it has not been transcribed. If it teaches more of this lesson, that material
+  is **not** in the Knowledge Base yet.
 
 ---
 
