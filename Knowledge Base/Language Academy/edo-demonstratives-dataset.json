@@ -1,0 +1,229 @@
+{
+  "source": {
+    "title": "Edo demonstratives and place words: this, that, these, those, here, there",
+    "note": "Transcribed from a lesson slide photographed by the project owner. The slide has two tables (singular/plural demonstratives, and the two place words) and four worked example sentences.",
+    "language": "Edo (Bini), Niger-Congo; main language of the ancient Kingdom of Benin",
+    "supplied_file": "A file was also supplied at Downloads/'Edo words(there,here,this,these'. It is an MP4 video, not the slide, and has not been transcribed. If it contains more of this lesson, its content is NOT represented here.",
+    "transcription_caveats": [
+      "No tone marks were supplied. The slide marks only the underdot vowels (ọ, ẹ), ṅ in evbaṅ/evbaṅna, and ỹ in ỹọ. Add tone before teaching pronunciation.",
+      "The slide writes elisions with an apostrophe: vb' ọna for vbe ọna, ọr' for ọre, n' for ne, ỹ' for ỹọ. Entries below keep the slide's spelling and give the full form only where the slide itself supplies it.",
+      "vbe is glossed 'what' by position in example 1 only; edo-questions-grammar.md records de as 'what/which'. Whether these are the same morpheme is not settled here, so vbe is not added as a headword.",
+      "ọr' is read as ọre 'is / it is' from the slide's own gloss 'That is the thing'. The full form is not printed on the slide.",
+      "The post-nominal forms na and ni are an observation drawn from examples 3 and 4 (see post_nominal_note), not something the slide states. Confirm with a speaker before teaching it as a rule."
+    ],
+    "already_in_academy_vocabulary": [
+      {
+        "supplied": "okhuo",
+        "existing": "òkhùò",
+        "file": "edo-adjectives-dataset.json",
+        "note": "'woman', in example 4"
+      },
+      {
+        "supplied": "nodẹ",
+        "existing": "nódẹ̀",
+        "file": "edo-adjectives-dataset.json",
+        "note": "'yesterday', in example 4"
+      },
+      {
+        "supplied": "dẹh",
+        "existing": "dẹh",
+        "file": "edo-alphabet-dataset.json",
+        "note": "'to buy', in example 2"
+      },
+      {
+        "supplied": "ra",
+        "existing": "ra",
+        "file": "edo-questions-dataset.json",
+        "note": "'or / question marker', closes example 2"
+      }
+    ]
+  },
+  "demonstratives": {
+    "singular": [
+      {
+        "edo": "ọna",
+        "english": "this"
+      },
+      {
+        "edo": "ọni",
+        "english": "that"
+      }
+    ],
+    "plural": [
+      {
+        "edo": "ena",
+        "english": "these"
+      },
+      {
+        "edo": "eni",
+        "english": "those"
+      }
+    ],
+    "post_nominal_note": "Standing alone, the word is ọna/ọni/ena/eni. Directly after a noun the slide's own examples use the short forms na and ni: ẹkpo na 'this bag' (example 3), okhuo ni 'that woman' (example 4). The same -na/-ni split runs through the place words below.",
+    "post_nominal": [
+      {
+        "edo": "na",
+        "english": "this (directly after a noun)",
+        "from_example": 3
+      },
+      {
+        "edo": "ni",
+        "english": "that (directly after a noun)",
+        "from_example": 4
+      }
+    ]
+  },
+  "locatives": [
+    {
+      "edo": "evbaṅ",
+      "english": "here",
+      "form": "short"
+    },
+    {
+      "edo": "evbaṅna",
+      "english": "here",
+      "form": "long",
+      "note": "evbaṅ + na, matching proximal na 'this'"
+    },
+    {
+      "edo": "evba",
+      "english": "there",
+      "form": "short"
+    },
+    {
+      "edo": "evbani",
+      "english": "there",
+      "form": "long",
+      "note": "evba + ni, matching distal ni 'that'"
+    }
+  ],
+  "examples": [
+    {
+      "number": 1,
+      "edo": "Vb' ọna khin?",
+      "literal": "What this be?",
+      "translation": "What is this?",
+      "shows": "ọna standing alone as the subject"
+    },
+    {
+      "number": 2,
+      "edo": "Ọni ọr' Emwin n' u dẹh ra?",
+      "literal": "That is the thing that u bought or?",
+      "translation": "Is that what you bought?",
+      "shows": "ọni standing alone; ra closes the question"
+    },
+    {
+      "number": 3,
+      "edo": "Lahọ, mu Ẹkpo na ỹ' Evbani.",
+      "literal": "Please carry this bag put there",
+      "translation": "Please place this bag there.",
+      "shows": "post-nominal na in ẹkpo na 'this bag'; evbani 'there'; the serial verb mu ... ỹọ 'carry ... put' = 'place'",
+      "verb": "mu ỹọ"
+    },
+    {
+      "number": 4,
+      "edo": "Okhuo ni tiere Evbaṅna nodẹ.",
+      "literal": "Woman that called here yesterday",
+      "translation": "That woman called here yesterday.",
+      "shows": "post-nominal ni in okhuo ni 'that woman'; evbaṅna 'here'"
+    }
+  ],
+  "academy_vocabulary": [
+    {
+      "edo": "ọna",
+      "english": "this",
+      "category": "demonstrative",
+      "example": "Vb' ọna khin? — What is this?"
+    },
+    {
+      "edo": "ọni",
+      "english": "that",
+      "category": "demonstrative",
+      "example": "Ọni ọr' Emwin n' u dẹh ra? — Is that what you bought?"
+    },
+    {
+      "edo": "ena",
+      "english": "these",
+      "category": "demonstrative",
+      "example": "ena — these (plural of ọna)"
+    },
+    {
+      "edo": "eni",
+      "english": "those",
+      "category": "demonstrative",
+      "example": "eni — those (plural of ọni)"
+    },
+    {
+      "edo": "na",
+      "english": "this (after a noun)",
+      "category": "demonstrative",
+      "example": "ẹkpo na — this bag"
+    },
+    {
+      "edo": "ni",
+      "english": "that (after a noun)",
+      "category": "demonstrative",
+      "example": "okhuo ni — that woman"
+    },
+    {
+      "edo": "evbaṅna",
+      "english": "here",
+      "category": "place",
+      "example": "Okhuo ni tiere Evbaṅna nodẹ. — That woman called here yesterday."
+    },
+    {
+      "edo": "evbaṅ",
+      "english": "here (short form)",
+      "category": "place",
+      "example": "evbaṅ / evbaṅna — here"
+    },
+    {
+      "edo": "evbani",
+      "english": "there",
+      "category": "place",
+      "example": "Lahọ, mu Ẹkpo na ỹ' Evbani. — Please place this bag there."
+    },
+    {
+      "edo": "evba",
+      "english": "there (short form)",
+      "category": "place",
+      "example": "evba / evbani — there"
+    },
+    {
+      "edo": "mu ỹọ",
+      "english": "to place, to put",
+      "category": "verb",
+      "example": "mu Ẹkpo na ỹ' Evbani — place this bag there"
+    },
+    {
+      "edo": "lahọ",
+      "english": "please",
+      "category": "phrase",
+      "example": "Lahọ, mu Ẹkpo na ỹ' Evbani. — Please place this bag there."
+    },
+    {
+      "edo": "ẹkpo",
+      "english": "bag",
+      "category": "noun",
+      "example": "ẹkpo na — this bag"
+    },
+    {
+      "edo": "emwin",
+      "english": "thing",
+      "category": "noun",
+      "example": "Emwin n' u dẹh — the thing that you bought"
+    },
+    {
+      "edo": "khin",
+      "english": "to be",
+      "category": "verb",
+      "example": "Vb' ọna khin? — What is this?"
+    },
+    {
+      "edo": "tiere",
+      "english": "called",
+      "category": "verb",
+      "example": "Okhuo ni tiere Evbaṅna nodẹ. — That woman called here yesterday."
+    }
+  ]
+}
