@@ -1,0 +1,24 @@
+# Vercel builds this repository from its root and deploys only the website (frontend/app.py).
+# The other services (ai_assistant, store, hotels, cargo, language_academy) are deployed separately.
+# The root requirements.txt is for Docker and CI; Vercel installs the dependencies listed here.
+
+[project]
+name = "ekioba-website"
+version = "1.0.0"
+requires-python = ">=3.12"
+# Keep in sync with frontend/requirements.txt and frontend/pyproject.toml.
+dependencies = [
+    "fastapi==0.116.1",
+    "uvicorn[standard]==0.35.0",
+    "jinja2==3.1.6",
+    "httpx==0.28.1",
+    "aiofiles==24.1.0",
+    "python-multipart==0.0.20",
+    "yfinance==0.2.54",
+    "tonsdk==1.0.15",
+    "supabase==2.31.0",
+    "python-dotenv==1.0.1",
+]
+
+[tool.vercel]
+entrypoint = "frontend.app:app"
