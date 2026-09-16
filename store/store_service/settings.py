@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key())
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db.sqlite3")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-# In production set ALLOWED_HOSTS to your actual domain(s), e.g. "ekioba.com,*.run.app"
+# In production set ALLOWED_HOSTS to your actual domain(s), e.g. "beninkingdom.online,*.run.app"
 _raw_hosts = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1" if not DEBUG else "*")
 ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
 
@@ -133,7 +133,7 @@ CSRF_COOKIE_SAMESITE = "None"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
-CSRF_TRUSTED_ORIGINS = ["https://*.run.app", "https://ekioba.com"]
+CSRF_TRUSTED_ORIGINS = ["https://*.run.app", "https://beninkingdom.online"]
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

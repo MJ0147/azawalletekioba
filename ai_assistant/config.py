@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # CORS — comma-separated list of allowed origins (e.g. "https://ekioba.com,http://localhost:3000")
+    # CORS — comma-separated list of allowed origins (e.g. "https://beninkingdom.online,http://localhost:3000")
     CORS_ORIGINS: str = "http://localhost:3000"
 
     # AI — xAI Grok is the only AI provider. It answers from the Knowledge Base first

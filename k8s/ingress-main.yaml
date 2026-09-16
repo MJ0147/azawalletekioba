@@ -37,11 +37,11 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - ekioba.com
-        - www.ekioba.com
+        - beninkingdom.online
+        - www.beninkingdom.online
       secretName: ekioba-tls
   rules:
-    - host: ekioba.com
+    - host: beninkingdom.online
       http:
         paths:
           # Frontend — catch-all, must be last
@@ -70,7 +70,7 @@ spec:
                 port:
                   number: 8005
 
-    - host: www.ekioba.com
+    - host: www.beninkingdom.online
       http:
         paths:
           - path: /

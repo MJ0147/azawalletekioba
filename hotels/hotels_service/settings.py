@@ -11,7 +11,7 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 # non-postgres values fall back to SQLite for tests and local dev.
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
-# In production set ALLOWED_HOSTS to your actual domain(s), e.g. "ekioba.com,www.ekioba.com"
+# In production set ALLOWED_HOSTS to your actual domain(s), e.g. "beninkingdom.online,www.beninkingdom.online"
 _raw_hosts = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1" if not DEBUG else "*")
 ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(",") if h.strip()]
 
