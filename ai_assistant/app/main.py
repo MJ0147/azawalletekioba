@@ -148,6 +148,31 @@ def readiness_check():
     return {"status": "ready"}
 
 
+def database_problem(error: Exception) -> str:
+    """Why the database could not be reached, in words that suggest the fix.
+
+    "Database connection failed" alone gives nobody anywhere to start. The driver's own message
+    can name the host and user, so it goes to the log and only these categories are published.
+    """
+    # The message only: an exception named e.g. Unreachable would otherwise decide the category.
+    described = str(error).lower()
+    if "authentication" in described or "password" in described:
+        return "the credentials were rejected"
+    if "database" in described and "does not exist" in described:
+        return "no database of that name"
+    if any(s in described for s in ("could not translate host name", "name or service not known",
+                                    "nodename nor servname", "name resolution")):
+        return "the host name could not be resolved"
+    if any(s in described for s in ("network is unreachable", "no route to host", "unreachable")):
+        return ("the host is unreachable from here. Supabase's direct host is IPv6-only, so use the "
+                "Session pooler connection string instead")
+    if "timeout" in described or "timed out" in described:
+        return "the connection timed out"
+    if "ssl" in described or "tls" in described:
+        return "the TLS handshake failed"
+    return error.__class__.__name__
+
+
 @app.get("/health", tags=["Health"])
 def health_check(db: Session = Depends(get_db)):
     """Health check for database connectivity and service status.
@@ -156,14 +181,13 @@ def health_check(db: Session = Depends(get_db)):
     domain, so a reply has to say which one it came from.
     """
     try:
-        # Execute a simple query to verify the MySQL connection
         db.execute(text("SELECT 1"))
         return {"status": "ok", "service": "iyobo", "database": "connected"}
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database connection failed"
+            detail=f"Database connection failed: {database_problem(e)}",
         )
 
 
