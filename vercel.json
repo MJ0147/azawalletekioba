@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "website": {
+      "root": "frontend/",
+      "framework": "fastapi",
+      "entrypoint": "app:app"
+    },
+    "iyobo": {
+      "root": "ai_assistant/",
+      "framework": "fastapi",
+      "entrypoint": "vercel_app:app"
+    }
+  },
+  "rewrites": [
+    { "source": "/iyobo", "destination": { "service": "iyobo" } },
+    { "source": "/iyobo/(.*)", "destination": { "service": "iyobo" } },
+    { "source": "/(.*)", "destination": { "service": "website" } }
+  ]
+}

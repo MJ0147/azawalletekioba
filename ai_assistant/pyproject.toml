@@ -1,0 +1,23 @@
+# Vercel runs this folder as the "iyobo" service (see ../vercel.json) and installs these runtime
+# dependencies. requirements.txt stays for Docker and CI, and also has the test and lint tools.
+
+[project]
+name = "iyobo-assistant"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "httpx",
+    "pydantic-settings",
+    "sqlalchemy",
+    "psycopg2-binary",
+    "python-jose[cryptography]",
+    "google-adk[db]>=2.9,<3",
+    "litellm",
+    "asyncpg",
+    "aiosqlite",
+]
+
+[tool.vercel]
+entrypoint = "vercel_app:app"

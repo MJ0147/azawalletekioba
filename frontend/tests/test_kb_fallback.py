@@ -133,3 +133,17 @@ def test_chat_proxy_falls_back_to_knowledge_base_when_ai_is_unreachable(frontend
     assert '<div class="chat-bubble bot">' in response.text
     # A visitor id cookie lets the assistant remember this person next time.
     assert len(response.cookies.get("iyobo_visitor", "")) == 32
+
+
+def test_on_vercel_the_chat_uses_the_iyobo_service_on_the_same_domain(frontend, monkeypatch):
+    site = "https://www.beninkingdom.online"
+    monkeypatch.setattr(frontend, "NEXT_PUBLIC_IYOBO_API_URL", "")
+    monkeypatch.setattr(frontend, "AI_ASSISTANT_URL", "")
+    monkeypatch.setenv("VERCEL", "1")
+    assert frontend._resolve_chat_url(site) == f"{site}/iyobo/chat"
+
+    monkeypatch.delenv("VERCEL")
+    assert frontend._resolve_chat_url(site) == "http://localhost:8005/chat"  # local development
+
+    monkeypatch.setattr(frontend, "AI_ASSISTANT_URL", "https://assistant.example.com")
+    assert frontend._resolve_chat_url(site) == "https://assistant.example.com/chat"  # an explicit setting wins

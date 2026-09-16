@@ -28,6 +28,9 @@ logger = logging.getLogger("iyobo-service.knowledge_base")
 REPO_KNOWLEDGE_BASE = Path(__file__).resolve().parents[2] / "Knowledge Base"
 # Container: docker-compose mounts the folder here.
 CONTAINER_KNOWLEDGE_BASE = Path("/app/knowledge_base")
+# Vercel: the "iyobo" service only ships the ai_assistant folder, which carries a copy made by
+# scripts/sync_knowledge_base.py.
+BUNDLED_KNOWLEDGE_BASE = Path(__file__).resolve().parents[1] / "knowledge_base"
 
 INDEXED_SUFFIXES = (".md", ".json")
 MAX_CHUNK_CHARS = 1800
@@ -98,7 +101,7 @@ def resolve_root(configured: str = "") -> Optional[Path]:
     """Return the configured Knowledge Base folder, else the first default location that exists."""
     if configured.strip():
         return Path(configured.strip())
-    for candidate in (REPO_KNOWLEDGE_BASE, CONTAINER_KNOWLEDGE_BASE):
+    for candidate in (REPO_KNOWLEDGE_BASE, CONTAINER_KNOWLEDGE_BASE, BUNDLED_KNOWLEDGE_BASE):
         if candidate.is_dir():
             return candidate
     return None

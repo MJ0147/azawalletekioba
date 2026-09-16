@@ -1,0 +1,66 @@
+{
+  "source": {
+    "title": "Edo animal vocabulary",
+    "note": "Word list supplied by the project owner. Spelling recorded as supplied; casing normalised to lowercase in academy_vocabulary.",
+    "language": "Edo (Bini), Niger-Congo; main language of the ancient Kingdom of Benin",
+    "transcription_caveats": [
+      "No tone marks were supplied; add them before teaching pronunciation.",
+      "'Snake: Ẹyẹn / Ẹbi (Cobra)' is read as Ẹyẹn = snake and Ẹbi = cobra.",
+      "Ẹkiyhẹ (frog) uses 'yh', which is not a standard Edo digraph; verify with a native speaker."
+    ]
+  },
+
+  "groups": {
+    "domestic_livestock": [
+      { "edo": "Ekita",    "english": "dog" },
+      { "edo": "Ologbo",   "english": "cat" },
+      { "edo": "Ẹwẹ",      "english": "goat" },
+      { "edo": "Ọkhọkhọ",  "english": "fowl / chicken" }
+    ],
+    "wild_animals": [
+      { "edo": "Oduma",    "english": "lion" },
+      { "edo": "Ẹkpẹn",    "english": "leopard" },
+      { "edo": "Atalakpa", "english": "tiger" },
+      { "edo": "Ini",      "english": "elephant" },
+      { "edo": "eghile",   "english": "snail" },
+      { "edo": "egui",     "english": "tortoise" },
+      { "edo": "emẹ",      "english": "monkey" },
+      { "edo": "Evuato",   "english": "grasscutter" },
+      { "edo": "Ọtan",     "english": "squirrel" },
+      { "edo": "Ofẹn",     "english": "rat" }
+    ],
+    "birds_reptiles": [
+      { "edo": "Ahianmwẹ", "english": "bird" },
+      { "edo": "Ugu",      "english": "vulture" },
+      { "edo": "Ẹyẹn",     "english": "snake" },
+      { "edo": "Ẹbi",      "english": "cobra" },
+      { "edo": "Ikpin",    "english": "python" },
+      { "edo": "Ẹkiyhẹ",   "english": "frog" },
+      { "edo": "Agbaka",   "english": "crocodile" }
+    ]
+  },
+
+  "academy_vocabulary": [
+    { "edo": "ekita",    "english": "dog",            "category": "animal", "example": "ekita — dog (domestic)" },
+    { "edo": "ologbo",   "english": "cat",            "category": "animal", "example": "ologbo — cat (domestic)" },
+    { "edo": "ẹwẹ",      "english": "goat",           "category": "animal", "example": "ẹwẹ — goat (livestock)" },
+    { "edo": "ọkhọkhọ",  "english": "fowl / chicken", "category": "animal", "example": "ọkhọkhọ — fowl / chicken (livestock)" },
+    { "edo": "oduma",    "english": "lion",           "category": "animal", "example": "oduma — lion (wild)" },
+    { "edo": "ẹkpẹn",    "english": "leopard",        "category": "animal", "example": "ẹkpẹn — leopard (wild)" },
+    { "edo": "atalakpa", "english": "tiger",          "category": "animal", "example": "atalakpa — tiger (wild)" },
+    { "edo": "ini",      "english": "elephant",       "category": "animal", "example": "ini — elephant (wild)" },
+    { "edo": "eghile",   "english": "snail",          "category": "animal", "example": "eghile — snail" },
+    { "edo": "egui",     "english": "tortoise",       "category": "animal", "example": "egui — tortoise" },
+    { "edo": "emẹ",      "english": "monkey",         "category": "animal", "example": "emẹ — monkey (wild)" },
+    { "edo": "evuato",   "english": "grasscutter",    "category": "animal", "example": "evuato — grasscutter (wild)" },
+    { "edo": "ọtan",     "english": "squirrel",       "category": "animal", "example": "ọtan — squirrel (wild)" },
+    { "edo": "ofẹn",     "english": "rat",            "category": "animal", "example": "ofẹn — rat (wild)" },
+    { "edo": "ahianmwẹ", "english": "bird",           "category": "animal", "example": "ahianmwẹ — bird" },
+    { "edo": "ugu",      "english": "vulture",        "category": "animal", "example": "ugu — vulture (bird)" },
+    { "edo": "ẹyẹn",     "english": "snake",          "category": "animal", "example": "ẹyẹn — snake (reptile)" },
+    { "edo": "ẹbi",      "english": "cobra",          "category": "animal", "example": "ẹbi — cobra (reptile)" },
+    { "edo": "ikpin",    "english": "python",         "category": "animal", "example": "ikpin — python (reptile)" },
+    { "edo": "ẹkiyhẹ",   "english": "frog",           "category": "animal", "example": "ẹkiyhẹ — frog" },
+    { "edo": "agbaka",   "english": "crocodile",      "category": "animal", "example": "agbaka — crocodile (reptile)" }
+  ]
+}

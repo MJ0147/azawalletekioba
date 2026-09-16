@@ -73,7 +73,11 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static"), check_dir=F
 
 STORE_BACKEND_URL = os.getenv("STORE_BACKEND_URL", "http://localhost:8001/api/products/")
 STORE_PAYMENTS_URL = os.getenv("STORE_PAYMENTS_URL", "http://localhost:8001/payments/process/")
-AI_ASSISTANT_URL = os.getenv("AI_ASSISTANT_URL", "http://localhost:8005")
+# The Iyobo assistant service. Leave AI_ASSISTANT_URL empty on Vercel: vercel.json runs the assistant
+# as the "iyobo" service on this same domain, under IYOBO_SERVICE_PATH.
+AI_ASSISTANT_URL = os.getenv("AI_ASSISTANT_URL", "")
+IYOBO_SERVICE_PATH = "/iyobo"
+LOCAL_AI_ASSISTANT_URL = "http://localhost:8005"
 LANGUAGE_ACADEMY_URL = os.getenv("LANGUAGE_ACADEMY_URL", "http://localhost:8004")
 HOTELS_SERVICE_URL = os.getenv("HOTELS_SERVICE_URL", "http://localhost:8003")
 CARGO_SERVICE_URL = os.getenv("CARGO_SERVICE_URL", "http://localhost:8002")
@@ -172,13 +176,17 @@ def _build_ai_headers() -> dict[str, str]:
     return headers
 
 
-def _resolve_ai_base_url() -> str:
+def _resolve_ai_base_url(origin: str = "") -> str:
+    """The assistant's base URL: an explicit setting, else the "iyobo" service on this domain when
+    running on Vercel (given the site origin), else a local assistant."""
     base = (NEXT_PUBLIC_IYOBO_API_URL or AI_ASSISTANT_URL).strip()
-    return base.rstrip("/")
+    if not base and origin and os.getenv("VERCEL"):
+        base = f"{origin.rstrip('/')}{IYOBO_SERVICE_PATH}"
+    return (base or LOCAL_AI_ASSISTANT_URL).rstrip("/")
 
 
-def _resolve_chat_url() -> str:
-    base = _resolve_ai_base_url()
+def _resolve_chat_url(origin: str = "") -> str:
+    base = _resolve_ai_base_url(origin)
     if base.endswith("/api/ai"):
         base = base[:-7]
     return f"{base}/chat"
@@ -1116,7 +1124,7 @@ async def chat_proxy(request: Request, message: str = Form(default="")) -> HTMLR
     visitor_id = request.cookies.get(VISITOR_COOKIE, "")
     if not _VISITOR_ID.fullmatch(visitor_id):
         visitor_id = secrets.token_hex(16)
-    response = await _chat_proxy_reply(message.strip(), visitor_id)
+    response = await _chat_proxy_reply(message.strip(), visitor_id, origin=_site_origin(request))
     response.set_cookie(
         VISITOR_COOKIE,
         visitor_id,
@@ -1128,15 +1136,15 @@ async def chat_proxy(request: Request, message: str = Form(default="")) -> HTMLR
     return response
 
 
-async def _chat_proxy_reply(text: str, visitor_id: str) -> HTMLResponse:
+async def _chat_proxy_reply(text: str, visitor_id: str, origin: str = "") -> HTMLResponse:
     if not text:
         return HTMLResponse('<div class="chat-bubble bot">Ask Iyobo anything about EKIOBA.</div>')
 
     search_results = await _extract_link_search_results(text)
 
     # Iyobo (xAI Grok) answers from the Knowledge Base and runs its own web searches.
-    # NEXT_PUBLIC_IYOBO_API_URL takes precedence, then AI_ASSISTANT_URL.
-    backend_url = _resolve_chat_url()
+    # NEXT_PUBLIC_IYOBO_API_URL takes precedence, then AI_ASSISTANT_URL, then the iyobo service on Vercel.
+    backend_url = _resolve_chat_url(origin)
     if backend_url and "localhost" not in backend_url:
         # Answers that need a web search take longer than a plain completion.
         async with httpx.AsyncClient(timeout=90.0) as client:

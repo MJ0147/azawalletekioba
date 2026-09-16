@@ -5,7 +5,10 @@ Vercel and the frontend Docker image can't import the AI assistant's code or rea
 "Knowledge Base" folder the way the assistant does. This script copies:
 
     Knowledge Base/**/*.md and *.json (minus infrastructure docs)  ->  frontend/knowledge_base/
+                                                                        ai_assistant/knowledge_base/
     ai_assistant/app/<shared module>.py                             ->  frontend/services/<same name>
+
+The ai_assistant copy is for the assistant's Vercel service, which only ships the ai_assistant folder.
 
 The shared modules are the Knowledge Base search, the Grok client, the web check against the
 Knowledge Base, and answering without memory. The site chat quotes the Knowledge Base when no AI is
@@ -27,6 +30,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIR = REPO_ROOT / "Knowledge Base"
 SNAPSHOT_DIR = REPO_ROOT / "frontend" / "knowledge_base"
+ASSISTANT_SNAPSHOT_DIR = REPO_ROOT / "ai_assistant" / "knowledge_base"
+SNAPSHOT_DIRS = (SNAPSHOT_DIR, ASSISTANT_SNAPSHOT_DIR)
 ASSISTANT_APP = REPO_ROOT / "ai_assistant" / "app"
 FRONTEND_SERVICES = REPO_ROOT / "frontend" / "services"
 
@@ -63,7 +68,9 @@ def expected_files() -> dict[Path, bytes]:
             continue
         relative_path = path.relative_to(SOURCE_DIR).as_posix()
         if not _is_excluded(relative_path):
-            files[SNAPSHOT_DIR / relative_path] = path.read_bytes()
+            data = path.read_bytes()
+            for snapshot_dir in SNAPSHOT_DIRS:
+                files[snapshot_dir / relative_path] = data
     for name in SHARED_MODULES:
         files[FRONTEND_SERVICES / name] = _shared_module_copy(name)
     return files
@@ -76,11 +83,13 @@ def main() -> int:
 
     expected = expected_files()
     changed = [path for path, data in expected.items() if not path.is_file() or path.read_bytes() != data]
-    leftover = (
-        [path for path in SNAPSHOT_DIR.rglob("*") if path.is_file() and path not in expected]
-        if SNAPSHOT_DIR.is_dir()
-        else []
-    )
+    leftover = [
+        path
+        for snapshot_dir in SNAPSHOT_DIRS
+        if snapshot_dir.is_dir()
+        for path in snapshot_dir.rglob("*")
+        if path.is_file() and path not in expected
+    ]
 
     if args.check:
         if not changed and not leftover:
@@ -100,8 +109,9 @@ def main() -> int:
     for path in leftover:
         path.unlink()
         print(f"  removed: {path.relative_to(REPO_ROOT)}")
-    knowledge_files = len(expected) - len(SHARED_MODULES)
-    print(f"Done. {knowledge_files} Knowledge Base files in {SNAPSHOT_DIR.relative_to(REPO_ROOT)}.")
+    knowledge_files = (len(expected) - len(SHARED_MODULES)) // len(SNAPSHOT_DIRS)
+    folders = " and ".join(str(snapshot_dir.relative_to(REPO_ROOT)) for snapshot_dir in SNAPSHOT_DIRS)
+    print(f"Done. {knowledge_files} Knowledge Base files in {folders}.")
     return 0
 
 

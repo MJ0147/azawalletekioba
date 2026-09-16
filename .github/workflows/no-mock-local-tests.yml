@@ -27,7 +27,7 @@ jobs:
       - name: Run ai_assistant tests
         working-directory: ai_assistant
         run: |
-          python -m pytest tests/test_health_new.py tests/test_chat.py tests/test_knowledge_base.py tests/test_telegram.py tests/test_learning.py tests/test_web_verification.py -q
+          python -m pytest tests/test_health_new.py tests/test_chat.py tests/test_knowledge_base.py tests/test_telegram.py tests/test_learning.py tests/test_web_verification.py tests/test_vercel_service.py -q
 
   store:
     runs-on: ubuntu-latest
