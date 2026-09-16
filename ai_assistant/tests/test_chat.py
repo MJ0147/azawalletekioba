@@ -71,6 +71,7 @@ def test_parse_response_collects_text_and_unique_citations():
     reply = parse_response(data)
     assert reply.text == "Ekita means dog."
     assert reply.citations == ["https://example.com/a", "https://example.com/b"]
+    assert reply.used_web_search is True
 
 
 def test_parse_response_without_text_raises():

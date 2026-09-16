@@ -2,7 +2,7 @@
 
 Reference material collected from the EKIOBA workspace.
 
-Iyobo, the AI assistant (xAI Grok), uses this folder as its main source. It indexes every `.md` and `.json` file here except `SECURITY.md`, `DEPLOYMENT.md` and `Supabase/` (change this with `KNOWLEDGE_BASE_EXCLUDE`), and uses web search only to fill gaps. Edits take effect when the assistant restarts.
+Iyobo, the AI assistant (xAI Grok), uses this folder as its main source. It indexes every `.md` and `.json` file here except `SECURITY.md`, `DEPLOYMENT.md` and `Supabase/` (change this with `KNOWLEDGE_BASE_EXCLUDE`), and uses web search only to fill gaps. Everything found on the web is checked against this Knowledge Base before it is used. Edits take effect when the assistant restarts.
 
 The website's chat also answers from this folder when the AI assistant is offline. It reads a copy in `frontend/knowledge_base/`, so after editing anything here run `python scripts/sync_knowledge_base.py` and commit the updated copy. CI fails if the copy is out of date.
 

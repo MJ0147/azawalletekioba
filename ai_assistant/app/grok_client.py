@@ -26,6 +26,7 @@ class GrokNotConfigured(GrokError):
 class GrokReply:
     text: str
     citations: list[str] = field(default_factory=list)  # web page URLs, in first-cited order
+    used_web_search: bool = False  # Grok ran a search while writing this reply
 
 
 def build_payload(
@@ -56,6 +57,7 @@ def build_payload(
 def parse_response(data: dict[str, Any]) -> GrokReply:
     texts: list[str] = []
     citations: list[str] = []
+    used_web_search = False
 
     def add_citation(url: Any) -> None:
         url = str(url or "").strip()
@@ -63,7 +65,12 @@ def parse_response(data: dict[str, Any]) -> GrokReply:
             citations.append(url)
 
     for item in data.get("output") or []:
-        if not isinstance(item, dict) or item.get("type") != "message":
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("type") or "").endswith("search_call"):  # web_search_call, x_search_call
+            used_web_search = True
+            continue
+        if item.get("type") != "message":
             continue
         for part in item.get("content") or []:
             if not isinstance(part, dict) or part.get("type") != "output_text":
@@ -81,7 +88,7 @@ def parse_response(data: dict[str, Any]) -> GrokReply:
     text = "\n\n".join(texts).strip()
     if not text:
         raise GrokError(f"xAI response contained no text (status={data.get('status')!r})")
-    return GrokReply(text=text, citations=citations)
+    return GrokReply(text=text, citations=citations, used_web_search=used_web_search)
 
 
 async def create_response(

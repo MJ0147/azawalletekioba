@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     XAI_MODEL: str = "grok-4.6"
     XAI_WEB_SEARCH: bool = True
     XAI_TIMEOUT_SECONDS: float = 60.0
+    # Everything found on the web is checked against the Knowledge Base before it is used
+    # (app/web_verification.py). Web claims the Knowledge Base contradicts are always dropped. Web
+    # claims it doesn't cover are passed on labelled as unverified; set true to drop those too.
+    WEB_REQUIRE_KB_CONFIRMATION: bool = False
 
     # Knowledge Base — Iyobo's main source. Leave KNOWLEDGE_BASE_DIR empty to use the repo's
     # "Knowledge Base" folder, or /app/knowledge_base when mounted into the container.

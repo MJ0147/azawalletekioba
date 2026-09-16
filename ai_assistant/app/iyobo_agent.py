@@ -44,6 +44,7 @@ from google.genai import types
 from app.grok_client import GrokError, GrokNotConfigured, GrokReply, build_payload, create_response, parse_response
 from app.knowledge_base import Chunk, KnowledgeBase, format_context
 from app.learning_store import LearningStore, create_engine_for
+from app.web_verification import verify_web_findings
 
 logger = logging.getLogger("iyobo-service.agent")
 
@@ -68,7 +69,13 @@ Earlier messages from today's conversation come before the brief.
 ## Your tools
 - If the Knowledge Base excerpts don't cover the question, call search_knowledge_base with a better
   query before anything else.
-- Call search_web only for what the Knowledge Base doesn't have, or for current information.
+- Call search_web only for what the Knowledge Base doesn't have, or for current information. Its
+  results have already been checked against the Knowledge Base:
+  - "verified_by_knowledge_base": you can state these as fact.
+  - "unverified_not_in_knowledge_base": the Knowledge Base doesn't cover these. If you use them, say
+    they come from the web and haven't been verified against the Knowledge Base.
+  - "rejected_knowledge_base_disagrees": never repeat what the web said; give the Knowledge Base version.
+  Use nothing from the web beyond what search_web returns in those lists.
 
 ## Memory and learning
 - Use what you remember naturally; don't recite it back.
@@ -234,8 +241,11 @@ class IyoboAgent:
             query: The question to research.
 
         Returns:
-            A short answer and the web pages it came from.
+            What the web says, already checked against the Knowledge Base: claims it verifies, claims
+            it doesn't cover, and claims it rejects, plus the web pages used.
         """
+        if not self.settings.XAI_WEB_SEARCH:
+            return {"found": False, "error": "Web search is turned off; answer from the Knowledge Base."}
         payload = build_payload(
             model=self.settings.XAI_MODEL,
             instructions="Research the question on the web and answer concisely with the key facts.",
@@ -253,10 +263,22 @@ class IyoboAgent:
         except GrokError as exc:
             logger.warning("Web search failed: %s", exc)
             return {"found": False, "error": "Web search is unavailable right now."}
+
+        try:
+            check = await verify_web_findings(
+                reply.text, question=query, knowledge_base=self.knowledge_base(), settings=self.settings
+            )
+        except GrokError as exc:
+            logger.warning("Web findings not used; checking them against the Knowledge Base failed: %s", exc)
+            return {"found": False, "error": "Web results couldn't be checked against the Knowledge Base, so they weren't used."}
+
+        result = check.for_agent(self.settings.WEB_REQUIRE_KB_CONFIRMATION)
+        result["sources"] = reply.citations if result["found"] else []
         turn = _current_turn.get(None)
         if turn is not None:
-            turn.citations.extend(url for url in reply.citations if url not in turn.citations)
-        return {"found": True, "answer": reply.text, "sources": reply.citations}
+            turn.kb_sources.extend(s for s in check.kb_sources if s not in turn.kb_sources)
+            turn.citations.extend(url for url in result["sources"] if url not in turn.citations)
+        return result
 
     async def remember_about_user(self, note: str, tool_context: ToolContext) -> dict[str, Any]:
         """Save a short, lasting note about the person you're talking to, so you remember it in

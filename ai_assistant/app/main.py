@@ -27,6 +27,7 @@ from app.grok_client import (
 )
 from app.knowledge_base import KnowledgeBase, format_context, resolve_root
 from app.iyobo_agent import IyoboAgent
+from app.web_verification import WEB_CHECK_FAILED_SECTION, verify_web_findings
 
 # Setup structured logging for Cloud Run
 logging.basicConfig(
@@ -57,8 +58,9 @@ cultural marketplace and Web3 commerce platform. You run on Grok from xAI.
 3. Use web search to complement the Knowledge Base, not to replace it: search when the excerpts don't
    cover the question, only partly cover it, or the user needs current information (news, prices,
    events). Don't search for what the excerpts already answer.
-4. If a web source contradicts the Knowledge Base, give the Knowledge Base answer and mention the
-   discrepancy.
+4. Everything found on the web is checked against the Knowledge Base before it reaches the person.
+   Never use web information the Knowledge Base contradicts; give the Knowledge Base answer. Present
+   web information the Knowledge Base doesn't cover as unverified web information, not as fact.
 5. Say where facts came from: "(Knowledge Base: <file name>)" for excerpts, the site name for web
    results. Web source links are listed after your answer automatically, so don't paste URLs.
 6. The Knowledge Base flags uncertain Edo forms (OCR damage, forms to check with a native speaker).
@@ -229,14 +231,41 @@ async def ask_iyobo(
 async def ask_iyobo_stateless(
     message: str, link_results: Optional[list[dict[str, Any]]] = None
 ) -> tuple[GrokReply, list[str]]:
-    """Answer without memory: matching Knowledge Base excerpts as the main context, web search to fill gaps."""
-    hits = get_knowledge_base().search(message, limit=settings.KNOWLEDGE_BASE_TOP_K)
+    """Answer without memory: matching Knowledge Base excerpts as the main context, web search to fill gaps.
+
+    If the first answer drew on the web, its findings are checked against the Knowledge Base and the
+    answer is written again with only what passed the check.
+    """
+    knowledge_base = get_knowledge_base()
+    hits = knowledge_base.search(message, limit=settings.KNOWLEDGE_BASE_TOP_K)
     kb_context, kb_sources = format_context(hits, max_chars=settings.KNOWLEDGE_BASE_MAX_CHARS)
+    instructions = build_instructions(kb_context, link_results or [])
+
+    first = await _ask_grok(instructions, message, web_search=settings.XAI_WEB_SEARCH)
+    if not (first.used_web_search or first.citations):
+        return first, kb_sources
+
+    require_confirmation = settings.WEB_REQUIRE_KB_CONFIRMATION
+    try:
+        check = await verify_web_findings(first.text, question=message, knowledge_base=knowledge_base, settings=settings)
+    except GrokError as exc:
+        logger.warning("Web findings not used; checking them against the Knowledge Base failed: %s", exc)
+        web_section, citations = WEB_CHECK_FAILED_SECTION, []
+    else:
+        web_section = check.prompt_section(require_confirmation)
+        citations = first.citations if check.usable(require_confirmation) else []
+        kb_sources += [source for source in check.kb_sources if source not in kb_sources]
+
+    final = await _ask_grok(f"{instructions}\n\n{web_section}", message, web_search=False)
+    return GrokReply(text=final.text, citations=citations), kb_sources
+
+
+async def _ask_grok(instructions: str, message: str, *, web_search: bool) -> GrokReply:
     payload = build_payload(
         model=settings.XAI_MODEL,
-        instructions=build_instructions(kb_context, link_results or []),
+        instructions=instructions,
         message=message,
-        web_search=settings.XAI_WEB_SEARCH,
+        web_search=web_search,
     )
     data = await create_response(
         api_key=settings.XAI_API_KEY,
@@ -244,7 +273,7 @@ async def ask_iyobo_stateless(
         payload=payload,
         timeout=settings.XAI_TIMEOUT_SECONDS,
     )
-    return parse_response(data), kb_sources
+    return parse_response(data)
 
 
 @app.get("/", tags=["Health"])
