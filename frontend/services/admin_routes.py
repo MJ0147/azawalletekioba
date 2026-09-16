@@ -38,6 +38,18 @@ def safe_next(value: Any) -> str:
     return path
 
 
+def _remember(response: Any, user: telegram_login.TelegramUser, secret: str, request: Request) -> None:
+    """Keep the signed-in Telegram account in a signed, http-only cookie."""
+    response.set_cookie(
+        telegram_login.SESSION_COOKIE,
+        telegram_login.session_for(user, secret),
+        max_age=SESSION_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=_origin(request).startswith("https://"),
+    )
+
+
 def _account(user: Optional[telegram_login.TelegramUser]) -> dict[str, Any]:
     if user is None:
         return {"signed_in": False, "is_admin": False}
@@ -72,14 +84,31 @@ async def telegram_callback(request: Request) -> RedirectResponse:
     except telegram_login.TelegramLoginError as exc:
         return RedirectResponse(f"/login?next={quote(destination, safe='/')}&error={quote(str(exc))}", status_code=303)
     response = RedirectResponse(destination, status_code=303)
-    response.set_cookie(
-        telegram_login.SESSION_COOKIE,
-        telegram_login.session_for(user, secret),
-        max_age=SESSION_SECONDS,
-        httponly=True,
-        samesite="lax",
-        secure=_origin(request).startswith("https://"),
-    )
+    _remember(response, user, secret, request)
+    return response
+
+
+@router.post("/auth/telegram/miniapp")
+async def telegram_mini_app(request: Request) -> JSONResponse:
+    """Sign in the person Telegram has already identified, when the site runs as a Mini App.
+
+    Inside Telegram the login widget is neither available nor needed: Telegram hands the page
+    signed initData naming the account, so there is nothing for the visitor to tap.
+    """
+    try:
+        body = await request.json()
+    except ValueError:
+        body = {}
+    init_data = str((body or {}).get("init_data") or "") if isinstance(body, dict) else ""
+    secret = session_secret()
+    try:
+        if not secret:
+            raise telegram_login.TelegramLoginError("Telegram login isn't set up on this site yet")
+        user = telegram_login.verify_mini_app(init_data, telegram_login.bot_token())
+    except telegram_login.TelegramLoginError as exc:
+        return JSONResponse({"error": str(exc), "signed_in": False}, status_code=401)
+    response = JSONResponse(_account(user))
+    _remember(response, user, secret, request)
     return response
 
 

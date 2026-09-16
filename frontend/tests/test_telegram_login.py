@@ -1,9 +1,10 @@
 import hashlib
 import hmac
 import importlib.util
+import json
 import time
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import pytest
 from fastapi.testclient import TestClient
@@ -145,3 +146,57 @@ def test_the_login_page_offers_a_way_out_when_telegram_is_blocked(client):
     page = client.get("/login").text
     assert 'id="telegram-fallback"' in page
     assert "couldn&#39;t load" in page or "couldn't load" in page
+
+
+# ── Mini App sign-in ─────────────────────────────────────────────────────────
+
+
+def mini_app_init_data(token=BOT_TOKEN, **overrides):
+    """initData signed the way Telegram signs it for a Mini App."""
+    fields = {
+        "auth_date": str(int(time.time())),
+        "query_id": "AAExample",
+        "user": json.dumps({"id": 8894431525, "first_name": "Aza", "username": "Azavault"}),
+    }
+    fields.update(overrides)
+    check = "\n".join(f"{k}={fields[k]}" for k in sorted(fields))
+    secret = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
+    fields["hash"] = hmac.new(secret, check.encode(), hashlib.sha256).hexdigest()
+    return urlencode(fields)
+
+
+def test_mini_app_data_signs_in_the_telegram_account(client):
+    response = client.post("/auth/telegram/miniapp", json={"init_data": mini_app_init_data()})
+    assert response.status_code == 200, response.text
+    assert response.json()["username"] == "Azavault"
+    assert response.json()["is_admin"] is True
+    # The session cookie carries over to ordinary requests.
+    assert client.get("/api/telegram/me").json()["signed_in"] is True
+
+
+def test_mini_app_data_signed_with_another_token_is_refused(client):
+    bad = mini_app_init_data(token="999999:NOT-our-bot-token")
+    assert client.post("/auth/telegram/miniapp", json={"init_data": bad}).status_code == 401
+    assert client.get("/api/telegram/me").json()["signed_in"] is False
+
+
+def test_tampered_mini_app_data_is_refused(client):
+    good = mini_app_init_data()
+    tampered = good.replace("8894431525", "8894431524")
+    assert tampered != good
+    assert client.post("/auth/telegram/miniapp", json={"init_data": tampered}).status_code == 401
+
+
+def test_stale_mini_app_data_is_refused(client):
+    old = mini_app_init_data(auth_date=str(int(time.time()) - telegram_login.MAX_MINI_APP_AGE_SECONDS - 60))
+    assert client.post("/auth/telegram/miniapp", json={"init_data": old}).status_code == 401
+
+
+def test_the_signature_field_is_left_out_of_the_check(client):
+    """Telegram adds signature for third-party checks; it is not part of the hash."""
+    signed_in = mini_app_init_data() + "&signature=" + quote("not-part-of-the-hmac==")
+    assert client.post("/auth/telegram/miniapp", json={"init_data": signed_in}).status_code == 200
+
+
+def test_mini_app_sign_in_needs_data(client):
+    assert client.post("/auth/telegram/miniapp", json={}).status_code == 401

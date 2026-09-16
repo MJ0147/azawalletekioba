@@ -51,19 +51,34 @@
         <button type="button" class="btn-primary" onclick="window.location.reload()">Try again</button>
       </div>
 
-      <p style="margin:0;font-size:.85rem;color:var(--color-muted)">
+      <p id="telegram-privacy" style="margin:0;font-size:.85rem;color:var(--color-muted)">
         Telegram shares your name, username and profile photo with EKIOBA, never your phone number.
         If you allow it, @{{ bot_username }} can also send you messages.
       </p>
 
+      <p id="telegram-signing-in" hidden style="margin:0">Signing you in with Telegram…</p>
+
       <script>
-        // The widget replaces itself with an iframe. If none appears, it was blocked.
-        setTimeout(function () {
-          if (!document.querySelector('#telegram-button iframe')) {
-            var fallback = document.getElementById('telegram-fallback');
-            if (fallback) fallback.hidden = false;
+        (function () {
+          var webApp = window.Telegram && window.Telegram.WebApp;
+          if (webApp && webApp.initData) {
+            // Opened inside Telegram: the widget doesn't apply here, and base.html is already
+            // signing this person in from the data Telegram handed the page.
+            ['telegram-button', 'telegram-fallback', 'telegram-privacy'].forEach(function (id) {
+              var el = document.getElementById(id);
+              if (el) el.hidden = true;
+            });
+            document.getElementById('telegram-signing-in').hidden = false;
+            return;
           }
-        }, 3000);
+          // The widget replaces itself with an iframe. If none appears, it was blocked.
+          setTimeout(function () {
+            if (!document.querySelector('#telegram-button iframe')) {
+              var fallback = document.getElementById('telegram-fallback');
+              if (fallback) fallback.hidden = false;
+            }
+          }, 3000);
+        }());
       </script>
     {% else %}
       <p style="margin:0;color:#92400e">Telegram login isn't set up on this site yet.</p>

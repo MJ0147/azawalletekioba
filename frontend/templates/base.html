@@ -30,6 +30,9 @@
       });
     }
   </script>
+  <!-- Telegram Mini App bridge. Outside Telegram this leaves window.Telegram.WebApp with an
+       empty initData, and the site behaves as an ordinary website. -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -109,15 +112,37 @@
 
   <script>
     // Show who's logged in with Telegram; EKIOBA admins get a shortcut to the admin area.
+    // Opened as a Mini App, Telegram already says who this is, so nobody has to log in at all.
     (function () {
+      var webApp = window.Telegram && window.Telegram.WebApp;
+      if (webApp) {
+        try { webApp.ready(); webApp.expand(); } catch (e) { /* older Telegram clients */ }
+      }
+
+      function show(me) {
+        if (!me || !me.signed_in) return false;
+        var link = document.getElementById('account-link');
+        var label = document.getElementById('account-label');
+        if (label) label.textContent = me.username ? '@' + me.username : 'Account';
+        if (link) link.href = me.is_admin ? '/admin' : '/login';
+        return true;
+      }
+
       fetch('/api/telegram/me', { headers: { Accept: 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (me) {
-          if (!me || !me.signed_in) return;
-          var link = document.getElementById('account-link');
-          var label = document.getElementById('account-label');
-          if (label) label.textContent = me.username ? '@' + me.username : 'Account';
-          if (link) link.href = me.is_admin ? '/admin' : '/login';
+          if (show(me)) return null;
+          if (!webApp || !webApp.initData) return null;
+          return fetch('/auth/telegram/miniapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ init_data: webApp.initData })
+          })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (account) {
+              // The login page is rendered signed-out, so let the server draw it again.
+              if (show(account) && window.location.pathname === '/login') window.location.reload();
+            });
         })
         .catch(function () { /* offline: keep the Log in link */ });
     }());

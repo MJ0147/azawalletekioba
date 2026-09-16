@@ -14,10 +14,12 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import os
 import time
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
+from urllib.parse import parse_qsl
 
 from fastapi import Request
 
@@ -25,6 +27,14 @@ from services.academy_auth import make_session, read_session, session_secret
 
 SESSION_COOKIE = "ekioba_telegram"
 MAX_LOGIN_AGE_SECONDS = 24 * 60 * 60
+# Mini App data is made fresh each time the app opens, so it does not need the widget's long
+# window, and a shorter one limits how long captured initData could be replayed.
+MAX_MINI_APP_AGE_SECONDS = 60 * 60
+# Telegram signs Mini App data with a key derived from this constant, not with the bot token
+# directly as the login widget does.
+MINI_APP_SECRET_SALT = b"WebAppData"
+# hash carries the HMAC itself; signature is the separate Ed25519 field for third parties.
+MINI_APP_UNSIGNED_FIELDS = ("hash", "signature")
 # The fields Telegram signs. Anything else on the callback URL (such as our own `next`) isn't signed.
 TELEGRAM_FIELDS = ("id", "first_name", "last_name", "username", "photo_url", "auth_date")
 DEFAULT_BOT_USERNAME = "IdiacoinBot"
@@ -75,6 +85,40 @@ def verify_login(fields: Mapping[str, Any], token: str, now: Optional[float] = N
     if int(now if now is not None else time.time()) - auth_date > MAX_LOGIN_AGE_SECONDS:
         raise TelegramLoginError("this Telegram login has expired; log in again")
     return TelegramUser(id=user_id, username=received.get("username", ""))
+
+
+def verify_mini_app(init_data: str, token: str, now: Optional[float] = None) -> TelegramUser:
+    """Check the initData Telegram gives a Mini App. Raises TelegramLoginError unless it is genuine.
+
+    Telegram signs this differently from the login widget: the key is an HMAC of the bot token
+    under the constant "WebAppData", rather than a plain SHA-256 of the token.
+    https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+    """
+    if not token:
+        raise TelegramLoginError("Telegram login isn't set up on this site yet")
+    if not init_data:
+        raise TelegramLoginError("Telegram sent no sign-in data")
+
+    # initData is a query string, so "+" decodes to a space and a literal "+" arrives as %2B.
+    received: dict[str, str] = dict(parse_qsl(init_data, keep_blank_values=True))
+
+    supplied = str(received.get("hash") or "").strip().lower()
+    signed = {k: v for k, v in received.items() if k not in MINI_APP_UNSIGNED_FIELDS}
+    data_check_string = "\n".join(f"{key}={signed[key]}" for key in sorted(signed))
+    secret_key = hmac.new(MINI_APP_SECRET_SALT, token.encode("utf-8"), hashlib.sha256).digest()
+    expected = hmac.new(secret_key, data_check_string.encode("utf-8"), hashlib.sha256).hexdigest()
+    if not supplied or not hmac.compare_digest(expected, supplied):
+        raise TelegramLoginError("this sign-in didn't come from Telegram")
+
+    try:
+        auth_date = int(received["auth_date"])
+        person = json.loads(received["user"])
+        user_id = int(person["id"])
+    except (KeyError, ValueError, TypeError) as exc:
+        raise TelegramLoginError("the Telegram sign-in is incomplete") from exc
+    if int(now if now is not None else time.time()) - auth_date > MAX_MINI_APP_AGE_SECONDS:
+        raise TelegramLoginError("this Telegram sign-in has expired; reopen the app")
+    return TelegramUser(id=user_id, username=str(person.get("username") or ""))
 
 
 def session_for(user: TelegramUser, secret: str) -> str:
