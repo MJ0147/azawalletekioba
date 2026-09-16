@@ -4,11 +4,17 @@
 {% block description %}Browse hotel listings across Nigeria with EKIOBA.{% endblock %}
 
 {% block content %}
+{# Server-rendered JSON, read from a script tag rather than written into x-data. tojson escapes
+   <, > and & but leaves double quotes alone, and a double quote inside x-data="..." closes the
+   attribute: the rest of the component then rendered on the page as text. Same pattern as
+   museum.html. #}
+<script type="application/json" id="hotel-listings">{{ listings | tojson }}</script>
+
 <div class="shell"
      x-data="{
        city: '',
-       listings: {{ listings | tojson | safe }},
-       filteredListings: {{ listings | tojson | safe }},
+       listings: JSON.parse(document.getElementById('hotel-listings').textContent),
+       filteredListings: [],
        loading: false,
        bookModal: false,
        selectedHotel: null,
@@ -19,6 +25,10 @@
        bookingResult: null,
        bookingError: '',
        bookingLoading: false,
+
+       init() {
+         this.filteredListings = this.listings;
+       },
 
        filterByCity() {
          if (!this.city.trim()) { this.filteredListings = this.listings; return; }
