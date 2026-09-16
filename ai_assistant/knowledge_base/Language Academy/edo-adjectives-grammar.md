@@ -603,6 +603,6 @@ The lexical content above is also available as structured JSON for the Language 
 - [`edo-adjectives-dataset.json`](edo-adjectives-dataset.json)
 
 It includes an `academy_vocabulary` array already shaped to the academy's
-`{edo, english, category, example}` schema, so it can be merged into
-`language_academy/app/data/edo_vocab.json` without transformation. That merge has **not** been
-done — the live vocabulary file is unchanged.
+`{edo, english, category, example}` schema, so the Language Academy can load it without
+transformation. It has not yet been merged into the service's own vocabulary file, which is
+unchanged.

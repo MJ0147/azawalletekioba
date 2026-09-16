@@ -42,6 +42,23 @@ _EMPHASIS = re.compile(r"(\*\*|\*|`)")
 # Retrieval hints in the Knowledge Base ("Questions this answers: ...") aren't meant for readers.
 _HINT_PREFIX = "questions this answers:"
 
+# A vocabulary entry answers outright when the question spells out its English meaning ("What is
+# twenty in Edo?"). Common English words are different: "this", "here" and the like carry ordinary
+# sentences, so "what is this app" is not a request for the Edo word for "this". Entries glossed
+# only with such words answer only when the question actually asks for a translation.
+_COMMON_ENGLISH = frozenset("""
+this that these those here there it its they them he him she her we us you i me my your his our
+their is are was were be am been do does did done can could will would shall should may might must
+the a an and or but if so than then of to in on at for with from by about into over under
+what which who whom whose where when why how
+one two some any no not yes also more most very just only
+""".split())
+_TRANSLATION_CUES = (
+    "in edo", "edo word", "edo for", "edo name", "edo translation",
+    "how do you say", "how do i say", "how to say", "say in edo",
+    "translate", "translation", "what does", "mean", "pronounce",
+)
+
 
 @dataclass(frozen=True)
 class _Record:
@@ -111,6 +128,19 @@ def academy_words() -> list[dict[str, str]]:
 
 def _words(text: str) -> str:
     return " ".join(_WORD.findall(normalize(text)))
+
+
+def _asks_for_translation(question: str) -> bool:
+    """Whether the question actually asks what something is in Edo."""
+    lowered = normalize(question)
+    return any(cue in lowered for cue in _TRANSLATION_CUES)
+
+
+def _is_common_english(english: str) -> bool:
+    """A meaning made only of everyday English words, such as "this" or "here"."""
+    # "here (short form)" is still just "here".
+    parts = _words(english.split("(")[0]).split()
+    return bool(parts) and all(part in _COMMON_ENGLISH for part in parts)
 
 
 def _record_fields(text: str) -> dict[str, str] | None:
@@ -188,6 +218,13 @@ def _plain_text(markdown: str) -> str:
     return text
 
 
+def _excerpt(chunk: Chunk) -> str:
+    """A chunk read out as prose, with its heading when the text does not already say it."""
+    heading = chunk.title.split(" > ")[-1] if chunk.title else ""
+    text = _plain_text(chunk.text)
+    return f"{heading}\n{text}" if heading and heading not in text else text
+
+
 def _source_label(chunk: Chunk) -> str:
     if chunk.source.lower().endswith(".md") and chunk.title:
         return chunk.title.split(" > ")[0]
@@ -208,6 +245,9 @@ def answer(question: str) -> str:
     # A word whose English meaning is spelled out in the question ("What is twenty in Edo?") is the
     # answer, even when a longer page mentions that English word more often.
     exact = [r for r in records if f" {_words(r.fields['english'])} " in question_words]
+    # "what is this app" contains "this", but it isn't asking for the Edo word for "this".
+    if exact and not _asks_for_translation(question):
+        exact = [r for r in exact if not _is_common_english(r.fields["english"])]
     # Keep the longest meanings: "one hundred" shouldn't also list "one", nor "seventy-five" list "five".
     exact.sort(key=lambda r: -len(_words(r.fields["english"]).split()))
     longest: list[_Record] = []
@@ -218,13 +258,22 @@ def answer(question: str) -> str:
     exact = longest
     if exact:
         body, source = _vocabulary_body(exact), exact[0].chunk
-    elif records and records[0].chunk is top:
-        related = [r for r in records if r.score >= top_score * RELATED_SCORE_RATIO]
-        body, source = _vocabulary_body(related), top
     else:
-        heading = top.title.split(" > ")[-1] if top.title else ""
-        excerpt = _plain_text(top.text)
-        body = f"{heading}\n{excerpt}" if heading and heading not in excerpt else excerpt
-        source = top
+        related: list[_Record] = []
+        if records and records[0].chunk is top:
+            related = [r for r in records if r.score >= top_score * RELATED_SCORE_RATIO]
+            # The same guard as above: a word list is the wrong answer to "what can I do here".
+            if not _asks_for_translation(question):
+                related = [r for r in related if not _is_common_english(r.fields["english"])]
+        if related:
+            body, source = _vocabulary_body(related), top
+        else:
+            # Prose, not a dataset: a JSON record read aloud is no use to a visitor.
+            record_chunks = {id(r.chunk) for r in records}
+            source = next(
+                (c for c, _ in hits if id(c) not in record_chunks and c.source.lower().endswith(".md")),
+                top,
+            )
+            body = _excerpt(source)
 
     return f"{body}\n\n({OFFLINE_NOTE}: {_source_label(source)}.)"

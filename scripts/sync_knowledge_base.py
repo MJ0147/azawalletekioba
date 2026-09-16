@@ -39,9 +39,20 @@ FRONTEND_SERVICES = REPO_ROOT / "frontend" / "services"
 # which becomes `services.<name>` in the copy.
 SHARED_MODULES = ("knowledge_base.py", "grok_client.py", "web_verification.py", "stateless_answer.py")
 
-# Mirrors the KNOWLEDGE_BASE_EXCLUDE default in ai_assistant/config.py: infrastructure docs stay
-# out of anything the public site can quote.
-EXCLUDE = ("SECURITY.md", "DEPLOYMENT.md", "Supabase")
+# Mirrors the KNOWLEDGE_BASE_EXCLUDE default in ai_assistant/config.py: documents written for
+# whoever builds EKIOBA stay out of anything the public site can quote. A visitor asking "tell me
+# about the app" was being answered with the wallet dashboard's API endpoints and JSON schemas.
+EXCLUDE = (
+    # Infrastructure.
+    "SECURITY.md",
+    "DEPLOYMENT.md",
+    "Supabase",
+    # Written for developers, not visitors.
+    "README.md",
+    "AGENT_INSTRUCTIONS.md",
+    "WALLET_DASHBOARD_INTEGRATION.md",
+    "Project Readmes",
+)
 INDEXED_SUFFIXES = (".md", ".json")
 
 

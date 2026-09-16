@@ -26,6 +26,33 @@ def test_snapshot_leaves_out_infrastructure_docs():
     assert not any(source.startswith("Supabase/") for source in sources)
 
 
+def test_snapshot_leaves_out_documents_written_for_developers():
+    """A visitor asking about the app was being answered with the wallet dashboard's API docs."""
+    sources = kb_fallback.get_knowledge_base().sources
+    for internal in ("README.md", "AGENT_INSTRUCTIONS.md", "WALLET_DASHBOARD_INTEGRATION.md"):
+        assert internal not in sources
+    assert not any(source.startswith("Project Readmes/") for source in sources)
+
+
+def test_asking_about_the_app_describes_ekioba():
+    for question in ("tell me about the app", "what is this app", "tell me about EKIOBA"):
+        reply = kb_fallback.answer(question)
+        assert "cultural e-commerce marketplace" in reply, question
+        # None of the engineering vocabulary that used to come back.
+        for leaked in ("JSON Response", "HTML Response", "endpoint", "api/wallet"):
+            assert leaked.lower() not in reply.lower(), (question, leaked)
+
+
+def test_an_everyday_word_is_not_treated_as_a_translation_request():
+    """"this" and "here" are taught Edo words, but they also just carry ordinary sentences."""
+    assert "cultural e-commerce marketplace" in kb_fallback.answer("what is this app")
+
+
+def test_a_real_translation_request_still_answers_with_the_edo_word():
+    assert "evbaṅna" in kb_fallback.answer("how do you say here in Edo")
+    assert "ugie" in kb_fallback.answer("what is twenty in Edo")
+
+
 def test_answers_vocabulary_from_the_knowledge_base():
     reply = kb_fallback.answer("What is dog in Edo?")
     assert "ekita — dog" in reply

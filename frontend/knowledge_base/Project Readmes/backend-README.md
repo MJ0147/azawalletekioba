@@ -1,3 +1,0 @@
-# Backend
-
-Python backend starter.

@@ -44,11 +44,16 @@ review. It is only used, for you or anyone else, once they approve it.
 
 ## About EKIOBA
 
-Questions this answers: what is EKIOBA, mission, platform, marketplace.
+Questions this answers: what is EKIOBA, tell me about the app, about the app, about this
+website, what can I do here, what do you offer, mission, platform, marketplace.
 
 EKIOBA is a cultural e-commerce marketplace for the art, heritage and traditions of the Benin
 Kingdom (Edo State, Nigeria). It connects artisans and culture-bearers with buyers worldwide, takes
 payment in IDIA Coin, and offers hotels, cargo shipping and Edo language learning.
+
+You can use EKIOBA as a website or install it on your phone as an app. Either way it offers the
+same things: a store for Benin Kingdom art and craft, IDIA Coin checkout and wallet, the Edo
+Language Academy, the Benin Royal Museum, hotel booking, cargo shipping, and Iyobo to guide you.
 
 ## The store
 

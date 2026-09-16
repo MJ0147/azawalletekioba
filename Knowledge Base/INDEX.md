@@ -2,7 +2,7 @@
 
 Reference material collected from the EKIOBA workspace.
 
-Iyobo, the AI assistant (xAI Grok), uses this folder as its main source. It indexes every `.md` and `.json` file here except `SECURITY.md`, `DEPLOYMENT.md` and `Supabase/` (change this with `KNOWLEDGE_BASE_EXCLUDE`), and uses web search only to fill gaps. Everything found on the web is checked against this Knowledge Base before it is used. Edits take effect when the assistant restarts.
+Iyobo, the AI assistant (xAI Grok), uses this folder as its main source. It indexes every `.md` and `.json` file here **except the ones marked *not indexed* below** — infrastructure notes and documents written for whoever builds EKIOBA rather than for a visitor (change this with `KNOWLEDGE_BASE_EXCLUDE`). It uses web search only to fill gaps. Everything found on the web is checked against this Knowledge Base before it is used. Edits take effect when the assistant restarts.
 
 The website's chat also answers from this folder when the AI assistant is offline. It reads a copy in `frontend/knowledge_base/`, so after editing anything here run `python scripts/sync_knowledge_base.py` and commit the updated copy. CI fails if the copy is out of date.
 
@@ -10,7 +10,9 @@ The website's chat also answers from this folder when the AI assistant is offlin
 
 - [Platform guide](EKIOBA%20Platform/platform-guide.md): how the site works — the store, cart and IDIA Coin checkout, wallets, the dashboard, Academy, museum, hotels, cargo, returns and support.
 
-## Documents
+## Documents — *not indexed* by Iyobo
+
+Internal notes. Iyobo must never quote these to a visitor.
 
 - [Project overview](README.md): workspace purpose, local development, and CI/CD model.
 - [Security architecture](SECURITY.md): authentication, secrets management, database, and hardening guidance.
@@ -41,7 +43,9 @@ The website's chat also answers from this folder when the AI assistant is offlin
 - [Benin Kingdom overview](Benin%20History/benin-kingdom-overview.md): the kingdom, Queen Idia, bronze casting, the Igue festival and coral regalia.
 - [Obas of Benin: Benin Royal Museum catalogue](Benin%20History/benin-obas-museum-catalogue.md): the 38 Obas in the museum, Eweka I to Ewuare II, in reign order and grouped by era. Each has the name, reign and description from his portrait's inscription.
 
-## Component notes
+## Component notes — *not indexed* by Iyobo
+
+Developer setup notes.
 
 - [Frontend README](Project%20Readmes/frontend-README.md)
 - [Backend README](Project%20Readmes/backend-README.md)

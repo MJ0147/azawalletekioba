@@ -40,8 +40,9 @@ class Settings(BaseSettings):
     # "Knowledge Base" folder, or /app/knowledge_base when mounted into the container.
     KNOWLEDGE_BASE_DIR: str = ""
     # Comma-separated files/folders (relative to the Knowledge Base root) kept away from the
-    # public assistant because they describe internal infrastructure.
-    KNOWLEDGE_BASE_EXCLUDE: str = "SECURITY.md,DEPLOYMENT.md,Supabase"
+    # public assistant: internal infrastructure, and anything written for whoever builds EKIOBA
+    # rather than for a visitor. Keep this in step with EXCLUDE in scripts/sync_knowledge_base.py.
+    KNOWLEDGE_BASE_EXCLUDE: str = "SECURITY.md,DEPLOYMENT.md,Supabase,README.md,AGENT_INSTRUCTIONS.md,WALLET_DASHBOARD_INTEGRATION.md,Project Readmes"
     KNOWLEDGE_BASE_TOP_K: int = 6
     KNOWLEDGE_BASE_MAX_CHARS: int = 12000
 

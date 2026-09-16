@@ -150,11 +150,15 @@ def readiness_check():
 
 @app.get("/health", tags=["Health"])
 def health_check(db: Session = Depends(get_db)):
-    """Health check for database connectivity and service status."""
+    """Health check for database connectivity and service status.
+
+    Names the service: the website and this assistant both answer on /health on the same
+    domain, so a reply has to say which one it came from.
+    """
     try:
         # Execute a simple query to verify the MySQL connection
         db.execute(text("SELECT 1"))
-        return {"status": "ok", "database": "connected"}
+        return {"status": "ok", "service": "iyobo", "database": "connected"}
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
         raise HTTPException(

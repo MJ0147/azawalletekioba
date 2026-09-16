@@ -45,8 +45,13 @@ def test_search_ignores_tone_marks(project_kb):
 
 
 def test_search_finds_phrase_made_of_common_words(project_kb):
+    """The Knowledge Base teaches two ways to ask this, and either one answers the question.
+
+    d'emwin comes from the everyday word list; vb' ọna khin? from the demonstratives lesson.
+    """
     hits = project_kb.search("What is this?", limit=settings.KNOWLEDGE_BASE_TOP_K)
-    assert any("d'emwin" in chunk.text.lower() for chunk, _ in hits)
+    text = " ".join(chunk.text.lower() for chunk, _ in hits)
+    assert "d'emwin" in text or "ọna khin" in text
 
 
 def test_phrase_match_outranks_single_word_match(tmp_path: Path):
