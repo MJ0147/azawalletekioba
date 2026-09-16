@@ -45,21 +45,29 @@ Each has a short and a long form. The long forms carry the same **-na** (near) a
 
 ---
 
-## Standing alone vs. after a noun
+## The silent ọ
 
-The slide does not state this rule, but its own examples show it. **Alone**, the word is the
-full form:
+**The ọ of *ọni* is silent in a sentence** — confirmed by the project owner, who supplied the
+slide. This is not a second word. Once the demonstrative follows the noun it modifies, the
+initial vowel drops and only **ni** is said and written:
 
-- **Ọna** khin? — "**this** is …?"
-- **Ọni** ọr' emwin … — "**that** is the thing …"
+- okhuo **ni** — "that woman" (example 4), not *okhuo ọni*
 
-**Directly after a noun**, the examples use the short forms **na** and **ni**:
+The slide's example 3 shows the same thing happening to *ọna*:
 
-- ẹkpo **na** — "**this** bag" (example 3)
-- okhuo **ni** — "**that** woman" (example 4)
+- ẹkpo **na** — "this bag" (example 3), not *ẹkpo ọna*
 
-This is drawn from two examples only. **Confirm it with a speaker before teaching it as a
-rule.**
+### Where the vowel is kept
+
+The full vowel survives where the word stands alone or opens the sentence:
+
+- **Ọni** ọr' emwin … — "**That** is the thing …" (example 2, sentence-initial, ọ intact)
+- Vb' **ọna** khin? — "What is **this**?" (example 1)
+
+So the elision goes with following a noun, not simply with being somewhere in a sentence.
+
+> **Still open:** whether the plurals *ena* and *eni* lose their vowel the same way. The slide
+> has no example of either in a sentence, and it has not been confirmed.
 
 ---
 
@@ -79,7 +87,7 @@ these are the same morpheme is not settled, so *vbe* is not recorded as a headwo
 - **Literal:** That is the thing that u bought or?
 - **Meaning:** *Is that what you bought?*
 
-*ọni* stands alone. `ọr'` is read as **ọre** "is / it is" from the slide's own gloss; the full
+*ọni* opens the sentence, so its ọ is kept. `ọr'` is read as **ọre** "is / it is" from the slide's own gloss; the full
 form is not printed. `n'` is the relativiser "that / which". The final **ra** is the question
 particle already recorded in `edo-questions-dataset.json`.
 
@@ -90,13 +98,13 @@ particle already recorded in `edo-questions-dataset.json`.
 - **Verb:** the slide names it as **mu … ỹọ**
 
 A serial verb: *mu* "carry" and *ỹọ* "put" together mean "place". The object sits between
-them — **mu** ẹkpo na **ỹọ** evbani. Note the post-nominal **na** in *ẹkpo na*.
+them — **mu** ẹkpo na **ỹọ** evbani. Note *ọna* with its ọ silent in *ẹkpo na*.
 
 ### 4. Okhuo ni tiere Evbaṅna nodẹ.
 
 - **Meaning:** *That woman called here yesterday.*
 
-Post-nominal **ni** in *okhuo ni*, and the long place word *evbaṅna* "here". Both *okhuo*
+*ọni* with its ọ silent after the noun — *okhuo ni* — and the long place word *evbaṅna* "here". Both *okhuo*
 "woman" and *nodẹ* "yesterday" are already in the Knowledge Base, tone-marked, as **òkhùò**
 and **nódẹ̀** in `edo-adjectives-dataset.json`.
 

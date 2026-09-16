@@ -33,7 +33,7 @@ The website's chat also answers from this folder when the AI assistant is offlin
 - [Edo everyday dataset](Language%20Academy/edo-everyday-dataset.json): the same list as JSON, grouped, plus an `academy_vocabulary` array of the 26 words not already listed.
 - [Edo question formation](Language%20Academy/edo-questions-grammar.md): polar questions, the particle *yi*, alternative questions with *ra*, and *de* + NP content questions. Transcribed from OCR text, showing each form as printed alongside its likely reading.
 - [Edo questions dataset](Language%20Academy/edo-questions-dataset.json): the numbered examples, a particle summary, and an `academy_vocabulary` array.
-- [Edo demonstratives and place words](Language%20Academy/edo-demonstratives-grammar.md): this, that, these, those, here and there, with four worked sentences and the standing-alone vs. after-a-noun split. Transcribed from a lesson slide.
+- [Edo demonstratives and place words](Language%20Academy/edo-demonstratives-grammar.md): this, that, these, those, here and there, with four worked sentences and the silent ọ — ọni is said ni once it follows its noun. Transcribed from a lesson slide.
 - [Edo demonstratives dataset](Language%20Academy/edo-demonstratives-dataset.json): the two tables and the examples as JSON, plus an `academy_vocabulary` array of 16 words.
 
 ## Benin History

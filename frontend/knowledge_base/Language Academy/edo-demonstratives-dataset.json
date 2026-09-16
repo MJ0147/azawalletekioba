@@ -9,7 +9,7 @@
       "The slide writes elisions with an apostrophe: vb' ọna for vbe ọna, ọr' for ọre, n' for ne, ỹ' for ỹọ. Entries below keep the slide's spelling and give the full form only where the slide itself supplies it.",
       "vbe is glossed 'what' by position in example 1 only; edo-questions-grammar.md records de as 'what/which'. Whether these are the same morpheme is not settled here, so vbe is not added as a headword.",
       "ọr' is read as ọre 'is / it is' from the slide's own gloss 'That is the thing'. The full form is not printed on the slide.",
-      "The post-nominal forms na and ni are an observation drawn from examples 3 and 4 (see post_nominal_note), not something the slide states. Confirm with a speaker before teaching it as a rule."
+      "The ọ of ọni is silent once the word follows its noun — confirmed by the project owner, who supplied the slide. Recorded as elision of one word (see demonstratives.vowel_elision), not as a separate short form. Whether the plurals ena/eni behave the same way is still unconfirmed."
     ],
     "already_in_academy_vocabulary": [
       {
@@ -59,19 +59,28 @@
         "english": "those"
       }
     ],
-    "post_nominal_note": "Standing alone, the word is ọna/ọni/ena/eni. Directly after a noun the slide's own examples use the short forms na and ni: ẹkpo na 'this bag' (example 3), okhuo ni 'that woman' (example 4). The same -na/-ni split runs through the place words below.",
-    "post_nominal": [
-      {
-        "edo": "na",
-        "english": "this (directly after a noun)",
-        "from_example": 3
-      },
-      {
-        "edo": "ni",
-        "english": "that (directly after a noun)",
-        "from_example": 4
-      }
-    ]
+    "vowel_elision": {
+      "rule": "The project owner confirms the ọ of ọni is silent in a sentence. It is not a separate word: once the demonstrative follows the noun it modifies, the initial vowel drops and only ni is said and written — okhuo ni 'that woman' (example 4). Example 3 shows the same for ọna — ẹkpo na 'this bag'.",
+      "vowel_kept_when": "The full vowel is kept where the word stands alone or opens the sentence. Example 2 begins Ọni ọr' Emwin ... with the ọ intact, and example 1 has Vb' ọna khin?",
+      "confirmed_by": "project owner, for ọni",
+      "open_question": "Whether the plurals ena and eni elide the same way is not shown on the slide and has not been confirmed.",
+      "forms": [
+        {
+          "full": "ọna",
+          "in_sentence": "na",
+          "english": "this",
+          "from_example": 3,
+          "phrase": "ẹkpo na — this bag"
+        },
+        {
+          "full": "ọni",
+          "in_sentence": "ni",
+          "english": "that",
+          "from_example": 4,
+          "phrase": "okhuo ni — that woman"
+        }
+      ]
+    }
   },
   "locatives": [
     {
@@ -110,14 +119,14 @@
       "edo": "Ọni ọr' Emwin n' u dẹh ra?",
       "literal": "That is the thing that u bought or?",
       "translation": "Is that what you bought?",
-      "shows": "ọni standing alone; ra closes the question"
+      "shows": "ọni opening the sentence, so the ọ is kept and pronounced; ra closes the question"
     },
     {
       "number": 3,
       "edo": "Lahọ, mu Ẹkpo na ỹ' Evbani.",
       "literal": "Please carry this bag put there",
       "translation": "Please place this bag there.",
-      "shows": "post-nominal na in ẹkpo na 'this bag'; evbani 'there'; the serial verb mu ... ỹọ 'carry ... put' = 'place'",
+      "shows": "ọna with its ọ silent after the noun — ẹkpo na 'this bag'; evbani 'there'; the serial verb mu ... ỹọ 'carry ... put' = 'place'",
       "verb": "mu ỹọ"
     },
     {
@@ -125,7 +134,7 @@
       "edo": "Okhuo ni tiere Evbaṅna nodẹ.",
       "literal": "Woman that called here yesterday",
       "translation": "That woman called here yesterday.",
-      "shows": "post-nominal ni in okhuo ni 'that woman'; evbaṅna 'here'"
+      "shows": "ọni with its ọ silent after the noun — okhuo ni 'that woman'; evbaṅna 'here'"
     }
   ],
   "academy_vocabulary": [
@@ -155,15 +164,15 @@
     },
     {
       "edo": "na",
-      "english": "this (after a noun)",
+      "english": "this (ọna with the ọ silent, after a noun)",
       "category": "demonstrative",
-      "example": "ẹkpo na — this bag"
+      "example": "ẹkpo na — this bag (full form ọna)"
     },
     {
       "edo": "ni",
-      "english": "that (after a noun)",
+      "english": "that (ọni with the ọ silent, after a noun)",
       "category": "demonstrative",
-      "example": "okhuo ni — that woman"
+      "example": "okhuo ni — that woman (full form ọni)"
     },
     {
       "edo": "evbaṅna",
