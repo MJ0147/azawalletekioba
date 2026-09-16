@@ -162,7 +162,7 @@
             </div>
             <div class="product-info">
               <h3 class="product-name" x-text="hotel.title"></h3>
-              <p class="product-desc" style="color:var(--color-muted)" x-text="'📍 ' + hotel.city"></p>
+              <p class="product-desc" style="color:var(--color-muted)" x-text="'📍 ' + (hotel.address ? hotel.address + ', ' + hotel.city : hotel.city)"></p>
               <p x-show="hotel.description" style="font-size:.83rem;color:var(--color-muted);margin:.3rem 0" x-text="hotel.description"></p>
               <div style="display:flex;align-items:center;gap:.5rem;margin:.4rem 0;flex-wrap:wrap">
                 <span x-show="hotel.rating"
@@ -215,7 +215,7 @@
       <template x-if="selectedHotel">
         <div>
           <p style="font-weight:700;font-size:1.05rem" x-text="selectedHotel.title"></p>
-          <p style="color:var(--color-muted);font-size:.88rem;margin-bottom:1.25rem" x-text="'📍 ' + selectedHotel.city"></p>
+          <p style="color:var(--color-muted);font-size:.88rem;margin-bottom:1.25rem" x-text="'📍 ' + (selectedHotel.address ? selectedHotel.address + ', ' + selectedHotel.city : selectedHotel.city)"></p>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
             <label style="font-size:.85rem;font-weight:600;display:flex;flex-direction:column;gap:.3rem">

@@ -120,3 +120,16 @@ def test_login_page_embeds_the_telegram_widget_for_idiacoinbot(client):
     assert 'data-telegram-login="IdiacoinBot"' in page
     assert 'data-auth-url="http://testserver/auth/telegram/callback?next=/academy"' in page
     assert 'id="account-link"' in client.get("/museum").text  # the header links to it on every page
+
+
+@pytest.mark.parametrize("admin_id", ["8894431525", "7152238199"])
+def test_the_named_admins_are_recognised_by_telegram_id_alone(client, admin_id):
+    """@Azavault and @Ramseyaimua stay admins even if their username changes or is hidden."""
+    log_in(client, id=admin_id, username="")
+    assert client.get("/api/orders").status_code == 200
+    assert "adminHub()" in client.get("/admin").text
+
+
+def test_an_unlisted_telegram_id_is_not_an_admin(client):
+    log_in(client, id="8894431524", username="")
+    assert client.get("/api/orders").status_code == 401

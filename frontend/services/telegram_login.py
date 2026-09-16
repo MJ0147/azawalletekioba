@@ -29,6 +29,9 @@ MAX_LOGIN_AGE_SECONDS = 24 * 60 * 60
 TELEGRAM_FIELDS = ("id", "first_name", "last_name", "username", "photo_url", "auth_date")
 DEFAULT_BOT_USERNAME = "IdiacoinBot"
 DEFAULT_ADMIN_USERNAMES = "Azavault,Ramseyaimua"
+# The same two admins by numeric id: @Azavault and @Ramseyaimua. A Telegram id is permanent, while a
+# username can be released and taken by someone else, so these are the safer half of the check.
+DEFAULT_ADMIN_IDS = "8894431525,7152238199"
 
 
 class TelegramLoginError(ValueError):
@@ -97,7 +100,7 @@ def is_admin(user: Optional[TelegramUser]) -> bool:
     """Admins are checked on every request, so removing someone from the settings takes effect at once."""
     if user is None:
         return False
-    if str(user.id) in _names("TELEGRAM_ADMIN_IDS"):
+    if str(user.id) in _names("TELEGRAM_ADMIN_IDS", DEFAULT_ADMIN_IDS):
         return True
     return bool(user.username) and user.username.lower() in _names("TELEGRAM_ADMIN_USERNAMES", DEFAULT_ADMIN_USERNAMES)
 
