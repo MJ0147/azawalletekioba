@@ -75,3 +75,10 @@ def test_benin_city_listings_are_real_hotels(client):
     for hotel in benin:
         assert hotel.get("address"), hotel["title"]
         assert float(hotel["price_per_night"]) > 0, hotel["title"]
+
+
+def test_no_offline_warning_is_shown(client):
+    """The built-in list is real hotels, not samples, so there is nothing to apologise for."""
+    text = visible_text(client.get("/hotels").text)
+    for phrase in ("temporarily offline", "sample listings", "Showing sample"):
+        assert phrase not in text, phrase

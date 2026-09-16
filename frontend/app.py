@@ -1276,8 +1276,13 @@ async def health() -> JSONResponse:
 
 @app.get("/hotels", response_class=HTMLResponse)
 async def hotels_page(request: Request) -> HTMLResponse:
+    """The hotels page.
+
+    A hotel service supplies the listings when one is configured and reachable. Otherwise the page
+    uses the built-in list, which is real hotels with the addresses and rates they publish, not
+    placeholders — so there is nothing to warn a reader about, and no banner.
+    """
     listings: list[dict[str, Any]] = []
-    service_offline = False
     base = (HOTELS_SERVICE_URL or "").strip().rstrip("/")
     if base:
         try:
@@ -1287,17 +1292,11 @@ async def hotels_page(request: Request) -> HTMLResponse:
                 data = r.json()
                 if isinstance(data, list):
                     listings = data
-        except Exception:
-            service_offline = True
-    else:
-        service_offline = True
-
-    if not listings:
-        listings = PRESTIGIOUS_HOTELS
+        except Exception as exc:
+            logger.warning("Hotel service unreachable (%s); using the built-in listings", exc.__class__.__name__)
 
     return templates.TemplateResponse(request, "hotels.html", {
-        "listings": listings,
-        "service_offline": service_offline,
+        "listings": listings or PRESTIGIOUS_HOTELS,
     })
 
 

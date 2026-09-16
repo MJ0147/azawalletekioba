@@ -127,13 +127,6 @@
     </div>
   </section>
 
-  <!-- Service status banner -->
-  {% if service_offline %}
-  <div class="panel" style="background:var(--color-warn,#fffbeb);border:1px solid #fbbf24;margin-bottom:1.5rem">
-    <p style="margin:0;color:#92400e">⚠️ Hotel service is temporarily offline. Showing sample listings.</p>
-  </div>
-  {% endif %}
-
   <!-- City filter -->
   <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap">
     <input type="search" x-model="city" placeholder="Filter by city (e.g. Benin City)"
