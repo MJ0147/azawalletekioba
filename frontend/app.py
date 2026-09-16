@@ -47,6 +47,8 @@ from services.ton import TonServiceError
 from services.museum import MUSEUM_PORTRAITS, museum_catalogue
 from services import kb_fallback
 from services import iyobo_direct
+from services import academy_routes
+from services import academy_translate as academy_translator
 from services.grok_client import GrokError
 
 logger = logging.getLogger("ekioba-frontend")
@@ -66,6 +68,8 @@ for _asset_dir in (BASE_DIR / "static", PUBLIC_DIR):
 app = FastAPI(title="Ekioba Frontend")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static"), check_dir=False), name="static")
+# Edo Language Academy institute: wallet sign-in, grade exams, points and IDIA conversions.
+app.include_router(academy_routes.router)
 
 # public/ (PWA manifest, token metadata) is served at root URLs by
 # `public_root_files` below, and directly by Vercel's CDN. It must not also be
@@ -78,7 +82,8 @@ STORE_PAYMENTS_URL = os.getenv("STORE_PAYMENTS_URL", "http://localhost:8001/paym
 AI_ASSISTANT_URL = os.getenv("AI_ASSISTANT_URL", "")
 IYOBO_SERVICE_PATH = "/iyobo"
 LOCAL_AI_ASSISTANT_URL = "http://localhost:8005"
-LANGUAGE_ACADEMY_URL = os.getenv("LANGUAGE_ACADEMY_URL", "http://localhost:8004")
+# Optional separate language_academy service (Docker). Without it the Academy uses the Knowledge Base.
+LANGUAGE_ACADEMY_URL = os.getenv("LANGUAGE_ACADEMY_URL", "")
 HOTELS_SERVICE_URL = os.getenv("HOTELS_SERVICE_URL", "http://localhost:8003")
 CARGO_SERVICE_URL = os.getenv("CARGO_SERVICE_URL", "http://localhost:8002")
 NEXT_PUBLIC_IYOBO_API_URL = os.getenv("NEXT_PUBLIC_IYOBO_API_URL", "")
@@ -1392,42 +1397,25 @@ async def museum_page(request: Request) -> HTMLResponse:
 
 @app.get("/academy", response_class=HTMLResponse)
 async def academy_page(request: Request) -> HTMLResponse:
-    service_offline = False
-    base = (LANGUAGE_ACADEMY_URL or "").strip().rstrip("/")
-    if base:
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                r = await client.get(f"{base}/health", headers={"Accept": "application/json"})
-                if r.status_code >= 400:
-                    service_offline = True
-        except Exception:
-            service_offline = True
-    else:
-        service_offline = True
-    return templates.TemplateResponse("academy.html", {"request": request, "service_offline": service_offline})
+    # Grades, points, the translator and practice all run in this app (services/academy_*.py), so the
+    # page doesn't depend on the separate language_academy service.
+    return templates.TemplateResponse("academy.html", {"request": request})
 
 
 @app.post("/api/academy/translate")
 async def academy_translate(request: Request) -> JSONResponse:
+    """English ↔ Edo from the Knowledge Base, with Grok for words it lacks (services/academy_translate.py)."""
     try:
         payload = await request.json()
-    except Exception:
+    except ValueError:
         return JSONResponse({"error": "Invalid JSON."}, status_code=400)
-
-    base = (LANGUAGE_ACADEMY_URL or "").strip().rstrip("/")
-    if base:
-        async with httpx.AsyncClient(timeout=12.0) as client:
-            try:
-                r = await client.post(
-                    f"{base}/translate",
-                    json=payload,
-                    headers={"Accept": "application/json"},
-                )
-                r.raise_for_status()
-                return JSONResponse(r.json())
-            except Exception:
-                pass
-    return JSONResponse({"error": "Translation service unavailable."}, status_code=503)
+    if not isinstance(payload, dict):
+        return JSONResponse({"error": "Invalid JSON."}, status_code=400)
+    try:
+        result = await academy_translator.translate(payload.get("text"), str(payload.get("direction") or "en_to_edo"))
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return JSONResponse(result)
 
 
 @app.get("/api/academy/vocabulary")

@@ -11,3 +11,9 @@ tonsdk==1.0.15
 supabase==2.31.0
 # Load .env for local development (host environment variables still take precedence)
 python-dotenv==1.0.1
+# Edo Language Academy records (grades, points, IDIA conversions): PostgreSQL via asyncpg, SQLite locally
+sqlalchemy==2.0.49
+asyncpg==0.31.0
+aiosqlite==0.22.1
+# Checks TON Connect wallet sign-in signatures (also a tonsdk dependency)
+pynacl==1.6.2

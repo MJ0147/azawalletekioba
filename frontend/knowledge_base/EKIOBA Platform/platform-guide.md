@@ -79,8 +79,9 @@ IDIA Coin is EKIOBA's cultural token, named in honour of Queen Idia, the first Q
 Benin. It is a Jetton on the TON blockchain, the only chain EKIOBA settles on. IDIA payments cannot
 be reversed once they are confirmed on-chain.
 
-- **Academy rewards.** The earlier replies said Academy quizzes earn IDIA, but Iyobo's instructions
-  say they earn Aza Points. Confirm which is correct.
+IDIA Coin can also be earned at the Edo Language Academy: after passing Grades 1–4, every 100
+Academy points converts to 1 IDIA, sent to the learner's wallet once the EKIOBA team has reviewed
+the request.
 
 ## Wallets and TON Connect
 
@@ -100,11 +101,31 @@ advice.
 
 ## Edo Language Academy
 
-Questions this answers: academy, learn Edo, lessons, quiz, translator, vocabulary, study.
+Questions this answers: academy, learn Edo, lessons, quiz, exam, grade, pass mark, points, rewards,
+convert points to IDIA, translator, vocabulary, study.
 
-The Edo Language Academy (`/academy`) teaches the Edo (Bini) language. It has an Edo–English
-translator, a 50-question vocabulary quiz with rewards, a vocabulary browser by category, and daily
-lessons. The words themselves are in the Language Academy section of this Knowledge Base.
+The Edo Language Academy (`/academy`) teaches the Edo (Bini) language as an institute with four
+grades:
+
+| Grade | Subject |
+| ----- | ------- |
+| 1 | Everyday words: nouns, family, food, nature, places and first phrases |
+| 2 | Counting in Edo: numbers from one to one hundred |
+| 3 | Animals and actions: animals, verbs and adverbs |
+| 4 | Describing and asking: adjectival verbs, adjectives, ideophones and question particles |
+
+- **Enrolling.** Sign in with a TON wallet. Grades, points and conversions belong to that wallet.
+- **Exams.** Each grade has a 50-question exam, one question per screen. 70% passes the grade and
+  unlocks the next one. Exams can be retaken, and an unfinished exam can be resumed.
+- **Points.** Each correct answer is worth 10 points, but only answers beyond your best score in
+  that grade earn points, so each grade is worth up to 500 points. Practice quizzes earn no points.
+- **IDIA Coin.** After passing Grades 1–4, points convert at 100 points = 1 IDIA Coin. A conversion
+  is a request: the EKIOBA team reviews it and sends the IDIA to your signed-in wallet. If a request
+  is declined, the points are returned.
+
+The Academy also has an English–Edo translator (Knowledge Base words first, AI-assisted for words
+the Knowledge Base doesn't have), a practice quiz, a vocabulary browser and daily lessons. The words
+themselves are in the Language Academy section of this Knowledge Base.
 
 ## Benin Royal Museum
 

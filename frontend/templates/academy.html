@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Edo Language Academy — EKIOBA{% endblock %}
-{% block description %}Learn the Edo language — vocabulary, translation, and interactive quizzes powered by EKIOBA.{% endblock %}
+{% block description %}Study Edo at EKIOBA's Language Academy: four graded levels, points you can convert to IDIA Coin, a translator and daily lessons.{% endblock %}
 
 {% block content %}
 <div class="shell">
@@ -11,35 +11,137 @@
       <p class="eyebrow">Edo Language Academy</p>
       <h1>Learn the Edo Language</h1>
       <p class="sub">
-        Explore vocabulary, translate phrases, and test your knowledge of the Edo language —
-        the tongue of the ancient Benin Kingdom.
+        Study the tongue of the ancient Benin Kingdom through four graded levels. Pass each grade exam,
+        earn points for your correct answers, and convert your points to IDIA Coin once you've passed
+        Grades 1 to 4.
       </p>
     </div>
     <div class="hero-badge">
-      <span class="hero-pill">📚 Vocabulary</span>
-      <span class="hero-pill">🔄 Translation</span>
-      <span class="hero-pill">🎯 Quiz</span>
+      <span class="hero-pill">🎓 Grades 1–4</span>
+      <span class="hero-pill">⭐ Points → IDIA</span>
+      <span class="hero-pill">🔄 Translator</span>
     </div>
   </section>
 
-  {% if service_offline %}
-  <div class="panel" style="background:var(--color-warn,#fffbeb);border:1px solid #fbbf24;margin-bottom:1.5rem">
-    <p style="margin:0;color:#92400e">⚠️ Language Academy service is temporarily offline. Some features may be unavailable.</p>
-  </div>
-  {% endif %}
+  <!-- ── Institute: sign-in, grades, points and IDIA conversion ─────────── -->
+  <section class="panel" id="institute" style="margin-bottom:1.5rem"
+           x-data="academyInstitute()" x-init="load()" @academy-refresh.window="load()">
+    <div class="panel-header" style="flex-wrap:wrap;gap:.75rem">
+      <div>
+        <h2>Academy Institute</h2>
+        <p>Graded exams · <span x-text="passPercent"></span>% to pass · points convert to IDIA Coin</p>
+      </div>
+      <template x-if="me">
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <span style="font-size:.85rem;color:var(--color-muted)" x-text="'💳 ' + shortWallet()"></span>
+          <button type="button" class="btn-ghost" @click="signOut()" style="padding:.35rem .8rem;font-size:.82rem">Sign out</button>
+        </div>
+      </template>
+    </div>
+
+    <template x-if="loading">
+      <p style="color:var(--color-muted)">Loading your Academy record…</p>
+    </template>
+
+    <template x-if="!loading && !configured">
+      <p style="margin:0;color:#92400e;background:#fffbeb;border:1px solid #fbbf24;border-radius:.75rem;padding:.9rem" x-text="notice"></p>
+    </template>
+
+    <template x-if="!loading && configured && !me">
+      <div style="display:grid;gap:.9rem;max-width:660px">
+        <p style="margin:0">Enrol with your TON wallet to take graded exams. Your grades, points and IDIA Coin conversions belong to that wallet.</p>
+        <ul style="margin:0;padding-left:1.1rem;color:var(--color-muted);font-size:.92rem;display:grid;gap:.3rem">
+          <li>Four grades with a 50-question exam each; <span x-text="passPercent"></span>% passes a grade and unlocks the next.</li>
+          <li>10 points for each correct answer. Retakes only earn points for beating your best score.</li>
+          <li>After passing Grades 1–4, every 100 points converts to 1 IDIA Coin, reviewed and sent by the EKIOBA team.</li>
+        </ul>
+        <button type="button" class="btn-primary" @click="signIn()" :disabled="busy" style="justify-self:start">
+          <span x-text="busy ? 'Waiting for your wallet…' : '💳 Sign in with TON wallet'"></span>
+        </button>
+        <template x-if="error"><p role="alert" style="margin:0;color:#b91c1c" x-text="error"></p></template>
+      </div>
+    </template>
+
+    <template x-if="!loading && me">
+      <div style="display:grid;gap:1.25rem">
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px;border:1px solid var(--color-border);border-radius:.9rem;padding:.9rem 1rem;background:var(--color-surface)">
+            <p style="margin:0;font-size:.78rem;color:var(--color-muted)">Points available</p>
+            <p style="margin:.2rem 0 0;font-size:1.6rem;font-weight:700" x-text="me.points.available"></p>
+          </div>
+          <div style="flex:1;min-width:160px;border:1px solid var(--color-border);border-radius:.9rem;padding:.9rem 1rem;background:var(--color-surface)">
+            <p style="margin:0;font-size:.78rem;color:var(--color-muted)">Points earned in total</p>
+            <p style="margin:.2rem 0 0;font-size:1.6rem;font-weight:700" x-text="me.points.earned"></p>
+          </div>
+          <div style="flex:1;min-width:160px;border:1px solid var(--color-border);border-radius:.9rem;padding:.9rem 1rem;background:var(--color-surface)">
+            <p style="margin:0;font-size:.78rem;color:var(--color-muted)">Grades passed</p>
+            <p style="margin:.2rem 0 0;font-size:1.6rem;font-weight:700" x-text="passedCount() + ' of ' + me.grades.length"></p>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem">
+          <template x-for="g in me.grades" :key="g.number">
+            <article :style="gradeCardStyle(g)">
+              <p style="margin:0;font-size:.75rem;letter-spacing:.07em;text-transform:uppercase;color:var(--color-muted)" x-text="'Grade ' + g.number"></p>
+              <h3 style="margin:.2rem 0 .35rem;font-size:1.1rem" x-text="g.title"></h3>
+              <p style="margin:0 0 .6rem;font-size:.88rem;color:var(--color-muted)" x-text="g.description"></p>
+              <p style="margin:0 0 .8rem;font-weight:600;font-size:.9rem" x-text="gradeStatus(g)"></p>
+              <button type="button" :class="g.passed ? 'btn-ghost' : 'btn-primary'" :disabled="!g.unlocked"
+                      @click="startExam(g.number)" x-text="gradeAction(g)" style="width:100%"></button>
+            </article>
+          </template>
+        </div>
+
+        <div style="border:1px solid #fcd34d;background:#fffbeb;border-radius:.9rem;padding:1rem 1.1rem;display:grid;gap:.7rem">
+          <h3 style="margin:0;font-size:1.05rem">Convert points to IDIA Coin</h3>
+          <p style="margin:0;font-size:.92rem" x-text="conversionMessage()"></p>
+          <button type="button" class="btn-primary" style="justify-self:start" :disabled="!canConvert() || busy" @click="requestConversion()"
+                  x-text="canConvert() ? 'Convert ' + me.idia.convertible_points + ' points to ' + me.idia.convertible_idia + ' IDIA' : 'Convert to IDIA'"></button>
+          <template x-if="error"><p role="alert" style="margin:0;color:#b91c1c" x-text="error"></p></template>
+          <template x-if="me.conversions.length">
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+                <thead>
+                  <tr style="text-align:left;color:var(--color-muted)">
+                    <th style="padding:.35rem .5rem">Requested</th><th style="padding:.35rem .5rem">Points</th>
+                    <th style="padding:.35rem .5rem">IDIA</th><th style="padding:.35rem .5rem">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="c in me.conversions" :key="c.id">
+                    <tr style="border-top:1px solid #fde68a">
+                      <td style="padding:.35rem .5rem" x-text="new Date(c.created_at).toLocaleDateString()"></td>
+                      <td style="padding:.35rem .5rem" x-text="c.points"></td>
+                      <td style="padding:.35rem .5rem" x-text="c.idia_amount"></td>
+                      <td style="padding:.35rem .5rem">
+                        <span x-text="conversionStatus(c)"></span>
+                        <template x-if="c.tx_hash">
+                          <a :href="'https://tonviewer.com/transaction/' + encodeURIComponent(c.tx_hash)" target="_blank" rel="noopener" style="margin-left:.35rem">View transfer</a>
+                        </template>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </section>
 
   <div class="grid-two" style="margin-bottom:1.5rem">
 
-    <!-- Translator -->
+    <!-- ── Translator ─────────────────────────────────────────────────────── -->
     <section class="panel"
              x-data="{
                text: '',
                direction: 'en_to_edo',
-               result: '',
+               result: null,
                loading: false,
                error: '',
                async translate() {
-                 this.error = ''; this.result = '';
+                 this.error = ''; this.result = null;
                  if (!this.text.trim()) { this.error = 'Enter text to translate.'; return; }
                  this.loading = true;
                  try {
@@ -49,9 +151,9 @@
                      body: JSON.stringify({ text: this.text, direction: this.direction })
                    });
                    const d = await r.json();
-                   this.result = d.translated_text || d.translation || d.error || 'No result.';
+                   if (!r.ok) { this.error = d.error || 'Translation failed.'; } else { this.result = d; }
                  } catch(e) {
-                   this.error = 'Translation service unavailable.';
+                   this.error = 'The translator could not be reached. Check your connection.';
                  } finally {
                    this.loading = false;
                  }
@@ -62,175 +164,59 @@
         <p>English ↔ Edo</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:.9rem">
-        <select x-model="direction"
+        <select x-model="direction" aria-label="Translation direction"
                 style="padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)">
           <option value="en_to_edo">English → Edo</option>
           <option value="edo_to_en">Edo → English</option>
         </select>
-        <textarea x-model="text" rows="3" placeholder="Enter text..."
+        <textarea x-model="text" rows="3" placeholder="Enter a word or phrase…" aria-label="Text to translate" maxlength="500"
+                  @keydown.ctrl.enter="translate()"
                   style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.95rem;resize:vertical;background:var(--color-surface)"></textarea>
         <button @click="translate()" :disabled="loading" class="btn-primary">
           <span x-text="loading ? 'Translating…' : 'Translate'"></span>
         </button>
         <template x-if="error"><p style="color:#ef4444;font-size:.9rem" x-text="error"></p></template>
         <template x-if="result">
-          <div style="background:var(--color-surface-alt,#f0f9ff);border:1px solid #7dd3fc;border-radius:.75rem;padding:1rem">
-            <p style="font-size:.8rem;color:var(--color-muted);margin-bottom:.4rem">Translation</p>
-            <p style="font-size:1.05rem;font-weight:600" x-text="result"></p>
+          <div style="background:var(--color-surface-alt,#f0f9ff);border:1px solid #7dd3fc;border-radius:.75rem;padding:1rem;display:grid;gap:.45rem">
+            <p style="font-size:.78rem;color:var(--color-muted);margin:0" x-text="result.source === 'ai' ? '🤖 AI-assisted' : '📚 EKIOBA Knowledge Base'"></p>
+            <p style="font-size:1.1rem;font-weight:600;margin:0" x-text="result.translated_text"></p>
+            <template x-if="result.matches && result.matches.length">
+              <div style="display:flex;flex-wrap:wrap;gap:.35rem">
+                <template x-for="(m, i) in result.matches" :key="i">
+                  <span style="font-size:.78rem;background:#e0f2fe;border-radius:999px;padding:.15rem .55rem" x-text="m.text + ' → ' + m.translation"></span>
+                </template>
+              </div>
+            </template>
+            <p style="font-size:.8rem;color:var(--color-muted);margin:0" x-text="result.note"></p>
           </div>
         </template>
       </div>
     </section>
 
-    <!-- Quiz -->
-    <section class="panel"
-             x-data="{
-               questionBank: [],
-               question: null,
-               questionIndex: 0,
-               userAnswer: '',
-               feedback: null,
-               answeredCount: 0,
-               correctCount: 0,
-               completed: false,
-               completionAward: 0,
-               locked: false,
-               loading: false,
-               category: '',
-               points: 0,
-               async loadSection() {
-                 this.feedback = null; this.userAnswer = ''; this.loading = true;
-                 this.answeredCount = 0; this.correctCount = 0; this.completed = false; this.completionAward = 0; this.locked = false;
-                 try {
-                   const url = '/api/academy/quiz/section?size=50' + (this.category ? '&category=' + encodeURIComponent(this.category) : '');
-                   const r = await fetch(url);
-                   const d = await r.json();
-                   this.questionBank = d.questions || [];
-                   this.questionIndex = 0;
-                   this.question = this.questionBank.length ? this.questionBank[0] : null;
-                 } catch(e) {
-                   this.questionBank = [];
-                   this.question = null;
-                 }
-                 this.loading = false;
-               },
-               nextQuestion() {
-                 this.feedback = null;
-                 this.userAnswer = '';
-                 this.locked = false;
-                 if (!this.questionBank.length) {
-                   this.question = null;
-                   return;
-                 }
-                 if (this.questionIndex + 1 >= this.questionBank.length) {
-                   this.completed = true;
-                   this.question = null;
-                   this.finishQuiz();
-                   return;
-                 }
-                 this.questionIndex += 1;
-                 this.question = this.questionBank[this.questionIndex];
-               },
-               async finishQuiz() {
-                 try {
-                   const r = await fetch('/api/academy/quiz/complete', {
-                     method: 'POST',
-                     headers: {'Content-Type':'application/json'},
-                     body: JSON.stringify({ answered: this.answeredCount, correct: this.correctCount })
-                   });
-                   const d = await r.json();
-                   this.completionAward = d.completion_bonus || 0;
-                   this.points += this.completionAward;
-                 } catch(e) {}
-               },
-               async submitAnswer() {
-                 if (!this.userAnswer.trim() || !this.question || this.locked) return;
-                 this.loading = true;
-                 try {
-                   const r = await fetch('/api/academy/quiz/answer', {
-                     method: 'POST',
-                     headers: {'Content-Type':'application/json'},
-                     body: JSON.stringify({ answer: this.userAnswer, expected: this.question.answer, user_id: 'guest' })
-                   });
-                   const d = await r.json();
-                   this.feedback = d;
-                   this.answeredCount += 1;
-                   if (d.correct) {
-                     this.correctCount += 1;
-                     this.points += (d.points_awarded || d.awarded_tokens || 10);
-                   }
-                   this.locked = true;
-                 } catch(e) { this.feedback = {correct: false, message: 'Service error'}; }
-                 this.loading = false;
-               }
-             }"
-             x-init="loadSection()">
+    <!-- ── Practice quiz ──────────────────────────────────────────────────── -->
+    <section class="panel" x-data="{ category: '' }">
       <div class="panel-header">
-        <h2>Quiz</h2>
-        <p>
-          Points: <strong x-text="points"></strong> |
-          Score: <strong x-text="correctCount"></strong>/<strong x-text="answeredCount"></strong> |
-          Question <strong x-text="question ? (questionIndex + 1) : answeredCount"></strong>/50
-        </p>
+        <h2>Practice quiz</h2>
+        <p>50 full-page questions · no points</p>
       </div>
-      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem">
-        <select x-model="category" @change="loadSection()"
-                style="flex:1;padding:.45rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.85rem;background:var(--color-surface)">
-          <option value="">General section</option>
-          <option value="greetings">Greetings section</option>
-          <option value="numbers">Numbers section</option>
-          <option value="food">Food section</option>
-          <option value="family">Family section</option>
-          <option value="body">Body section</option>
-          <option value="nature">Nature section</option>
+      <div style="display:flex;flex-direction:column;gap:.9rem">
+        <p style="margin:0;color:var(--color-muted)">Warm up before a grade exam. Practice quizzes are marked instantly and don't affect your grades or points.</p>
+        <select x-model="category" aria-label="Practice topic"
+                style="padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)">
+          <option value="">All topics</option>
+          <option value="noun">Everyday words</option>
+          <option value="numbers">Numbers</option>
+          <option value="animal">Animals</option>
+          <option value="verb">Verbs</option>
+          <option value="adjectival_verb">Describing words</option>
         </select>
-        <button @click="loadSection()" class="btn-ghost" style="padding:.45rem .9rem;font-size:.85rem">↻ New 50</button>
+        <button type="button" class="btn-primary" @click="$dispatch('academy-start-practice', { category })">Start practice quiz</button>
       </div>
-      <template x-if="loading && !question">
-        <p style="color:var(--color-muted)">Loading question…</p>
-      </template>
-      <template x-if="question">
-        <div style="display:flex;flex-direction:column;gap:.9rem">
-          <div style="background:var(--color-surface-alt,#faf5ff);border:1px solid #d8b4fe;border-radius:.75rem;padding:1rem">
-            <p style="font-size:.8rem;color:var(--color-muted);margin-bottom:.3rem" x-text="question.category || 'General'"></p>
-            <p style="font-weight:600;font-size:1.05rem" x-text="question.prompt"></p>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:.5rem">
-            <template x-for="(opt, idx) in (question.options || [])" :key="idx">
-              <label style="display:flex;align-items:center;gap:.55rem;border:1px solid var(--color-border);border-radius:.55rem;padding:.55rem .7rem;background:var(--color-surface);cursor:pointer">
-                <input type="radio" name="quiz-answer" :value="opt.text" x-model="userAnswer" />
-                <strong x-text="opt.label + '.'"></strong>
-                <span x-text="opt.text"></span>
-              </label>
-            </template>
-          </div>
-          <div style="display:flex;gap:.6rem">
-            <button @click="submitAnswer()" :disabled="loading" class="btn-primary" style="flex:1">Submit</button>
-            <button @click="nextQuestion()" class="btn-ghost" style="flex:1" x-text="(questionIndex + 1) >= questionBank.length ? 'Finish Quiz' : 'Next →'"></button>
-          </div>
-          <template x-if="feedback">
-            <div :style="'border-radius:.75rem;padding:.9rem;border:1px solid ' + (feedback.correct ? '#86efac' : '#fca5a5') + ';background:' + (feedback.correct ? '#f0fdf4' : '#fff1f2')">
-              <p style="font-weight:600" x-text="feedback.correct ? '✅ Correct!' : '❌ Incorrect'"></p>
-              <p style="font-size:.9rem;margin-top:.25rem" x-text="feedback.correct ? ('+' + (feedback.points_awarded || feedback.awarded_tokens || 10) + ' points awarded') : ('Correct answer: ' + (feedback.expected || question.answer || 'N/A'))"></p>
-            </div>
-          </template>
-        </div>
-      </template>
-      <template x-if="!question && !loading">
-        <p style="color:var(--color-muted)">Quiz unavailable. Service may be offline.</p>
-      </template>
-      <template x-if="completed">
-        <div style="margin-top:1rem;border:1px solid #86efac;background:#f0fdf4;border-radius:.75rem;padding:1rem">
-          <p style="font-weight:700;color:#166534;margin:0 0 .35rem">Quiz session completed.</p>
-          <p style="margin:0;font-size:.9rem">You answered <strong x-text="correctCount"></strong> correctly out of 50.</p>
-          <p style="margin:.35rem 0 0;font-size:.9rem" x-show="completionAward > 0">Completion bonus: <strong x-text="completionAward"></strong> points.</p>
-        </div>
-      </template>
     </section>
 
   </div>
 
-  <!-- Vocabulary Browser -->
+  <!-- ── Vocabulary Browser ──────────────────────────────────────────────── -->
   <section class="panel"
            x-data="{
              items: [],
@@ -256,7 +242,7 @@
         <p>Browse Edo words and phrases</p>
       </div>
       <div style="display:flex;gap:.5rem;align-items:center">
-        <input type="search" x-model="search" placeholder="Search words…"
+        <input type="search" x-model="search" placeholder="Search words…" aria-label="Search vocabulary"
                @input.debounce.400ms="load()"
                style="padding:.5rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface);min-width:200px" />
       </div>
@@ -311,15 +297,14 @@
         <p>Your curated Edo language lesson for today</p>
       </div>
       <div style="display:flex;gap:.5rem;align-items:center">
-        <select x-model="category" @change="load()"
+        <select x-model="category" @change="load()" aria-label="Lesson topic"
                 style="padding:.45rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.85rem;background:var(--color-surface)">
-          <option value="">All categories</option>
-          <option value="greetings">Greetings</option>
+          <option value="">All topics</option>
+          <option value="noun">Everyday words</option>
           <option value="numbers">Numbers</option>
-          <option value="food">Food</option>
-          <option value="family">Family</option>
-          <option value="body">Body</option>
-          <option value="nature">Nature</option>
+          <option value="animal">Animals</option>
+          <option value="verb">Verbs</option>
+          <option value="adjectival_verb">Describing words</option>
         </select>
         <button @click="load()" class="btn-ghost" style="padding:.45rem .9rem;font-size:.85rem">↻ Refresh</button>
       </div>
@@ -343,70 +328,82 @@
       </div>
     </template>
     <template x-if="!loading && (!lesson || (((lesson.items || []).length + (lesson.words || []).length) === 0))">
-      <p style="color:var(--color-muted)">Daily lesson unavailable. Academy service may be offline.</p>
+      <p style="color:var(--color-muted)">No lesson words for this topic yet.</p>
     </template>
   </section>
 
-  <!-- ── Create Lesson ─────────────────────────────────────────────────── -->
-  <section class="panel" style="margin-top:1.5rem"
-           x-data="{
-             title: '',
-             category: '',
-             size: 5,
-             result: null,
-             loading: false,
-             error: '',
-             async create() {
-               this.error = ''; this.result = null;
-               if (!this.title.trim()) { this.error = 'Enter a lesson title.'; return; }
-               this.loading = true;
-               try {
-                 const r = await fetch('/api/academy/lesson/create', {
-                   method: 'POST',
-                   headers: {'Content-Type':'application/json'},
-                   body: JSON.stringify({ title: this.title, category: this.category || null, size: this.size })
-                 });
-                 const d = await r.json();
-                 if (d.error) { this.error = d.error; } else { this.result = d; }
-               } catch(e) { this.error = 'Service unavailable.'; }
-               this.loading = false;
-             }
-           }">
-    <div class="panel-header">
-      <h2>Create Lesson</h2>
-      <p>Build a custom Edo language lesson</p>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:.9rem;max-width:460px">
-      <input type="text" x-model="title" placeholder="Lesson title (e.g. Market Phrases)"
-             style="padding:.6rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.95rem;background:var(--color-surface)" />
-      <div style="display:flex;gap:.6rem">
-        <select x-model="category"
-                style="flex:1;padding:.55rem .8rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)">
-          <option value="">Any category</option>
-          <option value="greetings">Greetings</option>
-          <option value="numbers">Numbers</option>
-          <option value="food">Food</option>
-          <option value="family">Family</option>
-          <option value="body">Body</option>
-          <option value="nature">Nature</option>
-        </select>
-        <input type="number" x-model="size" min="3" max="20" placeholder="Size"
-               style="width:80px;padding:.55rem .7rem;border:1px solid var(--color-border);border-radius:.5rem;font-size:.9rem;background:var(--color-surface)" />
-      </div>
-      <button @click="create()" :disabled="loading" class="btn-primary">
-        <span x-text="loading ? 'Creating…' : '+ Create Lesson'"></span>
-      </button>
-      <template x-if="error"><p style="color:#ef4444;font-size:.9rem" x-text="error"></p></template>
-      <template x-if="result">
-        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:.75rem;padding:1rem">
-          <p style="font-weight:700;color:#16a34a">✅ Lesson Created!</p>
-          <p style="font-size:.9rem;margin:.3rem 0">ID: <code x-text="result.lesson_id"></code></p>
-          <p style="font-size:.9rem" x-text="result.message || ('Title: ' + result.title)"></p>
-        </div>
-      </template>
-    </div>
-  </section>
+</div>
 
+<!-- ── Full-page exam and practice runner: one question per screen ───────── -->
+<div x-data="academyRunner()" x-show="open" style="display:none"
+     @academy-start-exam.window="startExam($event.detail.grade)"
+     @academy-start-practice.window="startPractice($event.detail.category)"
+     @keydown.window="onKey($event)">
+  <div role="dialog" aria-modal="true" :aria-label="title"
+       style="position:fixed;inset:0;z-index:9500;background:#f8f5f0;display:flex;flex-direction:column;overflow-y:auto">
+    <header style="display:flex;align-items:center;gap:1rem;padding:1rem clamp(1rem,4vw,2.5rem);background:#1d2a33;color:#fff">
+      <div style="flex:1;min-width:0">
+        <p style="margin:0;font-weight:700" x-text="title"></p>
+        <p style="margin:.15rem 0 0;font-size:.85rem;opacity:.8" x-show="question" x-text="'Question ' + (index + 1) + ' of ' + total"></p>
+      </div>
+      <button type="button" @click="close()" style="background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:.6rem;padding:.5rem .9rem;cursor:pointer;font-size:.95rem">✕ Exit</button>
+    </header>
+    <div style="height:6px;background:#e5dccf" aria-hidden="true">
+      <div :style="'height:100%;background:#dd5b2f;transition:width .25s ease;width:' + progress() + '%'"></div>
+    </div>
+
+    <main style="flex:1;display:flex;align-items:center;justify-content:center;padding:clamp(1.25rem,5vw,3rem)">
+      <div style="width:min(760px,100%)">
+        <template x-if="busy && !question && !result">
+          <p style="text-align:center;color:#6b7280;font-size:1.1rem">Loading…</p>
+        </template>
+        <template x-if="error">
+          <p role="alert" style="text-align:center;color:#b91c1c;margin:0 0 1rem" x-text="error"></p>
+        </template>
+
+        <template x-if="question">
+          <div>
+            <p style="margin:0 0 .5rem;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#9a3412" x-text="question.category || 'Edo'"></p>
+            <h2 style="margin:0 0 1.5rem;font-size:clamp(1.4rem,3.6vw,2.1rem);line-height:1.3;color:#1d2a33" x-text="question.prompt"></h2>
+            <template x-if="question.audio">
+              <button type="button" class="btn-ghost" @click="playEdoAudio(question.audio)" style="margin:-.75rem 0 1.25rem">🔊 Listen</button>
+            </template>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem">
+              <template x-for="opt in question.options" :key="opt.label">
+                <button type="button" @click="choose(opt.label)" :disabled="!!feedback || busy" :style="optionStyle(opt)">
+                  <strong style="display:inline-grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:#f3ede4;flex-shrink:0" x-text="opt.label"></strong>
+                  <span x-text="opt.text"></span>
+                </button>
+              </template>
+            </div>
+            <template x-if="feedback">
+              <div style="margin-top:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:space-between">
+                <p style="margin:0;font-weight:600;font-size:1.05rem" :style="feedback.correct ? 'color:#15803d' : 'color:#b91c1c'"
+                   x-text="feedback.correct ? '✅ Correct!' : '❌ The answer is ' + feedback.correct_answer"></p>
+                <button type="button" class="btn-primary" @click="next()" x-text="pending && pending.result ? 'See results' : 'Next question →'"></button>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <template x-if="result">
+          <div style="text-align:center">
+            <p style="font-size:3.5rem;margin:0" x-text="result.practice ? '📝' : (result.passed ? '🎓' : '📘')"></p>
+            <h2 style="margin:.5rem 0" x-text="result.practice ? 'Practice complete' : (result.passed ? 'You passed Grade ' + grade + '!' : 'Grade ' + grade + ' not passed yet')"></h2>
+            <p style="font-size:2.4rem;font-weight:700;margin:.25rem 0;color:#1d2a33" x-text="result.percent + '%'"></p>
+            <p style="margin:0 0 1rem;color:#6b7280" x-text="result.correct + ' of ' + result.total + ' correct' + (result.practice ? '' : ' · ' + result.pass_percent + '% needed to pass')"></p>
+            <p x-show="!result.practice" style="margin:0 0 1.5rem;font-weight:600"
+               x-text="result.points_awarded > 0 ? '⭐ +' + result.points_awarded + ' points' : 'No new points: points are only earned for beating your best score.'"></p>
+            <p x-show="result.practice" style="margin:0 0 1.5rem;color:#6b7280">Practice quizzes don't earn points. Take a grade exam to earn points toward IDIA Coin.</p>
+            <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+              <button type="button" class="btn-primary" x-show="result.next_grade" @click="nextGrade()" x-text="'Start Grade ' + result.next_grade"></button>
+              <button type="button" class="btn-ghost" @click="close()">Back to the Academy</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </main>
+  </div>
 </div>
 
 <script>
@@ -420,5 +417,308 @@
       player.play().catch(function () { /* autoplay blocked or file missing */ });
     };
   }());
+
+  async function readJson(response) {
+    try { return await response.json(); } catch (e) { return {}; }
+  }
+
+  // Sign-in, grades, points and IDIA conversion.
+  function academyInstitute() {
+    return {
+      loading: true,
+      configured: true,
+      notice: '',
+      me: null,
+      busy: false,
+      error: '',
+      passPercent: 70,
+
+      async load() {
+        this.loading = true;
+        try {
+          const r = await fetch('/api/academy/me', { headers: { Accept: 'application/json' } });
+          const d = await readJson(r);
+          if (r.ok) {
+            this.me = d; this.configured = true; this.passPercent = d.pass_percent || 70;
+          } else if (r.status === 401) {
+            this.me = null; this.configured = true;
+          } else {
+            this.me = null; this.configured = false;
+            this.notice = (d.error || 'The Academy is unavailable right now.') + ' You can still practise and translate below.';
+          }
+        } catch (e) {
+          this.me = null; this.configured = false;
+          this.notice = 'The Academy is unavailable right now. You can still practise and translate below.';
+        }
+        this.loading = false;
+      },
+
+      // TON Connect ton_proof: the wallet signs a one-time challenge, which proves this learner owns it.
+      async signIn() {
+        this.error = ''; this.busy = true;
+        let ui = null;
+        try {
+          ui = window.ekiobaTonReady ? await window.ekiobaTonReady() : null;
+          if (!ui) throw new Error('TON Connect could not load. Check your connection and try again.');
+          const challengeResponse = await fetch('/api/academy/auth/challenge');
+          const challenge = await readJson(challengeResponse);
+          if (!challengeResponse.ok) throw new Error(challenge.error || 'Sign-in is unavailable right now.');
+
+          if (ui.connected) await ui.disconnect();
+          ui.setConnectRequestParameters({ state: 'ready', value: { tonProof: challenge.payload } });
+          const wallet = await new Promise(function (resolve, reject) {
+            let stopModal = null;
+            const stopStatus = ui.onStatusChange(function (w) {
+              if (!w) return;
+              stopStatus(); if (stopModal) stopModal();
+              resolve(w);
+            });
+            if (typeof ui.onModalStateChange === 'function') {
+              stopModal = ui.onModalStateChange(function (state) {
+                if (state && state.status === 'closed' && state.closeReason === 'action-cancelled') {
+                  stopStatus(); stopModal();
+                  reject(new Error('Sign-in was cancelled.'));
+                }
+              });
+            }
+            ui.openModal().catch(function (err) { stopStatus(); if (stopModal) stopModal(); reject(err); });
+          });
+
+          const proofItem = wallet.connectItems && wallet.connectItems.tonProof;
+          if (!proofItem || !proofItem.proof) throw new Error('Your wallet connected without signing in. Disconnect it and try again.');
+          const verifyResponse = await fetch('/api/academy/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: wallet.account.address, state_init: wallet.account.walletStateInit, proof: proofItem.proof }),
+          });
+          const verified = await readJson(verifyResponse);
+          if (!verifyResponse.ok) throw new Error(verified.error || 'Wallet sign-in failed.');
+          await this.load();
+        } catch (e) {
+          this.error = (e && e.message) ? e.message : 'Wallet sign-in failed.';
+        } finally {
+          if (ui) { try { ui.setConnectRequestParameters(null); } catch (e) { /* older builds */ } }
+          this.busy = false;
+        }
+      },
+
+      async signOut() {
+        try { await fetch('/api/academy/auth/logout', { method: 'POST' }); } catch (e) { /* offline */ }
+        this.me = null;
+      },
+
+      shortWallet() {
+        const w = (this.me && this.me.wallet_display) || '';
+        return w.length > 12 ? w.slice(0, 6) + '…' + w.slice(-4) : w;
+      },
+
+      passedCount() { return this.me ? this.me.grades.filter(function (g) { return g.passed; }).length : 0; },
+
+      startExam(grade) {
+        window.dispatchEvent(new CustomEvent('academy-start-exam', { detail: { grade: grade } }));
+      },
+
+      gradeStatus(g) {
+        if (!g.unlocked) return '🔒 Pass Grade ' + (g.number - 1) + ' to unlock';
+        if (g.in_progress) return '⏳ In progress: ' + g.in_progress.answered + ' of ' + g.in_progress.total + ' answered';
+        if (g.passed) return '✅ Passed · best score ' + g.best_percent + '%';
+        if (g.attempts) return '📘 Not passed yet · best score ' + (g.best_percent || 0) + '%';
+        return 'Not started';
+      },
+
+      gradeAction(g) {
+        if (!g.unlocked) return 'Locked';
+        if (g.in_progress) return 'Resume exam';
+        return g.attempts ? 'Retake exam' : 'Start exam';
+      },
+
+      gradeCardStyle(g) {
+        const border = g.passed ? '#86efac' : (g.unlocked ? 'var(--color-border)' : '#e5e7eb');
+        const background = g.passed ? '#f0fdf4' : (g.unlocked ? 'var(--color-surface)' : '#f9fafb');
+        return 'border:1px solid ' + border + ';background:' + background + ';border-radius:.9rem;padding:1rem;display:flex;flex-direction:column;opacity:' + (g.unlocked ? 1 : 0.75);
+      },
+
+      canConvert() {
+        const idia = this.me && this.me.idia;
+        return !!idia && idia.eligible && !idia.pending_request && idia.convertible_points >= idia.points_per_idia;
+      },
+
+      conversionMessage() {
+        const idia = this.me.idia;
+        if (!idia.eligible) return 'Pass Grades 1 to 4 to unlock conversion. Your points keep adding up in the meantime.';
+        if (idia.pending_request) return 'Your conversion request is waiting for review by the EKIOBA team.';
+        if (idia.convertible_points < idia.points_per_idia) return 'You need at least ' + idia.points_per_idia + ' points to convert.';
+        return 'Every ' + idia.points_per_idia + ' points becomes 1 IDIA Coin, sent to your signed-in wallet after review.';
+      },
+
+      conversionStatus(c) {
+        if (c.status === 'paid') return '✅ Sent';
+        if (c.status === 'rejected') return '↩️ Declined, points returned' + (c.reviewer_note ? ': ' + c.reviewer_note : '');
+        return '⏳ Waiting for review';
+      },
+
+      async requestConversion() {
+        if (!this.canConvert()) return;
+        const idia = this.me.idia;
+        if (!window.confirm('Convert ' + idia.convertible_points + ' points to ' + idia.convertible_idia + ' IDIA Coin? The EKIOBA team will review the request and send the IDIA to ' + this.shortWallet() + '.')) return;
+        this.busy = true; this.error = '';
+        try {
+          const r = await fetch('/api/academy/conversions', { method: 'POST' });
+          const d = await readJson(r);
+          if (!r.ok) throw new Error(d.error || 'The conversion request could not be sent.');
+          await this.load();
+        } catch (e) {
+          this.error = e.message;
+        }
+        this.busy = false;
+      },
+    };
+  }
+
+  // The full-page runner for grade exams (marked on the server) and practice quizzes (marked here).
+  function academyRunner() {
+    return {
+      open: false,
+      mode: 'exam',
+      grade: null,
+      attemptId: null,
+      title: '',
+      total: 0,
+      index: 0,
+      question: null,
+      selected: '',
+      feedback: null,
+      pending: null,
+      result: null,
+      busy: false,
+      error: '',
+      bank: [],
+      practiceCorrect: 0,
+
+      show() { this.open = true; document.body.style.overflow = 'hidden'; },
+
+      reset() {
+        this.question = null; this.selected = ''; this.feedback = null; this.pending = null;
+        this.result = null; this.error = ''; this.index = 0; this.total = 0;
+      },
+
+      async startExam(grade) {
+        this.reset(); this.mode = 'exam'; this.grade = grade; this.title = 'Grade ' + grade + ' exam';
+        this.show(); this.busy = true;
+        try {
+          const r = await fetch('/api/academy/exams', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ grade: grade }),
+          });
+          const d = await readJson(r);
+          if (!r.ok) throw new Error(d.error || 'The exam could not start.');
+          this.attemptId = d.attempt_id; this.total = d.total;
+          if (d.result) { this.result = d.result; } else { this.question = d.question; this.index = d.question.index; }
+        } catch (e) {
+          this.error = e.message || 'The exam could not start.';
+        }
+        this.busy = false;
+      },
+
+      async startPractice(category) {
+        this.reset(); this.mode = 'practice'; this.grade = null; this.title = 'Practice quiz'; this.practiceCorrect = 0;
+        this.show(); this.busy = true;
+        try {
+          const r = await fetch('/api/academy/quiz/section?size=50' + (category ? '&category=' + encodeURIComponent(category) : ''));
+          const d = await readJson(r);
+          this.bank = (d.questions || []).filter(function (q) { return q && q.options && q.options.length && q.answer; });
+          if (!this.bank.length) throw new Error('No practice questions are available right now.');
+          this.total = this.bank.length;
+          this.question = this.practiceQuestion(0);
+        } catch (e) {
+          this.error = e.message || 'Practice questions could not load.';
+        }
+        this.busy = false;
+      },
+
+      practiceQuestion(i) {
+        const q = this.bank[i];
+        return { index: i, total: this.bank.length, prompt: q.prompt, options: q.options, category: q.category || '', audio: q.audio || null };
+      },
+
+      async choose(label) {
+        if (this.feedback || this.busy || !this.question) return;
+        this.selected = label; this.error = '';
+
+        if (this.mode === 'practice') {
+          const q = this.bank[this.index];
+          const chosen = (q.options.find(function (o) { return o.label === label; }) || {}).text;
+          const right = q.options.find(function (o) { return o.text === q.answer; }) || {};
+          const correct = chosen === q.answer;
+          if (correct) this.practiceCorrect += 1;
+          this.feedback = { correct: correct, correct_label: right.label, correct_answer: q.answer };
+          this.pending = this.index + 1 >= this.total
+            ? { result: { practice: true, correct: this.practiceCorrect, total: this.total, percent: Math.round(this.practiceCorrect * 100 / this.total) } }
+            : { next: this.practiceQuestion(this.index + 1) };
+          return;
+        }
+
+        this.busy = true;
+        try {
+          const r = await fetch('/api/academy/exams/' + encodeURIComponent(this.attemptId) + '/answer', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ index: this.index, choice: label }),
+          });
+          const d = await readJson(r);
+          if (r.status === 409) { await this.startExam(this.grade); return; }  // already answered elsewhere: pick up where the exam is
+          if (!r.ok) throw new Error(d.error || 'Your answer could not be saved.');
+          this.feedback = { correct: d.correct, correct_label: d.correct_label, correct_answer: d.correct_answer };
+          this.pending = d.result ? { result: d.result } : { next: d.next_question };
+        } catch (e) {
+          this.selected = '';
+          this.error = (e && e.message) ? e.message : 'Your answer could not be saved. Try again.';
+        }
+        this.busy = false;
+      },
+
+      next() {
+        if (!this.pending) return;
+        if (this.pending.result) { this.result = this.pending.result; this.question = null; }
+        else { this.question = this.pending.next; this.index = this.pending.next.index; }
+        this.feedback = null; this.pending = null; this.selected = '';
+      },
+
+      optionStyle(opt) {
+        const base = 'display:flex;align-items:center;gap:.8rem;width:100%;text-align:left;padding:1rem 1.1rem;border-radius:.9rem;font-size:1.05rem;cursor:pointer;border:2px solid ';
+        if (this.feedback) {
+          if (opt.label === this.feedback.correct_label) return base + '#16a34a;background:#f0fdf4;color:#14532d';
+          if (opt.label === this.selected) return base + '#dc2626;background:#fef2f2;color:#7f1d1d';
+          return base + '#e5e7eb;background:#fff;color:#6b7280';
+        }
+        return base + (opt.label === this.selected ? '#dd5b2f;background:#fff7ed' : '#e5e7eb;background:#fff') + ';color:#1d2a33';
+      },
+
+      progress() {
+        const done = this.result ? this.total : this.index + (this.feedback ? 1 : 0);
+        return this.total ? Math.round(done * 100 / this.total) : 0;
+      },
+
+      nextGrade() {
+        const g = this.result && this.result.next_grade;
+        if (g) this.startExam(g);
+      },
+
+      close() {
+        if (this.mode === 'exam' && this.question && !this.result &&
+            !window.confirm('Leave the exam? Your answers are saved and you can resume later.')) return;
+        this.open = false;
+        document.body.style.overflow = '';
+        window.dispatchEvent(new CustomEvent('academy-refresh'));
+      },
+
+      onKey(e) {
+        if (!this.open) return;
+        if (e.key === 'Escape') { this.close(); return; }
+        if (!this.question) return;
+        const key = (e.key || '').toUpperCase();
+        if (!this.feedback && ['A', 'B', 'C', 'D'].indexOf(key) !== -1) { this.choose(key); }
+        else if (this.feedback && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); this.next(); }
+      },
+    };
+  }
 </script>
 {% endblock %}

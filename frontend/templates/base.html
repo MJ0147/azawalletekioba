@@ -364,6 +364,8 @@
     }
 
     _tonReady = _initTonConnect();
+    // Page scripts (the Academy's wallet sign-in) share this TON Connect instance.
+    window.ekiobaTonReady = function () { return _tonReady; };
 
     function _tonAccount() {
       if (!_tonConnectUI) return null;

@@ -18,6 +18,10 @@ dependencies = [
     "tonsdk==1.0.15",
     "supabase==2.31.0",
     "python-dotenv==1.0.1",
+    "sqlalchemy==2.0.49",
+    "asyncpg==0.31.0",
+    "aiosqlite==0.22.1",
+    "pynacl==1.6.2",
 ]
 
 [tool.vercel]
