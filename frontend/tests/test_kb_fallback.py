@@ -98,10 +98,34 @@ def test_recorded_pronunciations_attach_to_their_words(tmp_path, monkeypatch):
         kb_fallback.academy_words.cache_clear()
 
 
-def test_chat_proxy_falls_back_to_knowledge_base_when_ai_is_unreachable(frontend, monkeypatch):
-    # A localhost AI URL is skipped, which is how the proxy behaves when no assistant is deployed.
+def test_chat_proxy_asks_grok_directly_when_no_assistant_is_deployed(frontend, monkeypatch):
+    from services import stateless_answer
+
     monkeypatch.setattr(frontend, "NEXT_PUBLIC_IYOBO_API_URL", "")
     monkeypatch.setattr(frontend, "AI_ASSISTANT_URL", "http://localhost:8005")
+    monkeypatch.setenv("XAI_API_KEY", "test-key")
+    requests = []
+
+    async def fake_create_response(*, api_key, base_url, payload, timeout):
+        requests.append(payload)
+        text = "Koyo! Dog in Edo is ekita."
+        return {"status": "completed", "output": [{"type": "message", "content": [{"type": "output_text", "text": text}]}]}
+
+    monkeypatch.setattr(stateless_answer, "create_response", fake_create_response)
+    response = TestClient(frontend.app).post("/api/chat/proxy", data={"message": "What is dog in Edo?"})
+
+    assert "Koyo! Dog in Edo is ekita." in response.text
+    assert kb_fallback.OFFLINE_NOTE not in response.text
+    assert "edo: ekita" in requests[0]["instructions"]  # Grok got the Knowledge Base as its main source
+    assert requests[0]["tools"] == [{"type": "web_search"}]
+
+
+def test_chat_proxy_falls_back_to_knowledge_base_when_ai_is_unreachable(frontend, monkeypatch):
+    # A localhost AI URL is skipped, which is how the proxy behaves when no assistant is deployed,
+    # and without an xAI key the website can't ask Grok itself either.
+    monkeypatch.setattr(frontend, "NEXT_PUBLIC_IYOBO_API_URL", "")
+    monkeypatch.setattr(frontend, "AI_ASSISTANT_URL", "http://localhost:8005")
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
 
     response = TestClient(frontend.app).post("/api/chat/proxy", data={"message": "What is dog in Edo?"})
     assert response.status_code == 200

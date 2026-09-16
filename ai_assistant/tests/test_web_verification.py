@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from app import iyobo_agent, main, web_verification
+from app import iyobo_agent, main, stateless_answer, web_verification
 from app.iyobo_agent import IyoboAgent
 from app.knowledge_base import Chunk, KnowledgeBase
 from app.web_verification import (
@@ -52,7 +52,7 @@ def grok(monkeypatch):
         state["payloads"].append(payload)
         return state["replies"].pop(0)
 
-    for module in (main, iyobo_agent, web_verification):
+    for module in (stateless_answer, iyobo_agent, web_verification):
         monkeypatch.setattr(module, "create_response", fake_create_response)
     monkeypatch.setattr(main, "get_knowledge_base", lambda: KB)
     monkeypatch.setattr(settings, "XAI_API_KEY", "test-key")

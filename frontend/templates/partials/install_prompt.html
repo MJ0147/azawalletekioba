@@ -1,0 +1,74 @@
+{# Homepage popup offering to install EKIOBA as an app. base.html keeps the browser's install offer
+   (beforeinstallprompt); iPhone and iPad Safari have no such offer, so they get Add to Home Screen
+   instructions instead. #}
+<div id="install-prompt" role="dialog" aria-modal="false" aria-labelledby="install-prompt-title" aria-describedby="install-prompt-text"
+     style="display:none;position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:8700;width:min(420px,calc(100vw - 2rem));background:#fff;border-radius:1rem;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:1rem;gap:.85rem;align-items:flex-start">
+  <img src="/static/icons/icon-192.png" alt="" width="52" height="52" style="border-radius:.75rem;flex-shrink:0" />
+  <div style="flex:1;min-width:0">
+    <p id="install-prompt-title" style="margin:0 0 .2rem;font-weight:700;color:#1d2a33">Install the EKIOBA app</p>
+    <p id="install-prompt-text" style="margin:0 0 .75rem;font-size:.88rem;color:#555">Add EKIOBA to your home screen for quick access to the store, the museum and the Edo Language Academy.</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <button type="button" id="install-prompt-accept" class="btn-primary">Install</button>
+      <button type="button" id="install-prompt-dismiss" class="btn-ghost">Not now</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var box = document.getElementById('install-prompt');
+  if (!box) return;
+  var acceptBtn = document.getElementById('install-prompt-accept');
+  var dismissBtn = document.getElementById('install-prompt-dismiss');
+  var text = document.getElementById('install-prompt-text');
+
+  var DISMISSED_KEY = 'ekioba-install-dismissed-at';
+  var SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;  // after "Not now", ask again in a week
+  var DELAY_MS = 2500;                       // let the homepage appear before interrupting
+
+  function snoozed() {
+    try { return Date.now() - Number(localStorage.getItem(DISMISSED_KEY) || 0) < SNOOZE_MS; }
+    catch (e) { return false; }
+  }
+  function snooze() {
+    try { localStorage.setItem(DISMISSED_KEY, String(Date.now())); } catch (e) { /* storage blocked */ }
+  }
+  function hide() { box.style.display = 'none'; }
+
+  var installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (installed || snoozed()) return;
+
+  var ua = navigator.userAgent;
+  var isIos = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isIosSafari = isIos && /safari/i.test(ua) && !/crios|fxios|edgios|opios/i.test(ua);
+  var mode = null;
+
+  function show(nextMode) {
+    if (mode) return;
+    mode = nextMode;
+    if (mode === 'ios') {
+      text.textContent = 'Tap the Share button, then “Add to Home Screen” to install EKIOBA.';
+      acceptBtn.textContent = 'Got it';
+    }
+    setTimeout(function () { box.style.display = 'flex'; }, DELAY_MS);
+  }
+
+  dismissBtn.addEventListener('click', function () { snooze(); hide(); });
+  acceptBtn.addEventListener('click', async function () {
+    var offer = window.ekiobaInstallPrompt;
+    if (mode !== 'prompt' || !offer) { snooze(); hide(); return; }
+    window.ekiobaInstallPrompt = null;
+    hide();
+    offer.prompt();
+    try {
+      var choice = await offer.userChoice;
+      if (!choice || choice.outcome !== 'accepted') snooze();
+    } catch (e) { snooze(); }
+  });
+  window.addEventListener('appinstalled', hide);
+
+  if (window.ekiobaInstallPrompt) show('prompt');
+  else document.addEventListener('ekioba:installable', function () { show('prompt'); });
+  if (isIosSafari) show('ios');
+}());
+</script>

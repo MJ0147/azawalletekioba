@@ -9,6 +9,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/styles.css" />
+  <!-- Installable web app: manifest, icons and service worker (/manifest.webmanifest, /sw.js). -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#1d2a33" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="EKIOBA" />
+  <script>
+    // Keep the browser's install offer so the homepage can present it in its own popup.
+    window.addEventListener('beforeinstallprompt', function (event) {
+      event.preventDefault();
+      window.ekiobaInstallPrompt = event;
+      document.dispatchEvent(new Event('ekioba:installable'));
+    });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () { /* the site works without it */ });
+      });
+    }
+  </script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -404,7 +425,20 @@
       }
     }
 
+    // The header button goes straight to TON Connect's wallet picker. With a wallet already connected
+    // (or if TON Connect can't load), it opens the wallet panel instead, which shows the connected
+    // address with Disconnect, or a Retry button.
     window.openWalletConnect = async function () {
+      var ui = await _tonReady;
+      if (ui && !_tonConnected()) {
+        try {
+          await ui.openModal();
+          return;
+        } catch (e) {
+          console.error('[EKIOBA] Could not open TON Connect:', e);
+        }
+      }
+
       if (!window._idiaContext) {
         window._idiaContext = { productId: 'wallet', productName: 'EKIOBA Wallet', priceNgn: 0 };
       }
@@ -422,9 +456,8 @@
       _setStatus('idia-status', '');
       switchChain('idia');
 
-      _setStatus('wallet-connect-status', 'Loading TON Connect…');
-      await _tonReady;
       _renderWalletConnectState();
+      if (!ui) await window.connectTonkeeper();  // shows why it failed, with Retry
     };
 
     window.connectTonkeeper = async function () {
@@ -699,6 +732,10 @@
     _renderWalletConnectState();
   }());
   </script>
+
+  {% if request is defined and request.url.path == "/" %}
+    {% include "partials/install_prompt.html" %}
+  {% endif %}
 
 </body>
 </html>

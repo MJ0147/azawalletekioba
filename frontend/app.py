@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import random
 import re
@@ -45,6 +46,10 @@ from agent import get_dashboard_forecast
 from services.ton import TonServiceError
 from services.museum import MUSEUM_PORTRAITS, museum_catalogue
 from services import kb_fallback
+from services import iyobo_direct
+from services.grok_client import GrokError
+
+logger = logging.getLogger("ekioba-frontend")
 
 BASE_DIR = Path(__file__).resolve().parent
 PUBLIC_DIR = BASE_DIR / "public"
@@ -869,6 +874,45 @@ async def tonconnect_manifest(request: Request) -> JSONResponse:
     )
 
 
+# Installable web app. These are explicit routes rather than files in public/: Vercel handles a
+# public/ folder itself and never served the old public/manifest.json, and a service worker has to be
+# served from the site root to work on every page.
+APP_THEME_COLOR = "#1d2a33"
+APP_ICONS_URL = "/static/icons"
+SERVICE_WORKER_FILE = BASE_DIR / "static" / "js" / "sw.js"
+
+
+@app.get("/manifest.webmanifest")
+async def web_app_manifest() -> JSONResponse:
+    """Web app manifest, so browsers offer to install EKIOBA on the home screen."""
+    return JSONResponse(
+        {
+            "id": "/",
+            "name": "EKIOBA — Edo Cultural Marketplace",
+            "short_name": "EKIOBA",
+            "description": "Edo artifacts, the Benin Royal Museum, the Edo Language Academy and IDIA Coin payments.",
+            "start_url": "/?source=app",
+            "scope": "/",
+            "display": "standalone",
+            "background_color": APP_THEME_COLOR,
+            "theme_color": APP_THEME_COLOR,
+            "icons": [
+                {"src": f"{APP_ICONS_URL}/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                {"src": f"{APP_ICONS_URL}/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+                {"src": f"{APP_ICONS_URL}/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+            ],
+        },
+        media_type="application/manifest+json",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@app.get("/sw.js")
+async def service_worker() -> FileResponse:
+    """The service worker, served from the root so its scope covers the whole site."""
+    return FileResponse(SERVICE_WORKER_FILE, media_type="application/javascript", headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/api/pay/idia-rate")
 async def idia_rate() -> JSONResponse:
     """Return the current idia coin NGN exchange rate and where it came from."""
@@ -1110,8 +1154,17 @@ async def _chat_proxy_reply(text: str, visitor_id: str) -> HTMLResponse:
                 reply = data.get("reply") or data.get("response") or data.get("answer") or ""
                 if reply:
                     return _chat_bubble(reply)
-            except Exception:
-                pass  # Fall through to the Knowledge Base
+            except Exception as exc:
+                # Fall through to Grok, then the Knowledge Base.
+                logger.warning("Iyobo assistant service unavailable (%s)", exc.__class__.__name__)
+
+    # No assistant service answered. With XAI_API_KEY set, ask Grok directly with the assistant's own
+    # Knowledge Base-first logic (services/iyobo_direct.py), just without memory of the visitor.
+    if iyobo_direct.is_configured():
+        try:
+            return _chat_bubble(await iyobo_direct.answer(text, search_results))
+        except GrokError as exc:
+            logger.warning("Grok unavailable for the site chat: %s", exc)
 
     lower = text.lower()
     if any(k in lower for k in ["forecast", "market", "price", "bitcoin", "stock", "crypto"]):
