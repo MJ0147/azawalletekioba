@@ -68,6 +68,31 @@ for _asset_dir in (BASE_DIR / "static", PUBLIC_DIR):
         pass
 
 app = FastAPI(title="Ekioba Frontend")
+
+# Telegram renders a Mini App in an iframe on Telegram Web, so framing cannot simply be denied:
+# X-Frame-Options: DENY or frame-ancestors 'none' would black out EKIOBA inside Telegram. These
+# are the origins allowed to frame the site; everything else is refused.
+FRAME_ANCESTORS = "'self' https://web.telegram.org https://*.telegram.org"
+SECURITY_HEADERS = {
+    # Stop a browser guessing a type for a response and running it as something else.
+    "X-Content-Type-Options": "nosniff",
+    # Send the path to ourselves, only the origin to anyone else. Chat messages and next=
+    # parameters should not travel to other sites in a Referer header.
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    # Clickjacking only. A full policy would have to name every CDN the pages load from, and
+    # getting that wrong takes the site down, so it is left for a deliberate pass.
+    "Content-Security-Policy": f"frame-ancestors {FRAME_ANCESTORS}",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for header, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(header, value)
+    return response
+
+
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static"), check_dir=False), name="static")
 # Edo Language Academy institute: wallet sign-in, grade exams, points and IDIA conversions.
@@ -1741,7 +1766,14 @@ async def hotels_listings_api(city: str = "", limit: int = 20) -> JSONResponse:
 @app.get("/{filename}")
 async def public_root_files(filename: str):
     # Keep existing root-level public assets (manifest, token metadata) compatible.
-    candidate = PUBLIC_DIR / filename
-    if candidate.exists() and candidate.is_file():
+    # Starlette will not let an encoded slash build a path segment, so "../" cannot arrive here
+    # today. The check is written out anyway: this resolves a caller-supplied name against the
+    # filesystem, and it should not depend on the router to stay inside public/.
+    candidate = (PUBLIC_DIR / filename).resolve()
+    try:
+        candidate.relative_to(PUBLIC_DIR.resolve())
+    except ValueError:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    if candidate.is_file():
         return FileResponse(candidate)
     return JSONResponse({"error": "Not found"}, status_code=404)
