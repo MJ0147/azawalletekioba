@@ -132,13 +132,24 @@ def get_settings() -> Settings:
             for error in exc.errors()
             if error.get("type") == "missing" and error.get("loc")
         })
-        if not missing:
+        # A rule that rejected a value says what it wants in its own message; pass those through
+        # too, or a bad DATABASE_URL still reaches the log as a bare pydantic traceback.
+        complaints = [
+            str(error.get("msg", "")).removeprefix("Value error, ").rstrip(".") + "."
+            for error in exc.errors()
+            if error.get("type") != "missing"
+        ]
+        if not missing and not complaints:
             raise
+        problems = []
+        if missing:
+            problems.append("Not set: " + ", ".join(missing) + ".")
+        problems.extend(complaints)
         raise RuntimeError(
-            "Iyobo's assistant can't start: required setting(s) not set: "
-            + ", ".join(missing)
-            + ". Set them in the environment (on Vercel: the iyobo service's Environment Variables; "
-            "locally: ai_assistant/.env). SECRET_KEY must be a strong secret of at least 32 characters."
+            "Iyobo's assistant can't start. " + " ".join(problems)
+            + " Set these in the environment (on Vercel: the iyobo service's Environment"
+            + " Variables; locally: ai_assistant/.env). It needs SECRET_KEY, at least 32"
+            + " characters, and DATABASE_URL (or SUPABASE_DB_URL)."
         ) from exc
 
 

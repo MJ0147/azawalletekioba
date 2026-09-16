@@ -27,19 +27,50 @@
         });
       </script>
     {% elif configured %}
-      <p style="margin:0;color:var(--color-muted)">Log in with your Telegram account through our bot, @{{ bot_username }}.</p>
-      <script async src="https://telegram.org/js/telegram-widget.js?22"
-              data-telegram-login="{{ bot_username }}"
-              data-size="large"
-              data-radius="10"
-              data-auth-url="{{ auth_url }}"
-              data-request-access="write"></script>
+      <p style="margin:0;color:var(--color-muted)">
+        One tap, no password. Log in with your Telegram account through our bot, @{{ bot_username }}.
+      </p>
+
+      <div id="telegram-button" style="min-height:48px;display:grid;place-items:center">
+        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                data-telegram-login="{{ bot_username }}"
+                data-size="large"
+                data-radius="10"
+                data-auth-url="{{ auth_url }}"
+                data-request-access="write"></script>
+      </div>
+
+      {# The widget is loaded from telegram.org. Ad and privacy blockers, and some in-app
+         browsers, stop it, and then this page would otherwise show nothing to click. #}
+      <div id="telegram-fallback" hidden style="display:grid;gap:.6rem;justify-items:center">
+        <p role="alert" style="margin:0;color:#92400e">The Telegram button couldn't load.</p>
+        <p style="margin:0;font-size:.85rem;color:var(--color-muted);max-width:38ch">
+          A privacy or ad blocker usually causes this, and so does opening the site inside another
+          app. Try again, or open this page in your normal browser.
+        </p>
+        <button type="button" class="btn-primary" onclick="window.location.reload()">Try again</button>
+      </div>
+
       <p style="margin:0;font-size:.85rem;color:var(--color-muted)">
         Telegram shares your name, username and profile photo with EKIOBA, never your phone number.
         If you allow it, @{{ bot_username }} can also send you messages.
       </p>
+
+      <script>
+        // The widget replaces itself with an iframe. If none appears, it was blocked.
+        setTimeout(function () {
+          if (!document.querySelector('#telegram-button iframe')) {
+            var fallback = document.getElementById('telegram-fallback');
+            if (fallback) fallback.hidden = false;
+          }
+        }, 3000);
+      </script>
     {% else %}
       <p style="margin:0;color:#92400e">Telegram login isn't set up on this site yet.</p>
+      <p style="margin:0;font-size:.85rem;color:var(--color-muted);max-width:44ch">
+        It needs TELEGRAM_BOT_TOKEN and a session secret (ACADEMY_SESSION_SECRET or SECRET_KEY),
+        and the site's domain has to be linked to the bot with /setdomain in @BotFather.
+      </p>
     {% endif %}
   </section>
 </div>

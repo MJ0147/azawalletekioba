@@ -86,7 +86,9 @@
           </a>
         </li>
         <li>
-          <a href="/login" id="account-link" aria-label="Log in with Telegram">
+          {# Carry the current page, so logging in returns you to where you were. #}
+          <a href="/login{% if request.url.path not in ["/login", "/admin"] %}?next={{ request.url.path|urlencode }}{% endif %}"
+             id="account-link" aria-label="Log in with Telegram">
             <span class="nav-icon" aria-hidden="true">👤</span>
             <span class="nav-label" id="account-label">Log in</span>
           </a>

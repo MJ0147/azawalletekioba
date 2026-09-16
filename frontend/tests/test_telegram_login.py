@@ -133,3 +133,15 @@ def test_the_named_admins_are_recognised_by_telegram_id_alone(client, admin_id):
 def test_an_unlisted_telegram_id_is_not_an_admin(client):
     log_in(client, id="8894431524", username="")
     assert client.get("/api/orders").status_code == 401
+
+
+def test_the_header_login_link_returns_you_to_the_page_you_were_on(client):
+    assert 'href="/login?next=/museum"' in client.get("/museum").text
+    # Not on the login page itself, which would send you back to the login page.
+    assert 'href="/login"' in client.get("/login").text
+
+
+def test_the_login_page_offers_a_way_out_when_telegram_is_blocked(client):
+    page = client.get("/login").text
+    assert 'id="telegram-fallback"' in page
+    assert "couldn&#39;t load" in page or "couldn't load" in page
