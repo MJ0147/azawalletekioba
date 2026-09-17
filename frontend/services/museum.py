@@ -3,8 +3,7 @@ Benin Royal Museum catalogue.
 
 Each Oba's name, reign and description are transcribed from the inscription plaque on his
 portrait (static/images/museum/<slug>.jpg). Entries are in reign order; eras group them
-for the gallery. Oba Akenzua I (c. 1713–1735) has no portrait yet, hence the gap between
-Ozuere and Eresoyen.
+for the gallery. All 39 Obas from Eweka I to Ewuare II are here.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ MUSEUM_ERAS: list[dict[str, str]] = [
     {"id": "founding", "title": "Founding of the Eweka Dynasty", "period": "c. 1200–1440"},
     {"id": "warrior-kings", "title": "Warrior Kings and Empire", "period": "1440–1606"},
     {"id": "succession-crisis", "title": "The Succession Crisis", "period": "c. 1606–1713"},
-    {"id": "recovery", "title": "Recovery and European Contact", "period": "c. 1735–1888"},
+    {"id": "recovery", "title": "Recovery and European Contact", "period": "c. 1713–1888"},
     {"id": "modern", "title": "1897 and the Modern Monarchy", "period": "1888–present"},
 ]
 
@@ -78,6 +77,9 @@ _INSCRIPTIONS: list[dict[str, str]] = [
     {"slug": "oba-ozuere", "era": "succession-crisis", "name": "Oba Ozuere", "reign": "c. 1712–1713",
      "description": "Short reign as a usurper backed by certain chiefs"},
     # Recovery and European Contact
+    {"slug": "oba-akenzua-i", "era": "recovery", "name": "Oba Akenzua I", "reign": "c. 1713–1735",
+     "description": "Restored royal authority after civil war, strengthened primogeniture and palace "
+                    "power, and expanded ivory trade and European commerce"},
     {"slug": "oba-eresoyen", "era": "recovery", "name": "Oba Eresoyen", "reign": "c. 1735–1750",
      "description": "Continued recovery of the monarchy; associated with cultural and artistic activity"},
     {"slug": "oba-akengbuda", "era": "recovery", "name": "Oba Akengbuda", "reign": "c. 1750–1804",

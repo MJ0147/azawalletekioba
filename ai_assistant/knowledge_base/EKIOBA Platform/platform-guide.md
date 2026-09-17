@@ -141,7 +141,7 @@ words it doesn't yet have), a practice quiz, a vocabulary browser and daily less
 
 Questions this answers: museum, Benin Royal Museum, Obas, portraits, kings of Benin.
 
-The Benin Royal Museum (`/museum`) is a portrait gallery of 38 Obas of Benin, from Oba Eweka I to Oba
+The Benin Royal Museum (`/museum`) is a portrait gallery of 39 Obas of Benin, from Oba Eweka I to Oba
 Ewuare II, in reign order and grouped by era. Each portrait's plaque gives the Oba's reign and
 legacy. The portraits are contemporary artistic renderings in the Benin bronze style.
 

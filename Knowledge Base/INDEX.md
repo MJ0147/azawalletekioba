@@ -44,7 +44,7 @@ Internal notes. Iyobo must never quote these to a visitor.
 ## Benin History
 
 - [Benin Kingdom overview](Benin%20History/benin-kingdom-overview.md): the kingdom, Queen Idia, bronze casting, the Igue festival and coral regalia.
-- [Obas of Benin: Benin Royal Museum catalogue](Benin%20History/benin-obas-museum-catalogue.md): the 38 Obas in the museum, Eweka I to Ewuare II, in reign order and grouped by era. Each has the name, reign and description from his portrait's inscription.
+- [Obas of Benin: Benin Royal Museum catalogue](Benin%20History/benin-obas-museum-catalogue.md): the 39 Obas in the museum, Eweka I to Ewuare II, in reign order and grouped by era. Each has the name, reign and description from his portrait's inscription.
 
 ## Component notes — *not indexed* by Iyobo
 

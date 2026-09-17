@@ -21,14 +21,28 @@ def client(frontend):
     return TestClient(frontend.app)
 
 
-def test_catalogue_lists_38_obas_in_reign_order(frontend):
+def test_catalogue_lists_39_obas_in_reign_order(frontend):
     from services.museum import MUSEUM_PORTRAITS
 
-    assert len(MUSEUM_PORTRAITS) == 38
-    assert [p["number"] for p in MUSEUM_PORTRAITS] == list(range(1, 39))
+    assert len(MUSEUM_PORTRAITS) == 39
+    assert [p["number"] for p in MUSEUM_PORTRAITS] == list(range(1, 40))
     assert MUSEUM_PORTRAITS[0]["name"] == "Oba Eweka I"
     assert MUSEUM_PORTRAITS[-1]["name"] == "Oba Ewuare II"
-    assert len({p["slug"] for p in MUSEUM_PORTRAITS}) == 38
+    assert len({p["slug"] for p in MUSEUM_PORTRAITS}) == 39
+
+
+def test_akenzua_i_sits_between_ozuere_and_eresoyen(frontend):
+    """He was left out while his portrait was missing, which broke the line of succession."""
+    from services.museum import MUSEUM_PORTRAITS
+
+    names = [p["name"] for p in MUSEUM_PORTRAITS]
+    assert names[names.index("Oba Ozuere") + 1] == "Oba Akenzua I"
+    assert names[names.index("Oba Akenzua I") + 1] == "Oba Eresoyen"
+
+    akenzua = MUSEUM_PORTRAITS[names.index("Oba Akenzua I")]
+    assert akenzua["reign"] == "c. 1713–1735"
+    assert akenzua["era"] == "recovery"
+    assert akenzua["image"] == "/static/images/museum/oba-akenzua-i.jpg"
 
 
 def test_every_portrait_has_an_image_and_an_era(frontend):
@@ -38,7 +52,7 @@ def test_every_portrait_has_an_image_and_an_era(frontend):
     for portrait in MUSEUM_PORTRAITS:
         assert (FRONTEND_DIR / "static" / "images" / "museum" / f"{portrait['slug']}.jpg").is_file()
         assert portrait["era"] in era_ids
-    assert sum(len(era["portraits"]) for era in museum_catalogue()) == 38
+    assert sum(len(era["portraits"]) for era in museum_catalogue()) == 39
 
 
 def test_museum_page_shows_inscriptions(client):
