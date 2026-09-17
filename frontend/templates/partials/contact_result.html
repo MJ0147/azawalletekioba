@@ -1,0 +1,16 @@
+{# What came of a submitted form. Rendered inside the page on a plain POST, and swapped in on its
+   own when htmx posts the form. #}
+{% if status == "sent" %}
+  <p class="contact-status is-sent">
+    Thank you, {{ form.name }} — your message is on its way to the EKIOBA team. We reply within
+    24 hours on business days, to {{ form.email }}.
+  </p>
+{% elif status == "error" %}
+  <p class="contact-status is-error">{{ error }}</p>
+{% elif status == "undeliverable" %}
+  <p class="contact-status is-error">
+    {{ error }} Please email us directly at
+    <a href="mailto:{{ contact_email }}?subject={{ form.subject|urlencode }}">{{ contact_email }}</a>,
+    and we'll pick it up from there.
+  </p>
+{% endif %}

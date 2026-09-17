@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us — EKIOBA{% endblock %}
+{% block description %}Message the EKIOBA team about an order, a payment, shipping or Edo culture. We reply within 24 hours on business days.{% endblock %}
+
+{% block content %}
+<div class="shell">
+
+  <section class="hero" style="padding-bottom:2rem">
+    <div>
+      <p class="eyebrow">We're listening</p>
+      <h1>Contact Us</h1>
+      <p class="sub">Questions about an order, a payment, shipping or Edo culture — write to us and
+         we'll reply within 24 hours on business days.</p>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-pill">✉️ {{ contact_email }}</span>
+    </div>
+  </section>
+
+  <div class="grid-two">
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Send us a message</h2>
+        <p>Include your order ID, and for a payment problem the blockchain transaction hash.</p>
+      </div>
+
+      {# htmx swaps in the server's reply; without JavaScript the same route renders the page afresh. #}
+      <form class="contact-form"
+            method="post"
+            action="/contact"
+            hx-post="/contact"
+            hx-target="#contact-result"
+            hx-swap="innerHTML"
+            hx-disabled-elt="#contact-send">
+        <label class="contact-field">
+          <span>Your name</span>
+          <input type="text" name="name" required maxlength="80" autocomplete="name"
+                 value="{{ form.name }}" placeholder="Osaro Igbinedion" />
+        </label>
+
+        <label class="contact-field">
+          <span>Your email</span>
+          <input type="email" name="email" required maxlength="254" autocomplete="email"
+                 value="{{ form.email }}" placeholder="you@example.com" />
+        </label>
+
+        <label class="contact-field">
+          <span>Subject <span class="contact-optional">(optional)</span></span>
+          <input type="text" name="subject" maxlength="120"
+                 value="{{ form.subject }}" placeholder="Order EK-1042 hasn't arrived" />
+        </label>
+
+        <label class="contact-field">
+          <span>Message</span>
+          <textarea name="message" required rows="7" maxlength="4000"
+                    placeholder="Tell us what you need help with…">{{ form.message }}</textarea>
+        </label>
+
+        {# Hidden from people, filled in by form-filling bots. See services/contact.py. #}
+        <div class="contact-trap" aria-hidden="true">
+          <label>Leave this field empty
+            <input type="text" name="website" tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
+
+        <button type="submit" id="contact-send" class="btn-primary">Send message</button>
+      </form>
+
+      <div id="contact-result" role="status" aria-live="polite">
+        {% include "partials/contact_result.html" %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Other ways to reach us</h2>
+      </div>
+      <ul class="contact-channels">
+        <li>
+          <span class="contact-channel-label">Email</span>
+          <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+        </li>
+        <li>
+          <span class="contact-channel-label">Ask Iyobo</span>
+          <a href="{{ iyobo_url }}">Our AI cultural guide answers instantly</a>
+        </li>
+        <li>
+          <span class="contact-channel-label">Telegram</span>
+          <a href="https://t.me/{{ telegram_bot }}" rel="noopener">@{{ telegram_bot }}</a>
+        </li>
+      </ul>
+      <p class="contact-note">
+        Support covers product questions, payment issues, shipping updates and Edo cultural
+        questions. We never ask for your wallet seed phrase or private keys — nobody from EKIOBA
+        will ever request them.
+      </p>
+    </section>
+  </div>
+
+</div>
+{% endblock %}

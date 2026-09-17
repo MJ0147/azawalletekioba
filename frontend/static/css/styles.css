@@ -911,3 +911,119 @@ button:disabled {
 
 /* The page behind must not scroll while Iyobo is open. */
 body.aza-open { overflow: hidden; }
+
+/* ── Contact Us ──────────────────────────────────────────────────────────── */
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.contact-optional {
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.contact-field input,
+.contact-field textarea {
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-family: inherit;
+  /* Under 16px, iOS Safari zooms the page when a field takes focus. */
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--ink);
+  background: #fff;
+}
+
+.contact-field textarea {
+  resize: vertical;
+  min-height: 9rem;
+}
+
+.contact-field input:focus,
+.contact-field textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* The honeypot: off-screen for people, still filled in by bots. `display: none` would be
+   skipped by some of them, which is the whole point of the field. */
+.contact-trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-status {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.contact-status.is-sent {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #047857;
+}
+
+.contact-status.is-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.contact-status a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.contact-channels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.contact-channels li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.contact-channel-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+
+.contact-channels a {
+  color: var(--accent-dark);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.contact-note {
+  margin: 1.25rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  opacity: 0.7;
+}

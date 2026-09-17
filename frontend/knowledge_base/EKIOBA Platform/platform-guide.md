@@ -5,8 +5,8 @@ Academy and museum, hotels, cargo, returns and support.
 
 - **Source.** Mostly collected from the site chat's earlier built-in replies. The hotel list comes
   from the site's own hotel data.
-- **Unconfirmed policies.** The returns policy, support response time and contact method have not
-  been confirmed; confirm them before relying on them.
+- **Unconfirmed policies.** The returns policy and support response time have not been confirmed;
+  confirm them before relying on them. The contact method is confirmed: the form at `/contact`.
 
 ---
 
@@ -191,7 +191,10 @@ EKIOBA support with your order ID and photos of the item's condition.
 
 Questions this answers: contact, support, help, customer service, reach EKIOBA.
 
-Contact EKIOBA support through the contact form on the homepage. Include your order ID, and for a
-payment problem include the blockchain transaction hash. Support covers product questions, payment
-issues, shipping updates and Edo cultural questions, and typically replies within 24 hours on
-business days.
+Contact EKIOBA support through the Contact Us form at `/contact`, linked from the menu and the
+footer of every page. Fill in your name, email and message and it reaches the EKIOBA inbox; the
+reply goes to the email address you gave. You can also write to adcredesolutions@gmail.com directly.
+Include your order ID, and for a payment problem include the blockchain transaction hash. Support
+covers product questions, payment issues, shipping updates and Edo cultural questions, and typically
+replies within 24 hours on business days. Nobody from EKIOBA will ever ask for your wallet seed
+phrase or private keys.

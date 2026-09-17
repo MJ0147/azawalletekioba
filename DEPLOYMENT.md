@@ -45,6 +45,7 @@ Supabase.
 | `TON_MERCHANT_WALLET`, `TON_API_KEY` | IDIA checkout and payment verification |
 | `FLW_SECRET_KEY` | Live USDT → NGN rate |
 | `PUBLIC_BASE_URL` | Optional — only if the TON Connect manifest origin can't be derived from the request |
+| `RESEND_API_KEY` | The Contact Us form. Vercel's runtime has no outbound SMTP, so the `SMTP_*` variables do not work there — use Resend, and verify a sending domain so mail reaches `CONTACT_FORWARD_TO`. Without a key the form tells visitors to email that address directly. |
 
 The chat, cargo, academy, hotels and store-catalog features call separate services
 (`AI_ASSISTANT_URL`, `CARGO_SERVICE_URL`, `LANGUAGE_ACADEMY_URL`, `HOTELS_SERVICE_URL`,

@@ -45,6 +45,7 @@ if str(_APP_FEATURE_DIR) not in sys.path:
 from agent import get_dashboard_forecast, unavailable_forecast
 from services.ton import TonServiceError
 from services.museum import MUSEUM_PORTRAITS, museum_catalogue
+from services import contact as contact_service
 from services import kb_fallback
 from services import iyobo_direct
 from services import academy_routes
@@ -1471,6 +1472,96 @@ async def cargo_book(request: Request) -> JSONResponse:
 
 
 # ── Benin Royal Museum page ────────────────────────────────────────────────
+
+# ── Contact Us ─────────────────────────────────────────────────────────────
+
+TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "IdiacoinBot").strip().lstrip("@")
+
+EMPTY_CONTACT_FORM = {"name": "", "email": "", "subject": "", "message": ""}
+
+
+def _contact_context(request: Request, **extra: Any) -> dict[str, Any]:
+    return {
+        "request": request,
+        "contact_email": contact_service.FORWARD_TO,
+        "iyobo_url": FRONTEND_IYOBO_URL,
+        "telegram_bot": TELEGRAM_BOT_USERNAME,
+        "form": EMPTY_CONTACT_FORM,
+        "status": "",
+        "error": "",
+        **extra,
+    }
+
+
+def _visitor_key(request: Request) -> str:
+    """Who is submitting, for rate limiting. Behind Vercel the client IP is the first forwarded one."""
+    forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+    return forwarded or (request.client.host if request.client else "")
+
+
+@app.get("/contact", response_class=HTMLResponse)
+async def contact_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "contact.html", _contact_context(request))
+
+
+@app.post("/contact", response_class=HTMLResponse)
+async def contact_submit(
+    request: Request,
+    name: str = Form(default=""),
+    email: str = Form(default=""),
+    subject: str = Form(default=""),
+    message: str = Form(default=""),
+    website: str = Form(default=""),  # the honeypot; people leave it empty
+) -> HTMLResponse:
+    """Forward a filled-in Contact Us form to the EKIOBA inbox.
+
+    htmx swaps in just the result; a browser without JavaScript posts the same form and gets the
+    whole page back, with what was typed still in the fields.
+    """
+    typed = {"name": name, "email": email, "subject": subject, "message": message}
+
+    try:
+        submission = contact_service.validate(
+            name=name, email=email, subject=subject, message=message, honeypot=website
+        )
+    except contact_service.ContactError as exc:
+        return _contact_response(request, status="error", error=str(exc), form=typed)
+
+    if not contact_service.within_rate_limit(_visitor_key(request)):
+        return _contact_response(
+            request,
+            status="error",
+            error="That's a few messages in a short time. Please give us a moment before sending another.",
+            form=typed,
+        )
+
+    try:
+        carried_by = await contact_service.submit(submission)
+    except contact_service.ContactNotConfigured:
+        logger.error("Contact form is not configured: set RESEND_API_KEY or the SMTP_* variables")
+        return _contact_response(
+            request,
+            status="undeliverable",
+            error="Our contact form can't send mail at the moment.",
+            form=typed,
+        )
+    except contact_service.ContactError as exc:
+        return _contact_response(
+            request, status="undeliverable", error=f"We couldn't send your message: {exc}", form=typed
+        )
+
+    logger.info("Contact form message forwarded via %s to %s", carried_by, contact_service.FORWARD_TO)
+    # The fields are cleared on success so a reload can't send the same message twice.
+    return _contact_response(request, status="sent", form={**EMPTY_CONTACT_FORM, "name": submission.name,
+                                                          "email": submission.email})
+
+
+def _contact_response(request: Request, *, status: str, form: dict[str, str], error: str = "") -> HTMLResponse:
+    """The result alone for htmx, or the whole page for a plain form post."""
+    context = _contact_context(request, status=status, error=error, form=form)
+    template = "partials/contact_result.html" if request.headers.get("hx-request") else "contact.html"
+    return templates.TemplateResponse(request, template, context)
+
 
 @app.get("/museum", response_class=HTMLResponse)
 async def museum_page(request: Request) -> HTMLResponse:

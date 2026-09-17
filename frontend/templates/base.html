@@ -89,6 +89,12 @@
           </a>
         </li>
         <li>
+          <a href="/contact" aria-label="Contact Us">
+            <span class="nav-icon" aria-hidden="true">✉️</span>
+            <span class="nav-label">Contact</span>
+          </a>
+        </li>
+        <li>
           {# Carry the current page, so logging in returns you to where you were. #}
           <a href="/login{% if request.url.path not in ["/login", "/admin"] %}?next={{ request.url.path|urlencode }}{% endif %}"
              id="account-link" aria-label="Log in with Telegram">
@@ -344,6 +350,7 @@
         <a href="/#services">All Services</a>
         <a href="/#store">Store</a>
         <a href="/museum">Benin Royal Museum</a>
+        <a href="/contact">Contact Us</a>
       </nav>
       <p class="footer-copy">&copy; 2026 EKIOBA. All rights reserved.</p>
     </div>
