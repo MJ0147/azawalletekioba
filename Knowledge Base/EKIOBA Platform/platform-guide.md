@@ -99,9 +99,15 @@ any other TON Connect wallet. Once connected, IDIA checkout uses that wallet aut
 
 Questions this answers: dashboard, home page, forecast, market, stocks, crypto, sentiment.
 
-The homepage works as a dashboard: product listings, market forecast charts (stocks, crypto and a
-sentiment score), TON wallet status and your cart. Market data comes from Yahoo Finance, Google
-Finance and SoSoValue; the raw data is at `/api/dashboard/forecast`. Forecasts are not financial
+The homepage works as a dashboard: product listings, market charts (stocks, crypto and a sentiment
+score), TON wallet status and your cart. Prices are live: stocks from Yahoo Finance, crypto from
+whichever of Binance, Coinbase, Kraken or CoinGecko answers first, and the Crypto Fear & Greed Index
+for sentiment. Every card names its source and the time the price was measured, and a card whose
+provider can't be reached says so instead of showing a figure. The raw data is at
+`/api/dashboard/forecast`.
+
+The dotted line on each chart is a trend line through the closes shown, continued three steps. It is
+an extrapolation of the recent slope, not a prediction of the market, and none of it is financial
 advice.
 
 ## Edo Language Academy

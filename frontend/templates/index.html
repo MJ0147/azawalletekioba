@@ -66,37 +66,52 @@
   <section id="home-dashboard" class="panel">
     <div class="panel-header">
       <h2>General Dashboard</h2>
-      <p>Dynamic market intelligence sourced from SoSoValue, Google Finance, and Yahoo Finance</p>
+      <p>Live prices from Yahoo Finance and the major crypto exchanges. Every card names its source and
+         the moment it was measured.</p>
     </div>
     <div class="forecast-grid">
       <article class="chart-card">
-        <h3>📈 Stock Forecast</h3>
-        <canvas id="homeStockChart" role="img" aria-label="Stock price forecast chart"></canvas>
-        <div class="prediction-box">
-          <div class="prediction-label">Next Predicted Price</div>
-          <div class="prediction-value" id="home-stock-next">—</div>
+        <h3>📈 Stocks <span class="chart-symbol" id="stock-symbol"></span></h3>
+        <div class="chart-holder"><canvas id="homeStockChart" role="img" aria-label="Stock price chart"></canvas></div>
+        <p class="chart-status" id="stock-status" hidden></p>
+        <div class="prediction-box" id="stock-box" hidden>
+          <div class="prediction-label">Latest price</div>
+          <div class="prediction-value" id="home-stock-latest">—</div>
+          <div class="prediction-trend" id="home-stock-next"></div>
         </div>
+        <p class="chart-source" id="stock-source"></p>
       </article>
 
       <article class="chart-card">
-        <h3>₿ Crypto Forecast (BTC)</h3>
-        <canvas id="homeCryptoChart" role="img" aria-label="BTC price forecast chart"></canvas>
-        <div class="prediction-box">
-          <div class="prediction-label">Next Predicted Price</div>
-          <div class="prediction-value" id="home-crypto-next">—</div>
+        <h3>₿ Crypto <span class="chart-symbol" id="crypto-symbol"></span></h3>
+        <div class="chart-holder"><canvas id="homeCryptoChart" role="img" aria-label="Crypto price chart"></canvas></div>
+        <p class="chart-status" id="crypto-status" hidden></p>
+        <div class="prediction-box" id="crypto-box" hidden>
+          <div class="prediction-label">Latest price</div>
+          <div class="prediction-value" id="home-crypto-latest">—</div>
+          <div class="prediction-trend" id="home-crypto-next"></div>
         </div>
+        <p class="chart-source" id="crypto-source"></p>
       </article>
 
       <article class="chart-card">
         <h3>📊 Market Sentiment</h3>
-        <canvas id="homeSentimentChart" role="img" aria-label="Market sentiment score chart"></canvas>
+        <div class="chart-holder"><canvas id="homeSentimentChart" role="img" aria-label="Crypto Fear and Greed Index"></canvas></div>
+        <p class="chart-status" id="sentiment-status" hidden></p>
+        <p class="chart-source" id="sentiment-source"></p>
       </article>
 
       <article class="chart-card">
-        <h3>☁️ Cloud Metrics</h3>
-        <canvas id="homeCloudChart" role="img" aria-label="Cloud metrics chart"></canvas>
+        <h3>☁️ Cloud Health</h3>
+        <div class="chart-holder"><canvas id="homeCloudChart" role="img" aria-label="Supabase response time"></canvas></div>
+        <p class="chart-status" id="cloud-status" hidden></p>
+        <p class="chart-source" id="cloud-source"></p>
       </article>
     </div>
+    <p class="forecast-disclaimer">
+      The dashed line continues the trend of the closes shown. It is an extrapolation of the recent
+      slope, not a prediction of the market, and nothing here is financial advice.
+    </p>
   </section>
 
   <!-- ── Category Chart + Wallet ───────────────────────────────────────── -->
@@ -128,106 +143,136 @@
   'use strict';
   const forecast = {{ forecast | tojson }};
 
-  function renderLineChart(elId, seriesLabel, labels, actual, predicted, colors) {
-    const canvas = document.getElementById(elId);
+  const AXIS = { responsive: true, maintainAspectRatio: false };
+
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text || '';
+  }
+
+  /** Show why a card is empty instead of drawing a line through numbers we do not have. */
+  function markUnavailable(prefix, panel) {
+    const status = document.getElementById(prefix + '-status');
+    if (status) {
+      status.textContent = (panel && panel.error) || 'This data could not be loaded right now.';
+      status.hidden = false;
+    }
+    const holder = document.getElementById(prefix === 'stock' ? 'homeStockChart'
+                 : prefix === 'crypto' ? 'homeCryptoChart'
+                 : prefix === 'sentiment' ? 'homeSentimentChart' : 'homeCloudChart');
+    if (holder && holder.parentElement) holder.parentElement.hidden = true;
+  }
+
+  function money(value, currency) {
+    if (value === null || value === undefined) return '—';
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD' }).format(value);
+    } catch (e) {
+      return (currency ? currency + ' ' : '') + Number(value).toFixed(2);
+    }
+  }
+
+  function measuredAt(iso) {
+    if (!iso) return '';
+    const when = new Date(iso);
+    return isNaN(when) ? '' : when.toLocaleString();
+  }
+
+  /** Price history plus its trend line, the trend continuing from the last real close. */
+  function renderPriceChart(canvasId, panel, colors) {
+    const canvas = document.getElementById(canvasId);
     if (!canvas) return;
+    const actual = panel.actual || [];
+    const predicted = panel.predicted || [];
+    const labels = (panel.labels || []).concat(panel.predicted_labels || []);
+    const padded = actual.concat(predicted.map(() => null));
+    const trend = actual.slice(0, -1).map(() => null)
+      .concat(actual.length ? [actual[actual.length - 1]] : [])
+      .concat(predicted);
+
     new Chart(canvas, {
       type: 'line',
       data: {
-        labels: labels || [],
+        labels: labels,
         datasets: [
-          {
-            label: seriesLabel,
-            data: actual || [],
-            borderColor: colors.main,
-            backgroundColor: 'transparent',
-            tension: 0.3,
-            pointRadius: 2,
-          },
-          {
-            label: 'Predicted',
-            data: predicted || [],
-            borderColor: colors.pred,
-            backgroundColor: 'transparent',
-            borderDash: [5, 4],
-            tension: 0.3,
-            pointRadius: 2,
-          }
+          { label: panel.symbol || 'Price', data: padded, borderColor: colors.main,
+            backgroundColor: 'transparent', tension: 0.3, pointRadius: 2, spanGaps: false },
+          { label: 'Trend (extrapolated)', data: trend, borderColor: colors.pred,
+            backgroundColor: 'transparent', borderDash: [5, 4], tension: 0.3, pointRadius: 2 },
         ],
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'bottom' } },
-      },
+      options: Object.assign({}, AXIS, {
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + money(ctx.parsed.y, panel.currency) } },
+        },
+        scales: { y: { ticks: { callback: (value) => money(value, panel.currency) } } },
+      }),
     });
   }
 
-  renderLineChart(
-    'homeStockChart',
-    'Stock',
-    forecast.stocks?.labels || [],
-    forecast.stocks?.actual || [],
-    forecast.stocks?.predicted || [],
-    { main: '#dd5b2f', pred: '#9f3f1f' }
-  );
+  function renderMarket(prefix, canvasId, panel, colors) {
+    panel = panel || {};
+    if (panel.status !== 'ok' || !(panel.actual || []).length) {
+      markUnavailable(prefix, panel);
+      return;
+    }
+    renderPriceChart(canvasId, panel, colors);
+    setText(prefix + '-symbol', panel.symbol || '');
+    setText('home-' + prefix + '-latest', money(panel.latest, panel.currency));
 
-  renderLineChart(
-    'homeCryptoChart',
-    'BTC',
-    forecast.crypto?.labels || [],
-    forecast.crypto?.actual || [],
-    forecast.crypto?.predicted || [],
-    { main: '#1d2a33', pred: '#dd5b2f' }
-  );
+    const predicted = panel.predicted || [];
+    if (predicted.length) {
+      const fit = typeof panel.trend_fit === 'number' ? ' · fit ' + Math.round(panel.trend_fit * 100) + '%' : '';
+      setText('home-' + prefix + '-next', 'Trend continues to ' + money(predicted[predicted.length - 1], panel.currency) + fit);
+    }
+    const box = document.getElementById(prefix + '-box');
+    if (box) box.hidden = false;
 
-  const sentimentCanvas = document.getElementById('homeSentimentChart');
-  if (sentimentCanvas) {
-    new Chart(sentimentCanvas, {
+    const measured = measuredAt(panel.as_of);
+    setText(prefix + '-source', panel.source + (measured ? ' · measured ' + measured : ''));
+  }
+
+  renderMarket('stock', 'homeStockChart', forecast.stocks, { main: '#dd5b2f', pred: '#9f3f1f' });
+  renderMarket('crypto', 'homeCryptoChart', forecast.crypto, { main: '#1d2a33', pred: '#dd5b2f' });
+
+  const sentiment = forecast.sentiment || {};
+  if (sentiment.status === 'ok' && (sentiment.values || []).length) {
+    new Chart(document.getElementById('homeSentimentChart'), {
       type: 'bar',
       data: {
-        labels: forecast.sentiment?.labels || ['Market'],
-        datasets: [{
-          label: 'Sentiment Score',
-          data: forecast.sentiment?.values || [50],
-          backgroundColor: '#1d2a33',
-        }],
+        labels: sentiment.labels || ['Fear & Greed'],
+        datasets: [{ label: 'Index', data: sentiment.values, backgroundColor: '#1d2a33' }],
       },
-      options: {
-        responsive: true,
+      options: Object.assign({}, AXIS, {
         scales: { y: { min: 0, max: 100 } },
         plugins: { legend: { display: false } },
-      },
+      }),
     });
+    const tone = sentiment.news_tone && sentiment.news_tone.status === 'ok'
+      ? ' · headline tone ' + sentiment.news_tone.score + '/100 over ' + sentiment.news_tone.headlines + ' headlines'
+      : '';
+    setText('sentiment-source', (sentiment.classification ? sentiment.classification + ' · ' : '') + sentiment.source + tone);
+  } else {
+    markUnavailable('sentiment', sentiment);
   }
 
-  const cloudCanvas = document.getElementById('homeCloudChart');
-  if (cloudCanvas) {
-    new Chart(cloudCanvas, {
+  const cloud = forecast.cloud || {};
+  if ((cloud.values || []).length) {
+    new Chart(document.getElementById('homeCloudChart'), {
       type: 'line',
       data: {
-        labels: forecast.cloud?.labels || [],
-        datasets: [{
-          label: 'Cloud Usage',
-          data: forecast.cloud?.values || [],
-          borderColor: '#dd5b2f',
-          backgroundColor: 'transparent',
-          tension: 0.3,
-        }],
+        labels: cloud.labels || [],
+        datasets: [{ label: 'Response time (ms)', data: cloud.values, borderColor: '#dd5b2f',
+                     backgroundColor: 'transparent', tension: 0.3 }],
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-      },
+      options: Object.assign({}, AXIS, { plugins: { legend: { display: false } } }),
     });
-  }
-
-  const stockPred = forecast.stocks?.predicted || [];
-  const cryptoPred = forecast.crypto?.predicted || [];
-  if (stockPred.length) {
-    document.getElementById('home-stock-next').textContent = '$' + Number(stockPred[stockPred.length - 1]).toFixed(2);
-  }
-  if (cryptoPred.length) {
-    document.getElementById('home-crypto-next').textContent = '$' + Number(cryptoPred[cryptoPred.length - 1]).toFixed(2);
+    setText('cloud-source', 'Supabase auth health · ' + (cloud.status || ''));
+  } else {
+    markUnavailable('cloud', { error: cloud.status === 'not-configured'
+      ? 'Supabase is not configured for this deployment.'
+      : 'No response time has been measured yet.' });
   }
 
   const labels = {{ chart_labels | tojson }};

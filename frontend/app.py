@@ -42,7 +42,7 @@ _APP_FEATURE_DIR = _SVC_DIR / "app"
 if str(_APP_FEATURE_DIR) not in sys.path:
     sys.path.insert(0, str(_APP_FEATURE_DIR))
 
-from agent import get_dashboard_forecast
+from agent import get_dashboard_forecast, unavailable_forecast
 from services.ton import TonServiceError
 from services.museum import MUSEUM_PORTRAITS, museum_catalogue
 from services import kb_fallback
@@ -126,12 +126,8 @@ IDIA_NGN_RATE = float(os.getenv("IDIA_NGN_RATE", "30.0"))
 
 
 def _default_forecast_payload() -> dict[str, Any]:
-    return {
-        "stocks": {"labels": [], "actual": [], "predicted": []},
-        "crypto": {"labels": [], "actual": [], "predicted": []},
-        "sentiment": {"labels": ["Market"], "values": [50]},
-        "cloud": {"labels": [], "values": []},
-    }
+    """Empty panels that say why. Never stand-in prices: an invented chart is worse than none."""
+    return unavailable_forecast("Market data could not be loaded.")
 
 
 def _is_api_request(request: Request) -> bool:
@@ -145,8 +141,8 @@ async def _safe_dashboard_forecast() -> dict[str, Any]:
         payload = await get_dashboard_forecast()
         if isinstance(payload, dict):
             return payload
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Market data unavailable: %r", exc)
     return _default_forecast_payload()
 
 
@@ -1188,6 +1184,40 @@ def _chat_bubble(reply: str) -> HTMLResponse:
     return HTMLResponse(f'<div class="chat-bubble bot">{body}</div>')
 
 
+def _market_line(panel: dict[str, Any]) -> str:
+    """One market in words: the last traded price, where it was measured, and when."""
+    if panel.get("status") != "ok" or panel.get("latest") is None:
+        return ""
+    measured = str(panel.get("as_of") or "")[:16].replace("T", " ")
+    line = f"{panel.get('symbol', 'Market')} is {panel.get('currency', '')} {panel['latest']:,.2f}".strip()
+    change = panel.get("change_percent")
+    if change is not None:
+        line += f" ({change:+.2f}% across the hours shown)"
+    return f"{line} — {panel.get('source', 'market data')}, measured {measured} UTC."
+
+
+def _market_snapshot(forecast: dict[str, Any]) -> str:
+    """The offline market reply: only prices that were actually fetched, each with its source."""
+    lines = [line for line in (_market_line(forecast.get("stocks") or {}),
+                               _market_line(forecast.get("crypto") or {})) if line]
+
+    sentiment = forecast.get("sentiment") or {}
+    if sentiment.get("status") == "ok" and sentiment.get("values"):
+        mood = f" ({sentiment['classification']})" if sentiment.get("classification") else ""
+        lines.append(f"The Crypto Fear & Greed Index is {sentiment['values'][0]:.0f} out of 100{mood}.")
+
+    if not lines:
+        return (
+            "I can't reach the market data providers right now, so I'd rather not quote a price. "
+            "Try again shortly, or check the live figures on the home dashboard."
+        )
+    lines.append(
+        "The dashboard also draws a trend line through these closes. That is an extrapolation of "
+        "the recent slope, not a prediction of the market, and none of this is financial advice."
+    )
+    return "\n".join(lines)
+
+
 VISITOR_COOKIE = "iyobo_visitor"
 _VISITOR_ID = re.compile(r"[a-f0-9]{32}")
 
@@ -1250,17 +1280,7 @@ async def _chat_proxy_reply(text: str, visitor_id: str, origin: str = "") -> HTM
 
     lower = text.lower()
     if any(k in lower for k in ["forecast", "market", "price", "bitcoin", "stock", "crypto"]):
-        forecast = await _safe_dashboard_forecast()
-        stocks = forecast.get("stocks", {}).get("predicted", [])
-        crypto = forecast.get("crypto", {}).get("predicted", [])
-        sentiment = forecast.get("sentiment", {}).get("values", [50])
-        stock_tip = stocks[-1] if stocks else "N/A"
-        crypto_tip = crypto[-1] if crypto else "N/A"
-        sent_tip = sentiment[0] if sentiment else "N/A"
-        reply = (
-            f"Live market snapshot: next stock estimate {stock_tip}, next crypto estimate {crypto_tip}, "
-            f"sentiment score {sent_tip}. Sources: Yahoo Finance, Google Finance, SoSoValue, and exchange feeds."
-        )
+        reply = _market_snapshot(await _safe_dashboard_forecast())
     else:
         # Offline: quote the best-matching Knowledge Base entries.
         reply = kb_fallback.answer(text)

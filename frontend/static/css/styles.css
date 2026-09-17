@@ -679,6 +679,61 @@ button:disabled {
   margin-top: 0.2rem;
 }
 
+/* The trend line is an extrapolation, so it is shown as a footnote to the live price,
+   never as a headline number. */
+.prediction-trend {
+  font-size: 0.78rem;
+  color: #047857;
+  opacity: 0.85;
+  margin-top: 0.25rem;
+}
+
+/* A fixed box keeps the grid steady while Chart.js sizes the canvas. */
+.chart-holder {
+  position: relative;
+  height: 220px;
+}
+
+.chart-symbol {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+  opacity: 0.65;
+}
+
+/* Where the figures came from, and when they were measured. */
+.chart-source {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink);
+  opacity: 0.6;
+}
+
+/* Why a card is empty. Shown in place of the chart, never alongside stand-in numbers. */
+.chart-status {
+  margin: 0.6rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(29, 42, 51, 0.04);
+  font-size: 0.85rem;
+  color: var(--ink);
+  opacity: 0.75;
+}
+
+.forecast-disclaimer {
+  margin: 1rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ink);
+  opacity: 0.6;
+}
+
+@media (max-width: 640px) {
+  .forecast-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Alpine panels stay hidden until Alpine has initialised. */
 [x-cloak] {
   display: none !important;

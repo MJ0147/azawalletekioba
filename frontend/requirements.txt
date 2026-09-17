@@ -4,7 +4,6 @@ jinja2==3.1.6
 httpx==0.28.1
 aiofiles==24.1.0
 python-multipart==0.0.20
-yfinance==0.2.54
 # TON Jetton payload (BOC/TL-B) construction for TON Connect payments
 tonsdk==1.0.15
 # Supabase (async client; the sync one would block the FastAPI event loop)
