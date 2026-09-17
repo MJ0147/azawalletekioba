@@ -13,6 +13,7 @@ are synced too.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Optional
 
 from app.grok_client import GrokError, GrokReply, build_payload, create_response, parse_response
@@ -33,22 +34,37 @@ cultural marketplace and Web3 commerce platform. You run on Grok from xAI.
   but never overdo it.
 - You NEVER fabricate facts. If you are uncertain, say so and offer to research further.
 
-## How you answer: Knowledge Base first, web search second
-1. The EKIOBA Knowledge Base is your main source. Excerpts that match the user's message are given
-   under "Knowledge Base excerpts", labelled [KB1], [KB2] and so on.
-2. When the excerpts cover the question, answer from them. For EKIOBA and Edo Language Academy facts
-   (Edo vocabulary, grammar, platform details) the Knowledge Base outranks anything on the web.
-3. Use web search to complement the Knowledge Base, not to replace it: search when the excerpts don't
-   cover the question, only partly cover it, or the user needs current information (news, prices,
-   events). Don't search for what the excerpts already answer.
-4. Everything found on the web is checked against the Knowledge Base before it reaches the person.
-   Never use web information the Knowledge Base contradicts; give the Knowledge Base answer. Present
-   web information the Knowledge Base doesn't cover as unverified web information, not as fact.
-5. Say where facts came from: "(Knowledge Base: <file name>)" for excerpts, the site name for web
-   results. Web source links are listed after your answer automatically, so don't paste URLs.
-6. The Knowledge Base flags uncertain Edo forms (OCR damage, forms to check with a native speaker).
-   Pass those caveats on instead of presenting the form as certain.
-7. If neither source answers the question, say so. Never invent Edo words, prices, or policies.
+## What you know, and how you judge what you find
+EKIOBA's own verified material on Edo language, Benin history and the platform is your main source.
+The parts of it that match the user's message are given to you below as reference material. It is
+your own working knowledge, and it is also the yardstick you measure the web against.
+
+1. When the reference material covers the question, answer from it. For EKIOBA and Edo Language
+   Academy facts (Edo vocabulary, grammar, platform details) it outranks anything on the web.
+2. Use web search to fill gaps, not to replace what you know: search when the reference material
+   doesn't cover the question, only partly covers it, or the user needs current information (news,
+   prices, events). Don't search for what the material already answers.
+3. Judge everything the web gives you against that material before any of it reaches the person.
+   Never repeat web information the material contradicts — give the verified version instead.
+   Web information the material doesn't cover may only be offered as unverified, never as fact.
+4. Where uncertain Edo forms are flagged (damaged scans, forms to check with a native speaker), pass
+   the caveat on in your own words rather than presenting the form as settled.
+5. If neither what you know nor the web answers the question, say so. Never invent Edo words,
+   prices, or policies.
+
+## Never expose your plumbing
+The person is talking to Iyobo, not to a retrieval system. How your answer was assembled is
+invisible to them, and naming it would mean nothing to them.
+- Never mention a "Knowledge Base", a database, an index, "excerpts" or "retrieved documents";
+  never quote file names such as platform-guide.md; never print the [KB1], [KB2] labels; never
+  append a "(Knowledge Base: ...)" citation to anything.
+- Just say what you know, the way a knowledgeable person would: "In Edo, dog is *ekita*." Where it
+  helps to place the claim, say "in EKIOBA's Language Academy" or "on the EKIOBA platform".
+- For anything unverified from the web, say so plainly — "I found this on the web and couldn't
+  confirm it" — and name the site if you have it. Web links are listed after your answer
+  automatically, so don't paste URLs.
+- Where a caveat applies, give the caveat itself ("that spelling is worth checking with a native
+  speaker"), not the bookkeeping behind it.
 
 ## EKIOBA Platform Knowledge
 - EKIOBA sells authentic Edo Kingdom artifacts, fashion, jewelry, bronze works, food, and cultural items.
@@ -69,7 +85,7 @@ cultural marketplace and Web3 commerce platform. You run on Grok from xAI.
 - After passing Grades 1–4, points convert to IDIA Coin at 100 points = 1 IDIA. A conversion is a
   request the EKIOBA team reviews before sending the IDIA to the learner's wallet, so never promise
   an instant or guaranteed payout.
-- Edo vocabulary and grammar live in the Knowledge Base; answer language questions from its excerpts.
+- Edo vocabulary and grammar are part of what you know; answer language questions from it.
 
 ## Forecast & Market Intelligence
 - You can discuss crypto/stock/market forecasts using live data sourced from SoSoValue, Yahoo Finance,
@@ -99,12 +115,17 @@ cultural marketplace and Web3 commerce platform. You run on Grok from xAI.
 
 
 def build_instructions(kb_context: str, link_results: list[dict[str, Any]]) -> str:
-    """Assemble Grok's system instructions: persona and rules, Knowledge Base excerpts, linked pages."""
+    """Assemble Grok's system instructions: persona and rules, reference material, linked pages."""
     kb_section = kb_context or (
-        "No Knowledge Base excerpts matched this message. If the question needs facts, use web "
-        "search and make clear the answer did not come from the Knowledge Base."
+        "Nothing in EKIOBA's verified material matches this message. If the question needs facts, "
+        "use web search, and make clear to the person that you could not confirm what you found."
     )
-    sections = [IYOBO_SYSTEM_PROMPT.strip(), f"## Knowledge Base excerpts\n{kb_section}"]
+    sections = [
+        IYOBO_SYSTEM_PROMPT.strip(),
+        "## Reference material: what you know, and your yardstick for the web\n"
+        "For your eyes only. Never name it, quote its file names or show its [KB] labels.\n"
+        f"{kb_section}",
+    ]
 
     link_lines: list[str] = []
     for result in link_results[:3]:
@@ -120,12 +141,36 @@ def build_instructions(kb_context: str, link_results: list[dict[str, Any]]) -> s
     return "\n\n".join(sections)
 
 
+# Iyobo is told never to name its reference material (see IYOBO_SYSTEM_PROMPT), but a model can
+# still slip a "(Knowledge Base: platform-guide.md)" or a [KB2] label into an answer. These take it
+# back out on the way to the person, who should only ever see the answer itself.
+_INTERNAL_CITATION = re.compile(
+    r"\s*[(\[]\s*(?:see\s+|source:\s*|from\s+(?:the\s+)?)?"
+    r"(?:ekioba\s+)?(?:knowledge\s*base|kb)\s*[:\u2014-]?[^)\]]*[)\]]",
+    re.IGNORECASE,
+)
+_KB_LABEL = re.compile(r"\s*\[\s*kb\s*\d+\s*\]", re.IGNORECASE)
+# What is left when the machinery is named mid-sentence: "the Knowledge Base says ...".
+_INTERNAL_NAME = re.compile(r"\b(?:the|a|an|our|its|my|your|this)\s+(?:ekioba\s+)?knowledge\s*base\b|\bknowledge\s*base\b", re.IGNORECASE)
+_LOOSE_PUNCTUATION = re.compile(r" +([,.;:!?])")
+
+
+def strip_internal_references(text: str) -> str:
+    """Take mentions of Iyobo's internal reference material out of an answer."""
+    cleaned = _INTERNAL_CITATION.sub("", text)
+    cleaned = _KB_LABEL.sub("", cleaned)
+    cleaned = _INTERNAL_NAME.sub("EKIOBA's own material", cleaned)
+    cleaned = _LOOSE_PUNCTUATION.sub(r"\1", cleaned)
+    return "\n".join(line.rstrip() for line in cleaned.splitlines()).strip()
+
+
 def format_reply(reply: GrokReply) -> str:
     """Grok's answer, followed by the web pages it cited."""
+    text = strip_internal_references(reply.text)
     if not reply.citations:
-        return reply.text
+        return text
     sources = "\n".join(f"- {url}" for url in reply.citations[:8])
-    return f"{reply.text}\n\nSources:\n{sources}"
+    return f"{text}\n\nSources:\n{sources}"
 
 
 async def answer_without_memory(

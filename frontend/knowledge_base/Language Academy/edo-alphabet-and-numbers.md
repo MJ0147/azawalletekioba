@@ -32,8 +32,8 @@ In the tables below, the highlighted letters are in **bold**.
 
 ### O and Ọ — filled in, not from the chart
 
-These two rows are missing from both photos. They are filled in below from words already in the
-Knowledge Base so the alphabet is complete. **The "sounds like" cues are proposed here, not the
+These two rows are missing from both photos. They are filled in below from Edo words already
+recorded elsewhere here, so the alphabet is complete. **The "sounds like" cues are proposed here, not the
 chart's own, and are unconfirmed.**
 
 | Letter | Sounds like        | Edo word(s)       | English                   |
@@ -62,13 +62,13 @@ chart's own, and are unconfirmed.**
 ## Notes
 
 - **Missing rows.** The O and Ọ rows are not in either photo; they fall between Ṅ and P. They are
-  filled in above from Knowledge Base words and marked `from_chart: false` in the dataset. Their
+  filled in above from Edo words recorded elsewhere here, and marked `from_chart: false`. Their
   "sounds like" cues are proposed, not the chart's.
 - **Recordings not transcribed.** Two recordings about O and Ọ were supplied
   (`Downloads/edo words O and O with an under hyphin (1).mp4`, 19s, and `(2).mp4`, 14m01s).
   Despite the `.mp4` extension **both are audio-only**, and no speech-to-text was available, so
   **nothing in the O and Ọ rows comes from them.** Whatever those recordings teach about the
-  difference between the two sounds is still missing from the Knowledge Base.
+  difference between the two sounds is therefore still undocumented.
 - **Inferred letters.** The second page's letter column is cut off in the photo, so its letters are
   inferred from the highlighted sounds. The letters Ȳ and Ỹ are inferred from the Edo words,
   which use *ȳ* (the sound in "garage") and *ỹ* (the Spanish *ñ*).

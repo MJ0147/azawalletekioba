@@ -239,19 +239,35 @@
     </div>
   </div>
 
-  <!-- ── Iyobo (Aza AI) Floating Chat Widget ────────────────────────────── -->
+  <!-- ── Iyobo (Aza AI) Assistant ───────────────────────────── -->
+  <!-- The launcher opens Iyobo over the whole screen (styles: static/css/styles.css). -->
   <div id="aza-widget"
        x-data="{
          open: false,
          messages: [{role:'bot', text:'Koyo! I\'m Iyobo, your EKIOBA AI cultural guide. Vhe o ye rie? How can I help? 🏺'}],
          input: '',
          loading: false,
+         show() {
+           this.open = true;
+           document.body.classList.add('aza-open');
+           this.$nextTick(() => { this.$refs.field?.focus(); this.toBottom(); });
+         },
+         hide() {
+           this.open = false;
+           document.body.classList.remove('aza-open');
+           this.$nextTick(() => this.$refs.launcher?.focus());
+         },
+         toBottom() {
+           const log = this.$refs.log;
+           if (log) log.scrollTop = log.scrollHeight;
+         },
          async send() {
            const txt = this.input.trim();
            if (!txt) return;
            this.messages.push({role:'user', text: txt});
            this.input = '';
            this.loading = true;
+           this.$nextTick(() => this.toBottom());
            try {
              const r = await fetch('/api/chat/proxy', {
                method: 'POST',
@@ -267,46 +283,52 @@
              this.messages.push({role:'bot', text:'Service temporarily unavailable. Please try again.'});
            }
            this.loading = false;
-           this.$nextTick(() => {
-             const log = document.getElementById('aza-log');
-             if (log) log.scrollTop = log.scrollHeight;
-           });
+           this.$nextTick(() => this.toBottom());
          }
        }"
-       style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:8000">
+       @keydown.escape.window="open && hide()">
 
-    <!-- Chat panel -->
-    <div x-show="open" x-transition
-         style="width:340px;background:#fff;border-radius:1rem;box-shadow:0 8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden;margin-bottom:.75rem;max-height:480px">
-      <div style="background:#1d2a33;color:#fff;padding:.85rem 1rem;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-weight:700;font-size:.95rem">⬡ Iyobo · Aza AI</span>
-        <button @click="open=false" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+    <!-- Full-screen conversation -->
+    <div x-show="open" x-cloak x-transition.opacity
+         class="aza-screen"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Iyobo, the EKIOBA AI assistant">
+      <header class="aza-bar">
+        <div>
+          <h2>⬡ Iyobo · Aza AI</h2>
+          <p>Your EKIOBA cultural guide</p>
+        </div>
+        <button type="button" class="aza-close" @click="hide()" aria-label="Close Iyobo">✕</button>
+      </header>
+
+      <div class="aza-log" x-ref="log" role="log" aria-live="polite">
+        <div class="aza-thread">
+          <template x-for="(msg, i) in messages" :key="i">
+            <div class="aza-msg" :class="msg.role === 'user' ? 'user' : 'bot'" x-text="msg.text"></div>
+          </template>
+          <template x-if="loading">
+            <div class="aza-msg bot thinking">Iyobo is thinking…</div>
+          </template>
+        </div>
       </div>
-      <div id="aza-log" style="flex:1;overflow-y:auto;padding:.85rem;display:flex;flex-direction:column;gap:.6rem;min-height:200px">
-        <template x-for="(msg, i) in messages" :key="i">
-          <div :style="'max-width:85%;padding:.55rem .85rem;border-radius:10px;font-size:.88rem;line-height:1.5;' +
-                       (msg.role==='user' ? 'background:#dd5b2f;color:#fff;align-self:flex-end;' : 'background:#f3f4f6;color:#1d2a33;align-self:flex-start;')"
-               x-text="msg.text"></div>
-        </template>
-        <template x-if="loading">
-          <div style="align-self:flex-start;background:#f3f4f6;border-radius:10px;padding:.55rem .85rem;font-size:.85rem;color:#888">Iyobo is thinking…</div>
-        </template>
-      </div>
-      <form @submit.prevent="send()" style="display:flex;border-top:1px solid #eee">
-        <input x-model="input" type="text" placeholder="Ask Iyobo…"
-               style="flex:1;padding:.65rem .85rem;border:none;outline:none;font-size:.9rem;background:#fafafa"
-               :disabled="loading" />
-        <button type="submit" :disabled="loading"
-                style="padding:.65rem 1rem;background:#dd5b2f;color:#fff;border:none;font-weight:700;cursor:pointer;font-size:.9rem">Send</button>
+
+      <form class="aza-composer" @submit.prevent="send()">
+        <div class="aza-composer-inner">
+          <input x-ref="field" x-model="input" type="text" placeholder="Ask Iyobo…"
+                 autocomplete="off" aria-label="Your message" :disabled="loading" />
+          <button type="submit" :disabled="loading">Send</button>
+        </div>
       </form>
     </div>
 
-    <!-- Toggle button -->
-    <button @click="open=!open"
-            aria-label="Toggle Iyobo AI chat"
-            style="width:56px;height:56px;border-radius:50%;background:#dd5b2f;color:#fff;border:none;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 16px rgba(221,91,47,.45);display:flex;align-items:center;justify-content:center;float:right">
-      <span x-text="open ? '✕' : '🤖'">🤖</span>
-    </button>
+    <!-- Launcher -->
+    <button type="button"
+            x-ref="launcher"
+            x-show="!open"
+            class="aza-launcher"
+            @click="show()"
+            aria-label="Chat with Iyobo, the EKIOBA AI assistant">🤖</button>
   </div>
 
   <!-- ── Site Footer ────────────────────────────────────────────────────── -->

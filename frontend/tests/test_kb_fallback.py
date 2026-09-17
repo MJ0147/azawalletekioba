@@ -56,7 +56,15 @@ def test_a_real_translation_request_still_answers_with_the_edo_word():
 def test_answers_vocabulary_from_the_knowledge_base():
     reply = kb_fallback.answer("What is dog in Edo?")
     assert "ekita — dog" in reply
-    assert "Knowledge Base" in reply
+    assert kb_fallback.OFFLINE_NOTE in reply
+    # Visitors are never told how Iyobo is put together, offline answers included.
+    assert "Knowledge Base" not in reply
+
+
+def test_no_offline_reply_names_the_knowledge_base():
+    questions = ["What is dog in Edo?", "Who was Oba Ewuare?", "How do I pay with IDIA?", "zzqx vvbnm"]
+    for question in questions:
+        assert "knowledge base" not in kb_fallback.answer(question).lower(), question
 
 
 def test_word_named_in_the_question_beats_a_longer_page():

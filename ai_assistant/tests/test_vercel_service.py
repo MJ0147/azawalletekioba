@@ -37,4 +37,7 @@ def test_the_assistant_ships_its_own_knowledge_base_copy():
     from app.knowledge_base import BUNDLED_KNOWLEDGE_BASE
 
     assert BUNDLED_KNOWLEDGE_BASE == ASSISTANT_DIR / "knowledge_base"
-    assert (BUNDLED_KNOWLEDGE_BASE / "INDEX.md").is_file()
+    # INDEX.md is the maintainers' map of the folder and is not shipped; the material Iyobo
+    # actually answers from is.
+    assert (BUNDLED_KNOWLEDGE_BASE / "EKIOBA Platform" / "platform-guide.md").is_file()
+    assert not (BUNDLED_KNOWLEDGE_BASE / "INDEX.md").exists()

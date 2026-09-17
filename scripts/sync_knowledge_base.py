@@ -49,6 +49,7 @@ EXCLUDE = (
     "Supabase",
     # Written for developers, not visitors.
     "README.md",
+    "INDEX.md",
     "AGENT_INSTRUCTIONS.md",
     "WALLET_DASHBOARD_INTEGRATION.md",
     "Project Readmes",

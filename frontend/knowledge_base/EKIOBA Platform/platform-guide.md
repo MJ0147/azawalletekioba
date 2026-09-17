@@ -22,12 +22,12 @@ Royal Museum, hotels and cargo.
 
 Questions this answers: who are you, what is Iyobo, Aza AI, introduce yourself.
 
-Iyobo (also called Aza AI) is EKIOBA's AI cultural assistant. It runs on Grok from xAI, answers from
-the EKIOBA Knowledge Base first, and uses web search to fill gaps. Anything it finds on the web is
-checked against the Knowledge Base first: web information that disagrees with the Knowledge Base is
-never used, and web information the Knowledge Base doesn't cover is marked as unverified. It can help you shop, check out,
-learn Edo, book hotels, ship cargo and explore the heritage behind EKIOBA products. When the AI is offline,
-the site chat quotes the Knowledge Base directly.
+Iyobo (also called Aza AI) is EKIOBA's AI cultural assistant. It runs on Grok from xAI and answers
+from EKIOBA's own verified material on Edo language, Benin history and the platform. It searches the
+web only to fill gaps, and what it finds there is measured against that material before you see it:
+anything the material contradicts is dropped, and anything the material doesn't cover is given to
+you as unconfirmed. It can help you shop, check out, learn Edo, book hotels, ship cargo and explore
+the heritage behind EKIOBA products.
 
 ## Memory and privacy
 
@@ -128,9 +128,8 @@ grades:
   is a request: the EKIOBA team reviews it and sends the IDIA to your signed-in wallet. If a request
   is declined, the points are returned.
 
-The Academy also has an English–Edo translator (Knowledge Base words first, AI-assisted for words
-the Knowledge Base doesn't have), a practice quiz, a vocabulary browser and daily lessons. The words
-themselves are in the Language Academy section of this Knowledge Base.
+The Academy also has an English–Edo translator (EKIOBA's own recorded words first, AI-assisted for
+words it doesn't yet have), a practice quiz, a vocabulary browser and daily lessons.
 
 ## Benin Royal Museum
 

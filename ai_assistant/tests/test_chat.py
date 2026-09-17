@@ -79,18 +79,24 @@ def test_parse_response_without_text_raises():
         parse_response({"status": "incomplete", "output": []})
 
 
-def test_instructions_put_knowledge_base_first():
+def test_instructions_put_ekiobas_own_material_first():
     instructions = main.build_instructions(
         "[KB1] Language Academy/edo-animals-dataset.json\nedo: ekita; english: dog",
         [{"name": "Linked", "url": "https://example.com", "snippet": "page text"}],
     )
-    assert "Knowledge Base first, web search second" in instructions
+    assert "What you know, and how you judge what you find" in instructions
     assert "[KB1] Language Academy/edo-animals-dataset.json" in instructions
-    assert instructions.index("## Knowledge Base excerpts") < instructions.index("## Pages the user linked")
+    assert instructions.index("## Reference material") < instructions.index("## Pages the user linked")
+
+
+def test_instructions_forbid_naming_the_reference_material_to_the_person():
+    instructions = main.build_instructions("[KB1] edo: ekita; english: dog", [])
+    assert "Never expose your plumbing" in instructions
+    assert "Never name it, quote its file names or show its [KB] labels." in instructions
 
 
 def test_instructions_without_matches_say_so():
-    assert "No Knowledge Base excerpts matched" in main.build_instructions("", [])
+    assert "Nothing in EKIOBA's verified material matches" in main.build_instructions("", [])
 
 
 def test_format_reply_lists_web_sources():
@@ -99,3 +105,24 @@ def test_format_reply_lists_web_sources():
         main.format_reply(GrokReply("Answer.", ["https://example.com"]))
         == "Answer.\n\nSources:\n- https://example.com"
     )
+
+
+def test_format_reply_takes_out_citations_of_the_reference_material():
+    """The person hears the answer, never how it was assembled."""
+    reply = GrokReply(
+        "Alphabet notes (Knowledge Base: edo-alphabet-and-numbers.md):\n"
+        "In Edo, dog is ekita [KB2]. I remember your name (Knowledge Base: platform-guide.md)."
+    )
+    assert main.format_reply(reply) == (
+        "Alphabet notes:\nIn Edo, dog is ekita. I remember your name."
+    )
+
+
+def test_format_reply_rewrites_the_reference_material_named_mid_sentence():
+    text = main.format_reply(GrokReply("The Knowledge Base flags that spelling as uncertain."))
+    assert "Knowledge Base" not in text
+    assert text == "EKIOBA's own material flags that spelling as uncertain."
+
+
+def test_format_reply_leaves_an_ordinary_answer_alone():
+    assert main.format_reply(GrokReply("Koyo! In Edo, dog is ekita.")) == "Koyo! In Edo, dog is ekita."

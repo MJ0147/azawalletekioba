@@ -2,7 +2,9 @@
 
 Reference material collected from the EKIOBA workspace.
 
-Iyobo, the AI assistant (xAI Grok), uses this folder as its main source. It indexes every `.md` and `.json` file here **except the ones marked *not indexed* below** — infrastructure notes and documents written for whoever builds EKIOBA rather than for a visitor (change this with `KNOWLEDGE_BASE_EXCLUDE`). It uses web search only to fill gaps. Everything found on the web is checked against this Knowledge Base before it is used. Edits take effect when the assistant restarts.
+Iyobo, the AI assistant (xAI Grok), uses this folder as its main source. It indexes every `.md` and `.json` file here **except the ones marked *not indexed* below** — infrastructure notes and documents written for whoever builds EKIOBA rather than for a visitor, this index among them (change this with `KNOWLEDGE_BASE_EXCLUDE`). It uses web search only to fill gaps, and judges what it finds there against this material before any of it reaches a visitor. Edits take effect when the assistant restarts.
+
+This folder is Iyobo's own knowledge and its yardstick for the web — it is not a thing visitors are told about. Iyobo never names it, quotes a file name or shows a `[KB1]` label in a reply, so write these pages in wording it can say out loud.
 
 The website's chat also answers from this folder when the AI assistant is offline. It reads a copy in `frontend/knowledge_base/`, so after editing anything here run `python scripts/sync_knowledge_base.py` and commit the updated copy. CI fails if the copy is out of date.
 
@@ -15,6 +17,7 @@ The website's chat also answers from this folder when the AI assistant is offlin
 Internal notes. Iyobo must never quote these to a visitor.
 
 - [Project overview](README.md): workspace purpose, local development, and CI/CD model.
+- [This index](INDEX.md): the map of this folder, for whoever maintains it.
 - [Security architecture](SECURITY.md): authentication, secrets management, database, and hardening guidance.
 - [Deployment guide](DEPLOYMENT.md): Supabase platform, Postgres connection, Edge Function limits, workflows, and blockchain integration.
 - [Wallet dashboard integration](WALLET_DASHBOARD_INTEGRATION.md): wallet, forecast APIs, frontend charts, configuration, and testing.

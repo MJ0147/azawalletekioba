@@ -18,7 +18,7 @@ EKIOBA Edo Language Academy.
 - **A second supplied file.** `Downloads/Edo words(there,here,this,these` was given alongside
   the photo. It is an **audio recording, 5m09s long** — not the slide. No speech-to-text was
   available, so it has not been transcribed. If it teaches more of this lesson, that material
-  is **not** in the Knowledge Base yet.
+  is **not** documented yet.
 
 ---
 
@@ -105,7 +105,7 @@ them — **mu** ẹkpo na **ỹọ** evbani. Note *ọna* with its ọ silent in
 - **Meaning:** *That woman called here yesterday.*
 
 *ọni* with its ọ silent after the noun — *okhuo ni* — and the long place word *evbaṅna* "here". Both *okhuo*
-"woman" and *nodẹ* "yesterday" are already in the Knowledge Base, tone-marked, as **òkhùò**
+"woman" and *nodẹ* "yesterday" are already recorded, tone-marked, as **òkhùò**
 and **nódẹ̀** in `edo-adjectives-dataset.json`.
 
 ---

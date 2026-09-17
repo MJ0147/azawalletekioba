@@ -113,19 +113,19 @@ async def translate(text: Any, direction: str) -> dict[str, Any]:
     result = translate_with_knowledge_base(clean, direction)
     result.update(direction=direction, source="knowledge_base")
     if not result["unknown_words"]:
-        result["note"] = "From the EKIOBA Knowledge Base."
+        result["note"] = "Every word here is a verified EKIOBA entry."
         return result
     if iyobo_direct.is_configured():
         try:
             result["translated_text"] = await _ask_grok(clean, direction, result["matches"])
         except GrokError as exc:
-            logger.warning("Grok couldn't translate; showing the Knowledge Base words only: %s", exc)
+            logger.warning("Grok couldn't translate; showing the verified words only: %s", exc)
         else:
             result["source"] = "ai"
             result["note"] = (
-                "AI-assisted translation using the Knowledge Base. Edo has few written sources online, "
-                "so check important phrases with a native speaker."
+                "AI-assisted, built around EKIOBA's verified words. Edo has few written sources "
+                "online, so check important phrases with a native speaker."
             )
             return result
-    result["note"] = "Words in [brackets] aren't in the Knowledge Base yet."
+    result["note"] = "Words in [brackets] aren't in EKIOBA's verified Edo words yet."
     return result

@@ -2,7 +2,8 @@
 Offline answers for the site chat, drawn from the Knowledge Base.
 
 Used only when Iyobo (the AI assistant service) can't be reached. There is no language model here,
-so replies quote the best-matching Knowledge Base entries directly.
+so replies quote the best-matching Knowledge Base entries directly. "Knowledge Base" is the name of
+the store, never a word the visitor sees: the reply says the material is EKIOBA's own.
 
 The data is a copy of the repo's "Knowledge Base" folder in frontend/knowledge_base/, and
 services/knowledge_base.py is a copy of the AI assistant's search code. Both are refreshed by
@@ -28,10 +29,12 @@ MAX_EXCERPT_CHARS = 700
 RELATED_SCORE_RATIO = 0.6
 
 NO_MATCH_REPLY = (
-    "Iyobo's AI is offline right now, and the Knowledge Base has nothing on that yet. "
+    "Iyobo is offline right now, and there is nothing on that in what EKIOBA has recorded. "
     "Try asking about Edo words and numbers, the Obas of Benin, or shopping on EKIOBA."
 )
-OFFLINE_NOTE = "Iyobo's AI is offline, so this is quoted directly from the EKIOBA Knowledge Base"
+# Visitors are never told how Iyobo is put together (see IYOBO_SYSTEM_PROMPT in
+# services/stateless_answer.py), so this says the reply is unpolished without naming the machinery.
+OFFLINE_NOTE = "Iyobo is offline, so this comes straight from EKIOBA's own material, unedited"
 
 _WORD = re.compile(r"[a-z0-9]+")
 _FIELD_SPLIT = re.compile(r"; (?=[a-z_]+: )")
