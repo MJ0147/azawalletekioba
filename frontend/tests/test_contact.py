@@ -130,6 +130,10 @@ def test_resend_is_asked_to_reply_to_the_visitor(monkeypatch):
     class Response:
         status_code = 200
 
+        @staticmethod
+        def json():
+            return {"id": "b7e1f0c2-0000-4a00-9c00-000000000000"}
+
     class Client:
         def __init__(self, **kwargs):
             pass
@@ -161,6 +165,7 @@ def test_a_refusal_from_resend_is_reported_not_swallowed(monkeypatch):
 
     class Response:
         status_code = 403
+        text = '{"message": "You can only send testing emails to your own address."}'
 
     class Client:
         def __init__(self, **kwargs):

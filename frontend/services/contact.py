@@ -225,7 +225,16 @@ async def _send_with_resend(message: ContactMessage, recipient: str) -> None:
         )
     if response.status_code >= 400:
         # Resend explains refusals in the body (an unverified sending domain, most often).
+        logger.error("Resend refused the message (%s): %s", response.status_code, response.text[:300])
         raise ContactError(f"The mail provider refused the message ({response.status_code}).")
+
+    # Resend's id is how a message is traced in its dashboard when a recipient says nothing arrived.
+    try:
+        message_id = (response.json() or {}).get("id", "")
+    except ValueError:
+        message_id = ""
+    if message_id:
+        logger.info("Resend accepted the message as %s", message_id)
 
 
 def _send_with_smtp_blocking(message: ContactMessage, recipient: str, smtp: dict[str, object]) -> None:
