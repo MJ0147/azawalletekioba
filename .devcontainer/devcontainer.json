@@ -9,7 +9,7 @@
 		"dockerfile": "../Dockerfile.universal"
 	},
 	"features": {
-		"ghcr.io/devcontainer-config/features/dot-config:4": {}
+		"ghcr.io/devcontainer-config/features/dot-config:5": {}
 	},
 	"customizations": {
 		"vscode": {
